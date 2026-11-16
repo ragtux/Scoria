@@ -61,7 +61,9 @@ In Live Preview, a click on a rendered link follows it. In Source mode, `Ctrl + 
 From the keyboard, with the cursor in a link: `Alt + Enter` follows it, `Ctrl + Enter` opens
 it in a new tab, `Ctrl + Alt + Enter` to the right, and `Ctrl + Alt + Shift + Enter` in a
 new [popout window](/docs/app/window/#popout-windows). A right click on a link offers the
-same three as **Open in new tab**, **Open to the right** and **Open in new window**.
+same three as **Open in new tab**, **Open to the right** and **Open in new window**. A new tab
+opens right after the current one; with **Always focus new tabs** off (Settings, Files and
+links) it opens behind it and you stay in the note.
 
 ## Source mode
 

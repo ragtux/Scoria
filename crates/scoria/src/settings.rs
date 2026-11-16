@@ -29,6 +29,7 @@
 
 use crate::assets::{logo, DISPLAY_FONT_FAMILY};
 use crate::palette::hotkey_chip;
+use crate::prompt::{Prompt, PromptAction, PromptButton, PromptEvent, PromptSpec};
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::{fonts, Theme};
 use crate::workspace::{
@@ -39,8 +40,9 @@ use gpui::{
     actions, canvas, deferred, div, hsla, linear_color_stop, linear_gradient, point, prelude::*,
     px, size, uniform_list, App, Bounds, Context, Entity, EventEmitter, FocusHandle, Focusable,
     FontWeight, Hsla, KeyBinding, KeyDownEvent, Keystroke, MouseButton, MouseDownEvent,
-    MouseMoveEvent, MouseUpEvent, Pixels, Point, Rgba, ScrollHandle, SharedString, Subscription,
-    UniformListScrollHandle, WeakEntity, Window, WindowBounds, WindowHandle, WindowOptions,
+    MouseMoveEvent, MouseUpEvent, Pixels, Point, Rgba, ScrollHandle, ScrollStrategy, SharedString,
+    Subscription, UniformListScrollHandle, WeakEntity, Window, WindowBounds, WindowHandle,
+    WindowOptions,
 };
 use scoria_commands::{hotkey_label, keystroke, Command};
 use scoria_formats::config::{
@@ -1038,12 +1040,12 @@ const DAILY_FOLDER: TextField = TextField {
     },
 };
 
-/// "Template file location" on the Daily notes tab. Obsidian's control is a
-/// file suggester rather than a plain field, and its placeholder went
-/// unprobed; the path typed here is what the suggester would store.
+/// "Template file location" on the Daily notes tab: a file suggester over
+/// the notes, "No file selected" while empty, storing the pick's path with
+/// `.md` (2026-11-15, `settings-gaps.mjs` s05).
 const DAILY_TEMPLATE: TextField = TextField {
     key: "template",
-    placeholder: "",
+    placeholder: "No file selected",
     prefix: "",
     read: |state| state.daily_notes().template.clone().unwrap_or_default(),
     write: |state, value| {
@@ -1114,9 +1116,8 @@ const ZK_FOLDER: TextField = TextField {
 };
 
 /// "Template file location". Obsidian's control is a file picker that
-/// stores the picked note's path with its `.md` (`Templates/Unique.md`) and
-/// shows `Example: folder1/note` while empty; here it is a field, and the
-/// path typed is what is stored.
+/// stores the picked file's path, a note's with its `.md`
+/// (`Templates/Unique.md`), and shows `Example: folder1/note` while empty.
 const ZK_TEMPLATE: TextField = TextField {
     key: "template",
     placeholder: "Example: folder1/note",
@@ -1724,6 +1725,47 @@ enum Control {
     /// list is not Obsidian's `["en-US"]`, and a "+" dropdown of the rest.
     /// Read from the session's spellchecker when drawn.
     Languages,
+    /// A "Template file location" row: Obsidian's file suggester
+    /// (`combobox-button mod-file`). It shows the path stored, and a click
+    /// opens a "Search..." list of the vault's files to pick from. `any`
+    /// lists every file rather than the notes alone (the Unique note
+    /// creator's); `missing` marks a stored path no file has, drawn behind
+    /// `lucide-file-question`.
+    File {
+        value: SharedString,
+        any: bool,
+        missing: bool,
+    },
+}
+
+/// What a [`Control::Button`] does when it is clicked.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ButtonAction {
+    /// File recovery's "Snapshots" row, **View**: the snapshots modal, with
+    /// no file chosen yet.
+    ViewSnapshots,
+    /// File recovery's "Clear history" row, **Clear**: asks first, then
+    /// deletes every snapshot.
+    ClearSnapshots,
+}
+
+/// The question **Clear** asks, as Obsidian 1.15 words it: Clear
+/// (`mod-destructive mod-cta`) before Cancel (2026-11-09 and 2026-11-15).
+fn clear_history_question() -> PromptSpec {
+    PromptSpec {
+        title: "Clear history".into(),
+        detail: vec![
+            "Are you sure you want to delete all snapshots? Files inside your vault will not be affected."
+                .into(),
+        ],
+        buttons: vec![
+            PromptButton::new("Clear", PromptAction::Submit).destructive(),
+            PromptButton::new("Cancel", PromptAction::Cancel),
+        ],
+        // Enter left it up, with Clear focused (2026-11-15, s04).
+        no_enter: true,
+        ..PromptSpec::default()
+    }
 }
 
 /// How far a setting gets in Scoria.
@@ -2036,6 +2078,8 @@ struct Item {
     /// The page a `lucide-settings` clickable icon before the control
     /// opens (`extra-setting-button`): the Spellcheck row's dictionary.
     cog: Option<Page>,
+    /// What a button does; `None` leaves it drawn but inert.
+    button: Option<ButtonAction>,
     honored: Honored,
 }
 
@@ -2071,6 +2115,7 @@ fn heading(name: &str) -> Item {
         page: None,
         folder: None,
         cog: None,
+        button: None,
         honored: Honored::Live,
     }
 }
@@ -2089,7 +2134,16 @@ fn item(name: &str, desc: &str, control: Control) -> Item {
         page: None,
         folder: None,
         cog: None,
+        button: None,
         honored: Honored::Live,
+    }
+}
+
+/// A button that does something: File recovery's two.
+fn button(name: &str, desc: &str, label: &str, action: ButtonAction) -> Item {
+    Item {
+        button: Some(action),
+        ..item(name, desc, Control::Button(label.to_string().into()))
     }
 }
 
@@ -2141,6 +2195,82 @@ fn field(name: &str, desc: &str, state: &VaultState, field: TextField) -> Item {
         field: Some(field),
         ..item(name, desc, Control::Text((field.read)(state).into()))
     }
+}
+
+/// A file suggester writing through `field`: the template rows of Daily
+/// notes, Note composer and Unique note creator. `any` offers every file
+/// (the Unique note creator's lists canvases, bases and images too, with
+/// their extensions); the other two offer notes.
+fn file_field(name: &str, desc: &str, state: &VaultState, field: TextField, any: bool) -> Item {
+    let value = (field.read)(state);
+    let missing = !value.is_empty()
+        && state
+            .vault()
+            .files()
+            .binary_search_by(|f| f.path.as_str().cmp(value.as_str()))
+            .is_err();
+    Item {
+        field: Some(field),
+        ..item(
+            name,
+            desc,
+            Control::File {
+                value: value.into(),
+                any,
+                missing,
+            },
+        )
+    }
+}
+
+/// What the file suggester offers, as (row, path written): every note —
+/// or with `any` every file — by its vault path, a note's without `.md`,
+/// in reverse path order, the order Obsidian 1.15's listed a vault's files
+/// in when it was opened (2026-11-15, `settings-gaps.mjs` s05). Obsidian
+/// lists a file created since then above them all; Scoria does not keep
+/// that order.
+fn file_choices(state: &VaultState, any: bool) -> Vec<(String, String)> {
+    let mut out: Vec<(String, String)> = state
+        .vault()
+        .files()
+        .iter()
+        .filter(|f| any || f.kind == scoria_formats::FileKind::Markdown)
+        .map(|f| {
+            let label = match f.kind {
+                scoria_formats::FileKind::Markdown => {
+                    f.path.strip_suffix(".md").unwrap_or(&f.path).to_string()
+                }
+                _ => f.path.clone(),
+            };
+            (label, f.path.clone())
+        })
+        .collect();
+    out.sort_by(|a, b| b.1.cmp(&a.1));
+    out
+}
+
+/// The rows a query leaves, best match first (ties in list order), each
+/// with the ranges the query matched; every row for an empty query.
+fn filter_choices(choices: &[(String, String)], query: &str) -> Vec<(usize, Vec<Range<usize>>)> {
+    let query = query.trim();
+    if query.is_empty() {
+        return (0..choices.len()).map(|ix| (ix, Vec::new())).collect();
+    }
+    let mut scored: Vec<(f64, usize, Vec<Range<usize>>)> = choices
+        .iter()
+        .enumerate()
+        .filter_map(|(ix, (label, _))| fuzzy_match(query, label).map(|m| (m.score, ix, m.ranges)))
+        .collect();
+    scored.sort_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
+    scored.into_iter().map(|(_, ix, r)| (ix, r)).collect()
+}
+
+/// The file suggester while its list is open.
+struct FilePick {
+    field: TextField,
+    choices: Vec<(String, String)>,
+    shown: Vec<(usize, Vec<Range<usize>>)>,
+    selected: usize,
 }
 
 /// A dropdown whose options come from the vault, showing the one the file
@@ -2239,6 +2369,11 @@ pub enum SettingsEvent {
     /// should be told: the one case is a folder button whose file manager
     /// would not start.
     Report(String),
+    /// File recovery's **View**: the snapshots modal over the vault.
+    ViewSnapshots,
+    /// File recovery's **Clear**, its question answered Clear: every
+    /// snapshot of the vault deleted.
+    ClearSnapshots,
 }
 
 /// What the vault holds under `themes/` and `snippets/`.
@@ -2298,6 +2433,11 @@ pub struct SettingsView {
     /// Indices into `all_commands` after search and filter.
     hotkey_rows: Vec<usize>,
     hotkey_scroll: UniformListScrollHandle,
+    /// The file suggester's "Search..." box, its list, and the row state
+    /// while it is open (under `menu`, by the key the row writes).
+    file_search: Entity<TextInput>,
+    file_scroll: UniformListScrollHandle,
+    file_pick: Option<FilePick>,
     /// The open tab's rows. Switching tabs puts it back to the top: Obsidian
     /// rebuilds a tab's content when it is shown, so Appearance never opens
     /// where Editor was left (gate day 7, 2026-11-09).
@@ -2323,6 +2463,10 @@ pub struct SettingsView {
     /// writes: a pick the file cannot hold (the Daily notes tab's "Custom"),
     /// kept here so the rows it reveals stay until another option is picked.
     local_pick: Option<&'static str>,
+    /// File recovery's "Clear history" question, up over the panel while
+    /// `confirming`: Obsidian asks it in a modal over the Settings window.
+    confirm: Entity<Prompt>,
+    confirming: bool,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -2340,7 +2484,39 @@ impl SettingsView {
         let snippet_search = cx.new(|cx| TextInput::new("Search snippets...", cx));
         let font_search = cx.new(|cx| TextInput::new("Enter font name...", cx));
         let field = cx.new(|cx| TextInput::new("", cx));
+        let confirm = cx.new(Prompt::new);
+        let file_search = cx.new(|cx| TextInput::new("Search...", cx));
         let subscriptions = vec![
+            cx.subscribe(
+                &file_search,
+                |this, _, event: &InputEvent, cx| match event {
+                    InputEvent::Changed => this.refilter_files(cx),
+                    InputEvent::Up => this.move_file_selection(-1, cx),
+                    InputEvent::Down => this.move_file_selection(1, cx),
+                    InputEvent::Submit => {
+                        let picked = this.file_pick.as_ref().and_then(|p| {
+                            p.shown
+                                .get(p.selected)
+                                .map(|(ix, _)| p.choices[*ix].1.clone())
+                        });
+                        // Enter with nothing listed does nothing; the list stays.
+                        if let Some(path) = picked {
+                            this.pick_file(&path, cx);
+                        }
+                    }
+                    InputEvent::Cancel => this.close_file_pick(cx),
+                },
+            ),
+            cx.subscribe(&confirm, |this, _, event: &PromptEvent, cx| {
+                if !this.confirming {
+                    return;
+                }
+                this.confirming = false;
+                if let PromptEvent::Submit(_) = event {
+                    cx.emit(SettingsEvent::ClearSnapshots);
+                }
+                cx.notify();
+            }),
             cx.subscribe(
                 &snippet_search,
                 |this, _, event: &InputEvent, cx| match event {
@@ -2393,6 +2569,9 @@ impl SettingsView {
             all_commands: Vec::new(),
             hotkey_rows: Vec::new(),
             hotkey_scroll: UniformListScrollHandle::new(),
+            file_search,
+            file_scroll: UniformListScrollHandle::new(),
+            file_pick: None,
             items_scroll: ScrollHandle::new(),
             capturing: None,
             menu: None,
@@ -2401,6 +2580,8 @@ impl SettingsView {
             editing: None,
             local_pick: None,
             field,
+            confirm,
+            confirming: false,
             _subscriptions: subscriptions,
         };
         view.load_commands(cx);
@@ -2520,6 +2701,7 @@ impl SettingsView {
             "editing": self.editing.map(|field| field.key),
             "hotkey_search": self.hotkey_search.read(cx).text(),
             "capturing": self.capturing,
+            "confirm": self.confirming.then(|| self.confirm.read(cx).describe(0, cx)),
             "rows": listed,
             "rows_total": (total > rows).then_some(total),
         })
@@ -2573,6 +2755,7 @@ impl SettingsView {
                     Control::Navigable(v) => ("navigable", json!(v.as_ref())),
                     Control::AppIcon(v) => ("app_icon", json!(v.as_ref())),
                     Control::Languages => ("languages", Value::Null),
+                    Control::File { value, .. } => ("file", json!(value.as_ref())),
                 };
                 json!({
                     "kind": if item.heading { "heading" } else { "setting" },
@@ -2638,6 +2821,326 @@ impl SettingsView {
     /// Closes the window from its frame, where the panel's own key handler
     /// is out of reach: an open field is written first, as every other way
     /// out writes it.
+    /// A button with something behind it, after the open field is written.
+    fn press_button(&mut self, action: ButtonAction, window: &mut Window, cx: &mut Context<Self>) {
+        self.commit_field(cx);
+        match action {
+            ButtonAction::ViewSnapshots => cx.emit(SettingsEvent::ViewSnapshots),
+            ButtonAction::ClearSnapshots => {
+                self.confirming = true;
+                self.confirm
+                    .update(cx, |p, cx| p.open(clear_history_question(), window, cx));
+                cx.notify();
+            }
+        }
+    }
+
+    // ----- the file suggester ------------------------------------------------
+
+    /// Opens a template row's list: every file it offers, the search box
+    /// empty and focused, the first row selected (2026-11-15, s05).
+    fn open_file_pick(
+        &mut self,
+        field: TextField,
+        any: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.commit_field(cx);
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let choices = file_choices(&state, any);
+        let shown = filter_choices(&choices, "");
+        self.file_pick = Some(FilePick {
+            field,
+            choices,
+            shown,
+            selected: 0,
+        });
+        self.menu = Some(field.key);
+        self.file_search
+            .update(cx, |input, cx| input.set_text("", cx));
+        self.file_scroll.scroll_to_item(0, ScrollStrategy::Top);
+        window.focus(&self.file_search.focus_handle(cx), cx);
+        cx.notify();
+    }
+
+    fn refilter_files(&mut self, cx: &mut Context<Self>) {
+        let query = self.file_search.read(cx).text().to_string();
+        if let Some(pick) = &mut self.file_pick {
+            pick.shown = filter_choices(&pick.choices, &query);
+            pick.selected = 0;
+            self.file_scroll.scroll_to_item(0, ScrollStrategy::Top);
+        }
+        cx.notify();
+    }
+
+    /// Up and Down walk the rows and stop at either end.
+    fn move_file_selection(&mut self, step: isize, cx: &mut Context<Self>) {
+        if let Some(pick) = &mut self.file_pick {
+            if pick.shown.is_empty() {
+                return;
+            }
+            let last = pick.shown.len() - 1;
+            pick.selected = pick.selected.saturating_add_signed(step).min(last);
+            self.file_scroll
+                .scroll_to_item(pick.selected, ScrollStrategy::Center);
+        }
+        cx.notify();
+    }
+
+    /// Writes the path picked, `.md` and all, and closes the list.
+    fn pick_file(&mut self, path: &str, cx: &mut Context<Self>) {
+        let Some(pick) = self.file_pick.take() else {
+            return;
+        };
+        self.menu = None;
+        if let Some(state) = self.state.clone() {
+            if (pick.field.read)(&state) != path {
+                cx.emit(SettingsEvent::Changed(Box::new((pick.field.write)(
+                    &state, path,
+                ))));
+            }
+        }
+        cx.notify();
+    }
+
+    /// The row's ×: writes `""`, which Obsidian keeps as the key's value.
+    fn clear_file(&mut self, field: TextField, cx: &mut Context<Self>) {
+        self.commit_field(cx);
+        self.menu = None;
+        self.file_pick = None;
+        if let Some(state) = self.state.clone() {
+            if !(field.read)(&state).is_empty() {
+                cx.emit(SettingsEvent::Changed(Box::new((field.write)(&state, ""))));
+            }
+        }
+        cx.notify();
+    }
+
+    /// Escape or a click elsewhere: the list closes and nothing is written.
+    fn close_file_pick(&mut self, cx: &mut Context<Self>) {
+        self.file_pick = None;
+        if self.menu.is_some() {
+            self.menu = None;
+        }
+        cx.notify();
+    }
+
+    /// The suggester's button (`combobox-button mod-file`): the stored path
+    /// or the placeholder, `lucide-file-question` before a path no file
+    /// has, a `lucide-x` while there is a value, `chevrons-up-down`; and
+    /// under it, while open, the "Search..." box over the rows.
+    fn render_file_field(
+        &self,
+        item: &Item,
+        value: &SharedString,
+        any: bool,
+        missing: bool,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> gpui::AnyElement {
+        let Some(field) = item.field else {
+            return div().into_any_element();
+        };
+        let open = self.menu == Some(field.key) && self.file_pick.is_some();
+        let empty = value.is_empty();
+        let button = div()
+            .id(SharedString::from(format!("settings-file-{}", field.key)))
+            .flex()
+            .flex_row()
+            .items_center()
+            .gap_1()
+            .min_w(px(160.))
+            .max_w(px(320.))
+            .px_2()
+            .py(px(3.))
+            .rounded_sm()
+            .cursor_pointer()
+            .bg(theme.tokens.interactive_normal)
+            .border_1()
+            .border_color(if open {
+                theme.tokens.background_modifier_border_focus
+            } else {
+                theme.tokens.background_modifier_border
+            })
+            .hover(|s| s.bg(theme.tokens.interactive_hover))
+            .text_size(px(12.))
+            .when(missing, |d| {
+                d.child(crate::assets::icon(
+                    "file-question",
+                    14.,
+                    theme.tokens.text_muted,
+                ))
+            })
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .whitespace_nowrap()
+                    .overflow_hidden()
+                    .text_ellipsis()
+                    .text_color(if empty {
+                        theme.tokens.text_faint
+                    } else {
+                        theme.tokens.text_normal
+                    })
+                    .child(if empty {
+                        SharedString::from(field.placeholder)
+                    } else {
+                        // A note shows without its `.md`, as the rows do.
+                        SharedString::from(
+                            value
+                                .strip_suffix(".md")
+                                .unwrap_or(value.as_ref())
+                                .to_string(),
+                        )
+                    }),
+            )
+            .when(!empty, |d| {
+                d.child(
+                    div()
+                        .id(SharedString::from(format!(
+                            "settings-file-clear-{}",
+                            field.key
+                        )))
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .size(px(16.))
+                        .rounded_sm()
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                        .child(crate::assets::icon("x", 12., theme.tokens.icon_color))
+                        .on_click(cx.listener(move |this, _, _, cx| {
+                            cx.stop_propagation();
+                            if this.click_dismissed_a_popover(cx) {
+                                return;
+                            }
+                            this.clear_file(field, cx)
+                        })),
+                )
+            })
+            .child(crate::assets::icon(
+                "chevrons-up-down",
+                12.,
+                theme.tokens.icon_color,
+            ))
+            .on_click(cx.listener(move |this, _, window, cx| {
+                cx.stop_propagation();
+                if this.click_dismissed_a_popover(cx) {
+                    this.file_pick = None;
+                    return;
+                }
+                this.open_file_pick(field, any, window, cx)
+            }));
+        let Some(pick) = self.file_pick.as_ref().filter(|_| open) else {
+            return div().relative().child(button).into_any_element();
+        };
+        let count = pick.shown.len();
+        // `.suggestion-container.combobox`: 236 px wide, the list at most
+        // 300 px tall with the box, rows 30 px.
+        let rows_height = (count as f32 * 30.).min(266.);
+        let popover = div()
+            .id("settings-file-list")
+            .absolute()
+            .top(px(30.))
+            .right(px(0.))
+            .w(px(236.))
+            .flex()
+            .flex_col()
+            .bg(theme.tokens.background_secondary)
+            .border_1()
+            .border_color(theme.tokens.background_modifier_border)
+            .rounded_md()
+            .shadow_lg()
+            .p_1()
+            .on_click(|_, _, cx| cx.stop_propagation())
+            .child(
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap_1()
+                    .px_1()
+                    .pb_1()
+                    .child(crate::assets::icon("search", 14., theme.tokens.text_faint))
+                    .child(div().flex_1().min_w_0().child(self.file_search.clone())),
+            )
+            .when(count > 0, |d| {
+                d.child(
+                    uniform_list(
+                        "settings-file-rows",
+                        count,
+                        cx.processor(Self::render_file_rows),
+                    )
+                    .track_scroll(&self.file_scroll)
+                    .h(px(rows_height)),
+                )
+            });
+        div()
+            .relative()
+            .child(button)
+            .child(deferred(popover).with_priority(1))
+            .into_any_element()
+    }
+
+    fn render_file_rows(
+        &mut self,
+        range: Range<usize>,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Vec<gpui::Stateful<gpui::Div>> {
+        let theme = cx.global::<Theme>().clone();
+        let Some(pick) = &self.file_pick else {
+            return Vec::new();
+        };
+        range
+            .filter_map(|ix| {
+                let (choice, ranges) = pick.shown.get(ix)?;
+                let (label, path) = pick.choices.get(*choice)?;
+                let highlights: Vec<_> = ranges
+                    .iter()
+                    .map(|r| {
+                        (
+                            r.clone(),
+                            gpui::HighlightStyle {
+                                font_weight: Some(FontWeight::BOLD),
+                                ..Default::default()
+                            },
+                        )
+                    })
+                    .collect();
+                let path = path.clone();
+                Some(
+                    div()
+                        .id(("settings-file-row", ix))
+                        .w_full()
+                        .h(px(30.))
+                        .px_2()
+                        .flex()
+                        .items_center()
+                        .rounded_sm()
+                        .cursor_pointer()
+                        .text_size(px(13.))
+                        .text_color(theme.tokens.text_normal)
+                        .when(ix == pick.selected, |d| {
+                            d.bg(theme.tokens.background_modifier_hover)
+                        })
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                        .child(
+                            gpui::StyledText::new(SharedString::from(label.clone()))
+                                .with_highlights(highlights),
+                        )
+                        .on_click(cx.listener(move |this, _, _, cx| {
+                            cx.stop_propagation();
+                            this.pick_file(&path, cx)
+                        })),
+                )
+            })
+            .collect()
+    }
+
     fn close_from_frame(&mut self, cx: &mut Context<Self>) {
         self.dismiss_open_controls(cx);
         cx.emit(SettingsEvent::Close);
@@ -3007,12 +3510,13 @@ impl SettingsView {
     fn interface_items(state: &VaultState) -> Vec<Item> {
         let a = &state.appearance();
         vec![
+            // Off, no tab draws its view header (2026-11-15).
             appearance_toggle(
                 "Show tab title bar",
                 "Display the header at the top of every tab.",
                 a,
                 SHOW_VIEW_HEADER,
-            ).not_yet(),
+            ),
             appearance_toggle(
                 "Show ribbon",
                 "Display vertical toolbar on the side of the window.",
@@ -3193,13 +3697,14 @@ impl SettingsView {
             .unwrap_or_else(|| "None".into());
         let config_dir = state.vault().config_dir().to_string();
         let mut items = vec![
+            // Read when a link, a Files row or a menu opens a new tab
+            // (2026-11-15).
             app_toggle(
                 "Always focus new tabs",
                 "When you open a link in a new tab, switch to it immediately.",
                 app,
                 FOCUS_NEW_TAB,
-            )
-            .not_yet(),
+            ),
             choice(
                 "Default location for new notes",
                 "Where newly created notes are placed.",
@@ -3414,11 +3919,12 @@ impl SettingsView {
                     state,
                     DAILY_FOLDER,
                 ));
-                items.push(field(
+                items.push(file_field(
                     "Template file location",
                     "Choose the file to use as a template.",
                     state,
                     DAILY_TEMPLATE,
+                    false,
                 ));
                 items
             }
@@ -3615,16 +4121,14 @@ impl SettingsView {
                         state,
                         COMPOSER_REPLACEMENT_TEXT,
                     ),
-                    // A file suggester in Obsidian (`combobox-button
-                    // mod-file`), drawn as a plain text field the way the
-                    // Daily notes tab draws its own template path; what is
-                    // typed is what the suggester stores, the path with
-                    // `.md` (2026-11-09).
-                    field(
+                    // The file suggester: the notes, the pick stored as its
+                    // path with `.md` (2026-11-09, 2026-11-15).
+                    file_field(
                         "Template file location",
                         "Template file to use when merging or extracting. Available variables: {{content}}, {{fromTitle}}, {{newTitle}}, {{date:FORMAT}}, e.g. {{date:YYYY-MM-DD}}.",
                         state,
                         COMPOSER_TEMPLATE,
+                        false,
                     ),
                     toggle(
                         "Confirm file merge",
@@ -3647,11 +4151,13 @@ impl SettingsView {
                         state,
                         ZK_FOLDER,
                     ),
-                    field(
+                    // Its suggester lists every file, not the notes alone.
+                    file_field(
                         "Template file location",
                         "The file path to use as template.",
                         state,
                         ZK_TEMPLATE,
+                        true,
                     ),
                     field(
                         "Unique prefix format",
@@ -3666,8 +4172,8 @@ impl SettingsView {
             }
             // Two number fields, which write `file-recovery.json` (observed
             // 2026-11-09) and set Scoria's own snapshots' clock, and two
-            // buttons over the snapshots: inert, as every button in this
-            // window is, so tagged. The command opens the snapshots.
+            // buttons over the snapshots: View opens them, Clear asks and
+            // then empties Scoria's store (2026-11-15).
             "file-recovery" => vec![
                 field(
                     "Snapshot interval",
@@ -3683,18 +4189,18 @@ impl SettingsView {
                 )
                 // Snapshots are pruned when the vault opens.
                 .on_restart(),
-                item(
+                button(
                     "Snapshots",
                     "View and restore saved snapshots.",
-                    Control::Button("View".into()),
-                )
-                .not_yet(),
-                item(
+                    "View",
+                    ButtonAction::ViewSnapshots,
+                ),
+                button(
                     "Clear history",
                     "Delete all snapshots.",
-                    Control::Button("Clear".into()),
-                )
-                .not_yet(),
+                    "Clear",
+                    ButtonAction::ClearSnapshots,
+                ),
             ],
             "webviewer" => {
                 let w = &state.webviewer();
@@ -4386,18 +4892,39 @@ impl SettingsView {
                     .into_any_element()
             }
             // A button: `--text-normal` on `--interactive-normal`.
-            Control::Button(label) => div()
-                .px_3()
-                .py(px(3.))
-                .rounded_sm()
-                .bg(theme.tokens.interactive_normal)
-                .border_1()
-                .border_color(theme.tokens.background_modifier_border)
-                .text_size(px(12.))
-                .text_color(theme.tokens.text_normal)
-                .child(label.clone())
-                .into_any_element(),
+            Control::Button(label) => {
+                let shown = div()
+                    .px_3()
+                    .py(px(3.))
+                    .rounded_sm()
+                    .bg(theme.tokens.interactive_normal)
+                    .border_1()
+                    .border_color(theme.tokens.background_modifier_border)
+                    .text_size(px(12.))
+                    .text_color(theme.tokens.text_normal)
+                    .child(label.clone());
+                let Some(action) = item.button else {
+                    return shown.into_any_element();
+                };
+                shown
+                    .id(SharedString::from(format!("settings-button-{}", item.name)))
+                    .cursor_pointer()
+                    .hover(|s| s.bg(theme.tokens.interactive_hover))
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        cx.stop_propagation();
+                        if this.click_dismissed_a_popover(cx) {
+                            return;
+                        }
+                        this.press_button(action, window, cx)
+                    }))
+                    .into_any_element()
+            }
             Control::Languages => self.render_languages(theme, cx),
+            Control::File {
+                value,
+                any,
+                missing,
+            } => self.render_file_field(item, value, *any, *missing, theme, cx),
             Control::AppIcon(name) => {
                 let chosen = !name.is_empty();
                 let button = |id: &'static str, label: &'static str, cta: bool| {
@@ -5909,6 +6436,22 @@ impl Render for SettingsView {
         if self.editing.is_none() && self.field.focus_handle(cx).is_focused(window) {
             self.focus_tab(window, cx);
         }
+        // The same for the question once it is answered.
+        if !self.confirming && self.confirm.focus_handle(cx).contains_focused(window, cx) {
+            self.focus_tab(window, cx);
+        }
+        // And for the file suggester's box, which any click that closes a
+        // popover takes away with `menu`.
+        if self
+            .file_pick
+            .as_ref()
+            .is_some_and(|p| self.menu != Some(p.field.key))
+        {
+            self.file_pick = None;
+        }
+        if self.file_pick.is_none() && self.file_search.focus_handle(cx).is_focused(window) {
+            self.focus_tab(window, cx);
+        }
         let theme = cx.global::<Theme>().clone();
         self.corners = WindowCorners::of(window);
         // A write that landed from the hex field or "Restore default"
@@ -5983,6 +6526,7 @@ impl Render for SettingsView {
             // the difference out of the content column rather than pushing
             // it past the window's edge.
             .size_full()
+            .relative()
             .bg(theme.tokens.modal_background)
             .map(|d| self.corners.apply(d))
             .overflow_hidden()
@@ -6090,6 +6634,25 @@ impl Render for SettingsView {
                     .child(div().flex_1().min_h_0().child(body)),
                     ),
             )
+            // A question over the panel (File recovery's "Clear history"):
+            // the panel dimmed behind it and out of the pointer's reach.
+            .when(self.confirming, |d| {
+                d.child(
+                    div()
+                        .id("settings-confirm")
+                        .occlude()
+                        .absolute()
+                        .inset_0()
+                        .flex()
+                        .flex_row()
+                        .justify_center()
+                        .items_start()
+                        .pt(px(120.))
+                        .bg(theme.tokens.background_modifier_cover)
+                        .on_click(|_, _, cx| cx.stop_propagation())
+                        .child(self.confirm.clone()),
+                )
+            })
     }
 }
 
@@ -6909,8 +7472,8 @@ mod tests {
     /// `file-recovery.json` byte for byte as Obsidian 1.15.0 did while the
     /// probe typed into them (`2026-11-09-file-recovery.json`,
     /// `s05-settings-typed`), refused values writing nothing; the two
-    /// fields set the snapshots' clock, the two buttons stay inert and
-    /// tagged.
+    /// fields set the snapshots' clock, and the two buttons open and clear
+    /// the snapshots.
     #[test]
     fn the_file_recovery_tab_writes_file_recovery_json_as_obsidian_did() {
         let (dir, mut state) = vault();
@@ -6928,11 +7491,9 @@ mod tests {
         assert_eq!(recovery[1].control, Control::Text("7".into()));
         assert_eq!(recovery[2].control, Control::Button("View".into()));
         assert_eq!(recovery[3].control, Control::Button("Clear".into()));
-        for row in &recovery[..2] {
+        // Every row acts now: the buttons since 2026-11-15.
+        for row in &recovery {
             assert_ne!(row.honored, Honored::No, "{}", row.name);
-        }
-        for row in &recovery[2..] {
-            assert_eq!(row.honored, Honored::No, "{}", row.name);
         }
         assert_eq!(recovery[0].field.map(|f| f.key), Some("intervalMinutes"));
         assert_eq!(recovery[1].field.map(|f| f.key), Some("keepDays"));
@@ -7118,6 +7679,7 @@ mod tests {
                         v.to_string()
                     }
                     Control::Toggle(on) => on.to_string(),
+                    Control::File { value, .. } => value.to_string(),
                     Control::None | Control::Languages => String::new(),
                 };
                 (item.name.to_string(), value)
@@ -7698,6 +8260,7 @@ mod tests {
                     Control::Toggle(_) => "toggle",
                     Control::None => "none",
                     Control::Languages => "languages",
+                    Control::File { .. } => "file",
                 };
                 (i.name.to_string(), kind)
             })
@@ -8158,6 +8721,8 @@ mod tests {
             live,
             [
                 "Quick font size adjustment",
+                // Read by `Workspace::show_view_header` as each group draws.
+                "Show tab title bar",
                 "Show ribbon",
                 "Inline title",
                 "Readable line length",
@@ -8177,6 +8742,8 @@ mod tests {
                 // `Editor::set_convert_html`.
                 "Convert pasted HTML to Markdown",
                 "Vim key bindings",
+                // Read by `Workspace::open_link_in_new_tab`.
+                "Always focus new tabs",
                 "Automatically update internal links",
                 "Use [[Wikilinks]]",
                 "Show all file types",
@@ -8242,6 +8809,195 @@ mod tests {
         for (name, _) in &toggles {
             assert!(!name.is_empty(), "a toggle has no name");
         }
+    }
+
+    /// A vault laid out like the probe's (2026-11-15, s05): notes in
+    /// folders, and a canvas, an image and a base among the templates.
+    fn vault_with_templates() -> (tempfile::TempDir, VaultState) {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        std::fs::create_dir_all(root.join(".obsidian")).unwrap();
+        for (path, text) in [
+            ("Target.md", "t\n"),
+            ("Other.md", "o\n"),
+            ("Templates/Composer.md", "{{content}}\n"),
+            ("Templates/Unique.md", "# {{title}}\n"),
+            ("Templates/Deep/Nested.md", "nested\n"),
+            ("Templates/Sheet.canvas", "{\"nodes\":[],\"edges\":[]}"),
+            ("Templates/Pic.png", "png"),
+            ("Templates/Data.base", "views: []\n"),
+        ] {
+            let at = root.join(path);
+            std::fs::create_dir_all(at.parent().unwrap()).unwrap();
+            std::fs::write(at, text).unwrap();
+        }
+        let state = VaultState::load(&root.to_path_buf()).unwrap();
+        (dir, state)
+    }
+
+    /// The three "Template file location" rows are file suggesters: the
+    /// Daily notes and Note composer ones over the notes, the Unique note
+    /// creator's over every file, each with Obsidian's empty label.
+    #[test]
+    fn the_template_rows_are_file_suggesters() {
+        let (_dir, state) = vault_with_templates();
+        let row = |tab: &str| {
+            SettingsView::plugin_items(&state, &[], tab, None)
+                .into_iter()
+                .find(|i| i.name.as_ref() == "Template file location")
+                .expect("a template row")
+        };
+        for (tab, any, placeholder) in [
+            ("daily-notes", false, "No file selected"),
+            ("note-composer", false, "Example: folder/note"),
+            ("zk-prefixer", true, "Example: folder1/note"),
+        ] {
+            let item = row(tab);
+            assert_eq!(
+                item.control,
+                Control::File {
+                    value: "".into(),
+                    any,
+                    missing: false
+                },
+                "{tab}"
+            );
+            assert_eq!(item.field.unwrap().placeholder, placeholder, "{tab}");
+            assert_eq!(item.honored, Honored::Live, "{tab}");
+        }
+        // A stored path no file has is marked; one that exists is not.
+        state
+            .apply_setting(&(COMPOSER_TEMPLATE.write)(&state, "Nowhere/Gone.md"))
+            .unwrap();
+        assert!(matches!(
+            row("note-composer").control,
+            Control::File { missing: true, .. }
+        ));
+        state
+            .apply_setting(&(COMPOSER_TEMPLATE.write)(&state, "Templates/Composer.md"))
+            .unwrap();
+        assert!(matches!(
+            row("note-composer").control,
+            Control::File { missing: false, .. }
+        ));
+    }
+
+    /// What the list offers and what a pick writes (2026-11-15, s05 and
+    /// s06): notes by path without `.md`, every file with its extension for
+    /// the Unique note creator, in reverse path order; a query filters
+    /// fuzzily, best first, and one matching nothing lists nothing; the
+    /// pick is the path with its extension.
+    #[test]
+    fn the_file_suggester_lists_filters_and_writes_the_path() {
+        let (dir, state) = vault_with_templates();
+        let labels = |any: bool| -> Vec<String> {
+            file_choices(&state, any)
+                .into_iter()
+                .map(|(label, _)| label)
+                .collect()
+        };
+        assert_eq!(
+            labels(false),
+            [
+                "Templates/Unique",
+                "Templates/Deep/Nested",
+                "Templates/Composer",
+                "Target",
+                "Other",
+            ]
+        );
+        assert_eq!(
+            labels(true),
+            [
+                "Templates/Unique",
+                "Templates/Sheet.canvas",
+                "Templates/Pic.png",
+                "Templates/Deep/Nested",
+                "Templates/Data.base",
+                "Templates/Composer",
+                "Target",
+                "Other",
+            ]
+        );
+        let notes = file_choices(&state, false);
+        let shown = |q: &str| -> Vec<String> {
+            filter_choices(&notes, q)
+                .into_iter()
+                .map(|(ix, _)| notes[ix].0.clone())
+                .collect()
+        };
+        assert_eq!(shown("nested"), ["Templates/Deep/Nested"]);
+        assert_eq!(shown("zzqqxx"), Vec::<String>::new());
+        assert_eq!(shown("").len(), 5);
+        assert_eq!(shown("Templates/Composer")[0], "Templates/Composer");
+        let (ix, ranges) = filter_choices(&notes, "nested").remove(0);
+        assert_eq!(notes[ix].1, "Templates/Deep/Nested.md");
+        assert_eq!(&notes[ix].0[ranges[0].clone()], "Nested");
+        // The pick goes through the row's own field: the path with `.md`.
+        state
+            .apply_setting(&(COMPOSER_TEMPLATE.write)(&state, &notes[ix].1))
+            .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(dir.path().join(".obsidian/note-composer.json")).unwrap(),
+            "{\n  \"askBeforeMerging\": true,\n  \"template\": \"Templates/Deep/Nested.md\"\n}"
+        );
+        state
+            .apply_setting(&(DAILY_TEMPLATE.write)(&state, &notes[ix].1))
+            .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(dir.path().join(".obsidian/daily-notes.json")).unwrap(),
+            "{\n  \"template\": \"Templates/Deep/Nested.md\"\n}"
+        );
+    }
+
+    /// File recovery's two buttons do something now: View and Clear, no
+    /// longer tagged, and Clear asks Obsidian's question first (2026-11-09,
+    /// 2026-11-15 s04).
+    #[test]
+    fn file_recovery_view_and_clear_are_live_buttons() {
+        let (_dir, state) = vault();
+        let items = SettingsView::plugin_items(&state, &[], "file-recovery", None);
+        let buttons: Vec<_> = items
+            .iter()
+            .filter(|i| matches!(i.control, Control::Button(_)))
+            .map(|i| (i.name.to_string(), i.button, i.honored))
+            .collect();
+        assert_eq!(
+            buttons,
+            [
+                (
+                    "Snapshots".to_string(),
+                    Some(ButtonAction::ViewSnapshots),
+                    Honored::Live
+                ),
+                (
+                    "Clear history".to_string(),
+                    Some(ButtonAction::ClearSnapshots),
+                    Honored::Live
+                ),
+            ]
+        );
+        let q = clear_history_question();
+        assert_eq!(q.title.as_ref(), "Clear history");
+        assert_eq!(
+            q.detail[0].as_ref(),
+            "Are you sure you want to delete all snapshots? Files inside your vault will not be affected."
+        );
+        let row: Vec<_> = q
+            .buttons
+            .iter()
+            .map(|b| (b.label.to_string(), b.action, b.cta, b.destructive))
+            .collect();
+        assert_eq!(
+            row,
+            [
+                ("Clear".to_string(), PromptAction::Submit, true, true),
+                ("Cancel".to_string(), PromptAction::Cancel, false, false),
+            ]
+        );
+        // Enter did not answer it in Obsidian.
+        assert!(q.no_enter);
+        assert!(q.input.is_none());
     }
 
     #[test]

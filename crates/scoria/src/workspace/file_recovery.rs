@@ -69,6 +69,9 @@ fn snapshotted(path: &str) -> bool {
     )
 }
 
+/// What **Clear** says once the snapshots are gone (2026-11-15, s04).
+pub(super) const CLEARED_NOTICE: &str = "Local history cleared.";
+
 pub(super) fn restored_notice(ts: i64, now: i64) -> String {
     format!("Successfully restored version from {}", time_ago(ts, now))
 }
@@ -95,6 +98,14 @@ impl VaultState {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .of(path)
+    }
+
+    /// "Clear history": the vault's whole store emptied.
+    pub(super) fn clear_snapshots(&self) -> std::io::Result<()> {
+        self.recovery
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear()
     }
 
     pub(super) fn snapshot_paths(&self) -> Vec<String> {
@@ -152,17 +163,48 @@ impl Workspace {
 
     /// `file-recovery:open`: the modal, the active file chosen.
     pub(super) fn open_file_recovery(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let query = self
+            .current
+            .as_deref()
+            .map(|p| crate::recovery_modal::display_name(p).to_string())
+            .unwrap_or_default();
+        self.open_file_recovery_on(query, window, cx);
+    }
+
+    /// The Settings tab's **View**: the same modal with no file chosen,
+    /// titled "File recovery" and reading "Please select a file on the left
+    /// to view snapshots." (2026-11-15, `settings-gaps.mjs` s04). Obsidian
+    /// opens it over the Settings window; Scoria's Settings is a window of
+    /// its own, so the modal comes up over the vault's, which is raised.
+    pub(super) fn view_snapshots(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.open_file_recovery_on(String::new(), window, cx);
+        window.activate_window();
+    }
+
+    /// The Settings tab's **Clear**, its question answered: every snapshot
+    /// of the vault gone, and the notice Obsidian shows.
+    pub(super) fn clear_snapshots(&mut self, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        match state.clear_snapshots() {
+            Ok(()) => self.report(CLEARED_NOTICE.to_string(), cx),
+            Err(err) => self.report(format!("Could not clear the local history: {err}"), cx),
+        }
+    }
+
+    fn open_file_recovery_on(
+        &mut self,
+        query: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let Some(state) = self.state.clone() else {
             return;
         };
         // What is on screen counts: the open note's unsaved edits are saved
         // first, so the comparison is with the file as the person sees it.
         self.flush_save(cx);
-        let query = self
-            .current
-            .as_deref()
-            .map(|p| crate::recovery_modal::display_name(p).to_string())
-            .unwrap_or_default();
         let snapshots_state = state.clone();
         let current_state = state.clone();
         let source = Source {
@@ -260,6 +302,24 @@ mod tests {
             restored_notice(0, 2_000),
             "Successfully restored version from a few seconds ago"
         );
+    }
+
+    /// Settings' **Clear** empties the store, and the next opening of a
+    /// note snapshots it again at once (2026-11-15, s04: 25 records, then 0,
+    /// then 1 after a note was opened).
+    #[test]
+    fn clear_history_empties_the_store_and_the_clock_starts_over() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("Note.md"), "one\n").unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert!(state.take_snapshot("Note.md", "one\n"));
+        assert!(state.take_snapshot("Other.md", "other\n"));
+        state.clear_snapshots().unwrap();
+        assert!(state.snapshot_paths().is_empty());
+        assert!(state.snapshots_of("Note.md").is_empty());
+        assert!(state.take_snapshot("Note.md", "one\n"));
+        assert_eq!(state.snapshot_paths(), ["Note.md"]);
+        assert_eq!(CLEARED_NOTICE, "Local history cleared.");
     }
 
     /// Snapshots are of notes and canvases, taken once per interval, and a

@@ -86,6 +86,7 @@ pub enum Choice {
     Create(String),
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum ComposerEvent {
     /// Enter or Shift+Enter on a row.
     Chosen(Choice, Placement),
@@ -106,6 +107,23 @@ pub enum LinksAnswer {
     Always,
     Once,
     DoNot,
+}
+
+/// What Ctrl+Enter asks for, from the prompt's kind, its query (trimmed)
+/// and whether any row is listed.
+fn create_new_event(kind: Kind, query: &str, listed: bool) -> Option<ComposerEvent> {
+    match kind {
+        Kind::Merge => {
+            (!query.is_empty() && listed).then(|| ComposerEvent::CreateNew(query.to_string()))
+        }
+        Kind::Extract => {
+            let name = if query.is_empty() { "Untitled" } else { query };
+            Some(ComposerEvent::Chosen(
+                Choice::Create(name.to_string()),
+                Placement::Append,
+            ))
+        }
+    }
 }
 
 struct Match {
@@ -333,14 +351,16 @@ impl ComposerPrompt {
         }
     }
 
-    /// Ctrl+Enter makes a note named from the query, but only while some
-    /// row is listed: with "No files found." the key is taken and nothing
-    /// happens (2026-11-09, s19c). Only the merge's was pressed; the
-    /// extraction's instruction is drawn and the key left alone.
+    /// Ctrl+Enter makes a note named from the query. A merge's does so
+    /// only while some row is listed: with "No files found." the key is
+    /// taken and nothing happens (2026-11-09, s19c). An extraction's always
+    /// does, whatever the rows offer — an existing note's own name gets a
+    /// numbered new one — and an empty query names it `Untitled`
+    /// (2026-11-15, `settings-gaps.mjs` s03).
     fn create_new(&mut self, cx: &mut Context<Self>) {
         let query = self.input.read(cx).text().trim().to_string();
-        if self.kind == Kind::Merge && !query.is_empty() && !self.matches.is_empty() {
-            cx.emit(ComposerEvent::CreateNew(query));
+        if let Some(event) = create_new_event(self.kind, &query, !self.matches.is_empty()) {
+            cx.emit(event);
         }
     }
 
@@ -627,5 +647,47 @@ impl Render for ComposerPrompt {
             Stage::Confirm { text, dont_ask } => self.render_confirm(text, dont_ask, &theme, cx),
             Stage::Links => self.links.clone().into_any_element(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Ctrl+Enter, by prompt (2026-11-09 s19c for the merge, 2026-11-15
+    /// `settings-gaps.mjs` s03 for an extraction).
+    #[test]
+    fn ctrl_enter_creates_from_the_query_and_an_extraction_always_does() {
+        // A merge: only with a query and some row listed.
+        assert_eq!(
+            create_new_event(Kind::Merge, "k3-exi", true),
+            Some(ComposerEvent::CreateNew("k3-exi".into()))
+        );
+        assert_eq!(create_new_event(Kind::Merge, "k3-exi", false), None);
+        assert_eq!(create_new_event(Kind::Merge, "", true), None);
+        // An extraction: the query as the new note's name, whatever the rows
+        // offer, and `Untitled` for an empty one.
+        let create = |name: &str| {
+            Some(ComposerEvent::Chosen(
+                Choice::Create(name.into()),
+                Placement::Append,
+            ))
+        };
+        assert_eq!(
+            create_new_event(Kind::Extract, "brand-new", true),
+            create("brand-new")
+        );
+        assert_eq!(
+            create_new_event(Kind::Extract, "Existing", true),
+            create("Existing")
+        );
+        assert_eq!(
+            create_new_event(Kind::Extract, "", true),
+            create("Untitled")
+        );
+        assert_eq!(
+            create_new_event(Kind::Extract, "", false),
+            create("Untitled")
+        );
     }
 }

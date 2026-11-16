@@ -71,6 +71,10 @@ pub struct PromptButton {
     /// of itself, pushed to the row's left end ("Remove" in "Edit
     /// bookmark").
     pub danger: bool,
+    /// `button.mod-destructive.mod-cta`: the accented one in the error
+    /// colour, kept in its place in the row ("Clear" in File recovery's
+    /// "Clear history").
+    pub destructive: bool,
 }
 
 /// One `setting-item` of a settings-style prompt.
@@ -110,7 +114,14 @@ impl PromptButton {
             action,
             cta: false,
             danger: false,
+            destructive: false,
         }
+    }
+
+    pub fn destructive(mut self) -> PromptButton {
+        self.cta = true;
+        self.destructive = true;
+        self
     }
 
     pub fn danger(mut self) -> PromptButton {
@@ -143,6 +154,10 @@ pub struct PromptSpec {
     pub buttons: Vec<PromptButton>,
     /// Settings-style rows; empty for the plain prompt.
     pub rows: Vec<PromptRow>,
+    /// Enter leaves the prompt as it is: File recovery's "Clear history"
+    /// question was not answered by Enter, though its Clear had the focus
+    /// (2026-11-15). A click on a button is the only answer then.
+    pub no_enter: bool,
 }
 
 pub struct Prompt {
@@ -316,7 +331,9 @@ impl Prompt {
     }
 
     fn confirm(&mut self, _: &Confirm, _: &mut Window, cx: &mut Context<Self>) {
-        self.submit(cx);
+        if !self.spec.no_enter {
+            self.submit(cx);
+        }
     }
 
     fn dismiss(&mut self, _: &Dismiss, _: &mut Window, cx: &mut Context<Self>) {
@@ -561,39 +578,48 @@ impl Render for Prompt {
         // registered the listener, and the wrapper's box is not the box the
         // user aims at.
         let settings = !self.spec.rows.is_empty();
-        let button =
-            |ix: usize, label: SharedString, primary: bool, danger: bool, theme: &Theme| {
-                let mut wash = theme.tokens.text_error;
-                wash.a = 0.1;
-                let mut wash_hover = theme.tokens.text_error;
-                wash_hover.a = 0.2;
-                div()
-                    .id(("prompt-button", ix))
-                    .px_3()
-                    .py_1()
-                    .rounded_md()
-                    .cursor_pointer()
-                    .text_size(px(13.))
-                    // `button.mod-cta`: `--text-on-accent` on `--interactive-accent`;
-                    // a plain button `--text-normal` on `--interactive-normal`,
-                    // `--interactive-hover` under the pointer.
-                    .when(primary, |d| {
-                        d.bg(theme.tokens.interactive_accent)
-                            .text_color(theme.tokens.text_on_accent)
-                            .hover(|s| s.bg(theme.tokens.interactive_accent_hover))
-                    })
-                    .when(danger, |d| {
-                        d.bg(wash)
-                            .text_color(theme.tokens.text_error)
-                            .hover(|s| s.bg(wash_hover))
-                    })
-                    .when(!primary && !danger, |d| {
-                        d.bg(theme.tokens.interactive_normal)
-                            .text_color(theme.tokens.text_normal)
-                            .hover(|s| s.bg(theme.tokens.interactive_hover))
-                    })
-                    .child(label)
-            };
+        let button = |ix: usize,
+                      label: SharedString,
+                      primary: bool,
+                      danger: bool,
+                      destructive: bool,
+                      theme: &Theme| {
+            let mut wash = theme.tokens.text_error;
+            wash.a = 0.1;
+            let mut wash_hover = theme.tokens.text_error;
+            wash_hover.a = 0.2;
+            div()
+                .id(("prompt-button", ix))
+                .px_3()
+                .py_1()
+                .rounded_md()
+                .cursor_pointer()
+                .text_size(px(13.))
+                // `button.mod-cta`: `--text-on-accent` on `--interactive-accent`;
+                // a plain button `--text-normal` on `--interactive-normal`,
+                // `--interactive-hover` under the pointer.
+                .when(primary && !destructive, |d| {
+                    d.bg(theme.tokens.interactive_accent)
+                        .text_color(theme.tokens.text_on_accent)
+                        .hover(|s| s.bg(theme.tokens.interactive_accent_hover))
+                })
+                // `mod-destructive mod-cta`: the error colour as the accent.
+                .when(destructive, |d| {
+                    d.bg(theme.tokens.text_error)
+                        .text_color(theme.tokens.text_on_accent)
+                })
+                .when(danger, |d| {
+                    d.bg(wash)
+                        .text_color(theme.tokens.text_error)
+                        .hover(|s| s.bg(wash_hover))
+                })
+                .when(!primary && !danger, |d| {
+                    d.bg(theme.tokens.interactive_normal)
+                        .text_color(theme.tokens.text_normal)
+                        .hover(|s| s.bg(theme.tokens.interactive_hover))
+                })
+                .child(label)
+        };
         div()
             .id("prompt")
             .key_context("Prompt")
@@ -702,6 +728,7 @@ impl Render for Prompt {
                                 action,
                                 cta,
                                 danger,
+                                destructive,
                             },
                         ) in row.into_iter().enumerate()
                         {
@@ -709,7 +736,7 @@ impl Render for Prompt {
                                 els.push(div().flex_1().into_any_element());
                             }
                             els.push(
-                                button(ix, label, cta, danger, &theme)
+                                button(ix, label, cta, danger, destructive, &theme)
                                     .on_click(cx.listener(move |this, _, _, cx| match action {
                                         PromptAction::Submit => this.submit(cx),
                                         PromptAction::Secondary => cx.emit(PromptEvent::Secondary),

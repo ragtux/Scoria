@@ -57,6 +57,8 @@ are the ones that change how Scoria behaves:
 | Use `[[Wikilinks]]` | `useMarkdownLinks` | The form of links Scoria creates |
 | Automatically update internal links | `alwaysUpdateLinks` | Whether a rename rewrites links without asking |
 | Default location for new notes | `newFileLocation`, `newFileFolderPath` | Where a new note lands |
+| Always focus new tabs | `focusNewTab` | Whether a tab a link, a Files row or **Open in new tab** opens becomes the active one, or waits behind it |
+| Show tab title bar | `showViewHeader` (`appearance.json`) | Whether each tab draws its header (back, forward, title, mode switch) |
 | Deleted files | `trashOption` | System trash, `.trash/`, or outright |
 | Confirm file deletion | `promptDelete` | Whether deleting asks |
 | Detect all file extensions | `showUnsupportedFiles` | Whether unknown kinds appear in Files |
@@ -78,6 +80,23 @@ them is not implemented here. Each such row says so on its own line — "not in 
 "on restart" for the window frame style and, on Linux, the custom app icon — so you can tell
 which is which without leaving the window. Inline title, fold heading, fold indent, Use
 Wikilinks (`useMarkdownLinks`) and the community theme (`cssTheme`) are acted on.
+
+A tab opened from a link goes right after the one you are in, as in Obsidian. With **Always
+focus new tabs** off it opens behind it and the keyboard stays where it was; the quick
+switcher's and **New tab**'s tabs always come to the front, which is what Obsidian does too.
+
+## Plugin tabs
+
+The **Template file location** rows of Daily notes, Note composer and Unique note creator are
+file pickers, as in Obsidian: a click lists the vault's notes (every file, for the Unique note
+creator) under a **Search...** box; type to filter, then `Enter` or a click picks, and the path
+is stored with its extension. The × clears it, and a path naming no file is marked with a
+question-mark icon.
+
+File recovery's **View** opens the snapshots with no file chosen, over the main window, since
+Scoria's Settings is a window of its own. **Clear** asks first, as Obsidian does, and then
+deletes every snapshot Scoria keeps for the vault ("Local history cleared."). Only a click on
+**Clear** answers it; `Enter` does not, in either app.
 
 ## Core and community plugins
 
