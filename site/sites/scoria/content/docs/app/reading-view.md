@@ -89,8 +89,7 @@ The gaps, honestly — none of these are in reading view today:
 | Mermaid diagrams | The code block |
 | An inline `style` attribute | The element, unstyled |
 | `<iframe>`, `<form>` and other tags Scoria has no drawing for | Their source |
-| Editing a property | The properties table is read-only here; edit it in [Live Preview](/docs/app/editing/) |
-| PDF export | — |
+| Editing a property | Only a value's pill can be removed here; edit the rest in [Live Preview](/docs/app/editing/) |
 
 Frontmatter edge cases match Obsidian: a `<script>` in a note is removed, unknown HTML
 elements are unwrapped, and a raw `<a>` gains `target` and `rel`.

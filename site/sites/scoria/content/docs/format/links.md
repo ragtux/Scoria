@@ -171,8 +171,8 @@ on a link in a popover opens it in the main area.
 
 ## Not yet
 
-- The *Properties view* toggle is written but has no surface: it is for Obsidian's File
-  properties view, which Scoria does not have. Search results do not preview, as they did not
+- The *Properties view* toggle is written but has no surface: a link in the File properties
+  pane (`properties:open-local`) opens on a click and does not preview. Search results do not preview, as they did not
   in Obsidian when it was observed.
 
 ## Next

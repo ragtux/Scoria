@@ -128,8 +128,6 @@ Quote it in your shell: `#` starts a comment in most of them.
 
 ## Not yet
 
-- Sort options and copying results — see [search](/docs/app/search/).
-- Saved searches.
 - Searching inside PDFs or other attachments. Search covers note text.
 
 ## Next

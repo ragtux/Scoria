@@ -95,9 +95,8 @@ is what Scoria itself last wrote.
 ## Several vaults
 
 One Scoria process opens one vault. To work in two, run it twice. `app:open-vault` and
-`app:open-another-vault` exist as command ids — your `hotkeys.json` bindings for them are
-honored as bindings — but switching vaults from inside the window is not implemented; the
-command is not offered in the palette.
+`app:open-another-vault` run, as does the vault switcher, but the vault you pick replaces the
+one in the window, where Obsidian opens it in a window of its own.
 
 ## Next
 

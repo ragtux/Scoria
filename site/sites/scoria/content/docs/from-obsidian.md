@@ -101,9 +101,9 @@ Not bugs, just differences you will notice in the first ten minutes:
 - **One vault per window.** Run it twice for two vaults. Popout windows are in: move a tab
   out with *Move to new window*, and they reopen where you left them, in Obsidian's
   `workspace.json` shape. See [the window](/docs/app/window/#popout-windows).
-- **Tabs and splits, but no stacked tabs.** `Ctrl + T` opens a tab, Split right and Split
-  down divide the main area into groups, a tab drags between them, and `Ctrl + Alt + ←` /
-  `→` still walk the history of what you have opened.
+- **Tabs, splits and stacked tabs.** `Ctrl + T` opens a tab, Split right and Split
+  down divide the main area into groups, a tab drags between them, a group stacks from its
+  tab-list menu, and `Ctrl + Alt + ←` / `→` still walk the history of what you have opened.
 - **Settings writes one key at a time.** Obsidian re-serialises a settings file on every
   change; Scoria merges the key you changed into the file's own JSON and leaves the rest of
   the bytes alone.
