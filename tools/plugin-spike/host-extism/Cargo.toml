@@ -1,0 +1,22 @@
+# The extism route's host. `default` is extism's own defaults (an HTTP client
+# for its manifests' URLs and `wasmtime/default`); `--no-default-features`
+# keeps extism's minimum, which still carries Cranelift, wasmtime's cache, GC,
+# coredumps, `wat` and WASI preview 1 (see extism's Cargo.toml).
+[workspace]
+
+[package]
+name = "spike-host-extism"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[features]
+default = ["extism/default"]
+
+[dependencies]
+extism = { version = "1.41", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+strip = true

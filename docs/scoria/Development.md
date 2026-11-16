@@ -6976,6 +6976,23 @@ handler, so IME works.
 > startup, so the default text and interface font is Inter on every machine;
 > `appearance.json` fonts override it. Never bundle `InterVariable.ttf`.
 
+## Ecosystem (phase 5)
+
+The native plugin SDK. The design study is [[Plugin SDK]].
+
+### Plugin runtime spike, 2026-11-16
+
+Milestone step 2 (commands with a check callback, calling `vault.read`,
+`vault.modify` and `notice`) built on both candidate runtimes in
+`tools/plugin-spike`, outside the workspace: WIT components on wasmtime 49 at
+five compiler tiers, and extism 1.41, against a baseline host with no runtime.
+The numbers and what they settle are in [[Plugin SDK#Spike, 2026-11-16]]: WIT
+over extism, Cranelift with parallel compilation, wasmtime 48 (the
+long-term-support release that builds with rustc 1.95) behind a `plugins`
+cargo feature. Cranelift adds about 13.7 MB to a stripped binary and a check
+callback costs 0.4 µs. Linux and Windows measured; macOS still to be taken.
+Re-run with `nix-shell tools/plugin-spike/shell.nix --run 'tools/plugin-spike/run.sh all'`.
+
 ## Spike gates
 
 The [[Specification]] sets three gates before any reader or writer work starts.

@@ -6,7 +6,7 @@ created: 2026-11-15
 ---
 # Plugin SDK
 
-The roadmap's last row is "5. Ecosystem | Native plugin SDK | Not started", and the compatibility tiers promise "a new native plugin API; existing JS plugins are out of scope". This note is the design study to start that phase from: what Obsidian's plugin API offers, how much of it Scoria already models, the runtimes a native SDK could sit on, what plugins mean for the vault's bytes, and a recommendation with a first milestone. Nothing here is built. Claims about outside projects carry their source; claims about Scoria name the crate and type, as of `c9479a5` (0.6.0).
+The roadmap's last row is "5. Ecosystem | Native plugin SDK | Not started", and the compatibility tiers promise "a new native plugin API; existing JS plugins are out of scope". This note is the design study to start that phase from: what Obsidian's plugin API offers, how much of it Scoria already models, the runtimes a native SDK could sit on, what plugins mean for the vault's bytes, and a recommendation with a first milestone. Nothing here is built into the app; the runtime spike in `tools/plugin-spike` (see [[#Spike, 2026-11-16]]) sits outside the workspace. Claims about outside projects carry their source; claims about Scoria name the crate and type, as of `c9479a5` (0.6.0).
 
 ## What Obsidian's plugin API is
 
@@ -154,7 +154,7 @@ Scoria-only plugin folders and an enabled list of Scoria's own would be new file
 
 ## Recommendation
 
-**WebAssembly components on wasmtime, with a WIT world of Scoria's own; Rust first.** It is the only option that is sandboxed, ABI-stable and one-file cross-platform at once, it hot-reloads, and it is the architecture gpui's own editor chose for the same problem. Extism is worth a spike as the host layer if JSON payloads and its multi-language kits outweigh WIT's typed bindings; the WIT route is the one with a typed contract and Zed's precedent. A JS kit can come later as a component that embeds a JS engine, which gives Obsidian authors a familiar language without promising their existing plugins run.
+**WebAssembly components on wasmtime, with a WIT world of Scoria's own; Rust first.** It is the only option that is sandboxed, ABI-stable and one-file cross-platform at once, it hot-reloads, and it is the architecture gpui's own editor chose for the same problem. Extism is worth a spike as the host layer if JSON payloads and its multi-language kits outweigh WIT's typed bindings; the WIT route is the one with a typed contract and Zed's precedent. The spike of both, [[#Spike, 2026-11-16]], chose WIT. A JS kit can come later as a component that embeds a JS engine, which gives Obsidian authors a familiar language without promising their existing plugins run.
 
 The API should mirror Obsidian's *names and shapes* where the concept is the same — `addCommand` with `id`/`name`/`checkCallback`, `CachedMetadata` with Obsidian's field names, `<plugin-id>:<command>` ids, `data.json` — so an Obsidian author recognises it and a port is mechanical for the model half. It should not mirror the DOM or CodeMirror.
 
@@ -173,24 +173,107 @@ Commands and code-block processors over Wasm, nothing else:
 
 Out of the milestone, in rough order after it: settings tabs as data, vault and metadata events, suggest and menus, post-processors over the block tree, protocol handlers and hover sources, a JS kit, and only then views and editor decorations.
 
+## Spike, 2026-11-16
+
+The two open questions that had to be answered before anything enters the workspace — what wasmtime costs in binary size and build time, and WIT components or extism — were settled with a spike of milestone step 2 on both routes. It lives in `tools/plugin-spike`, outside the cargo workspace like `docs/anya_scoria_gen` (each crate has its own empty `[workspace]` table), and `tools/plugin-spike/run.sh` rebuilds and re-measures everything; `run-windows.ps1` is its Windows half.
+
+### What was built
+
+- **`wit/plugin.wit`**, the world: imports `vault` (`read(path) -> result<string, string>`, `modify(path, text) -> result<_, string>`) and `workspace` (`notice(message)`); exports `commands() -> list<command>` (a record of `id`, `name`, `has-check`), `check(id, active-path) -> bool` and `run(id, active-path) -> result<_, string>`.
+- **Two guests, one small Rust crate each**, registering the same two commands: `count-words`, with a check callback (true when the active file ends in `.md`), which reads the note and posts a notice; and `append-line`, without one, which reads the note, writes it back with a line appended through `vault.modify`, and posts a notice. `guest-wit` uses `wit-bindgen` 0.63; `guest-extism` uses `extism-pdk` 1.4 with JSON in and out.
+- **Three hosts**, all over a tempdir vault with one note, sharing `common/spike.rs` (the vault, the path rule that refuses anything but plain components, the timers): `host-baseline` runs the same commands as plain Rust; `host-wit` is wasmtime's component model with `bindgen!`, one cargo feature per compiler tier; `host-extism` is extism 1.41. Each checks that the note on disk ends with the appended line.
+
+Both routes ran on wasmtime 49 (extism 1.41 depends on `wasmtime` ^49), built with Rust 1.100.0 from a rustup home inside the spike's target directory, because wasmtime 49 needs rustc 1.96 and Scoria's toolchain is 1.95 (see the toolchain notes below). Release profile with `strip = true` and otherwise Cargo's defaults, as the workspace's release profile is.
+
+### Numbers, Linux
+
+x86_64 NixOS, Threadripper PRO 3995WX (64 cores, 128 threads), local ZFS. Other agents were building the main workspace at the same time (load average 7 to 28), so build times are good to perhaps 10 percent. Sizes are the stripped binary; "added" is over the baseline host's 0.40 MB. Clean builds start from an empty target directory with the crates already downloaded; the incremental build follows a `touch` of `main.rs`.
+
+| Host | Size | Added | Clean, `-j 128` | Clean, `-j 8` | Incremental |
+| --- | --- | --- | --- | --- | --- |
+| baseline (no runtime) | 0.40 MB | — | 0.4 s | 0.3 s | 0.3 s |
+| WIT, wasmtime's default features | 18.59 MB | 18.19 MB | 51.9 s | 68.1 s | 1.5 s |
+| WIT, Cranelift | 13.91 MB | 13.51 MB | 53.4 s | 64.0 s | 0.9 s |
+| WIT, Cranelift + `parallel-compilation` | 14.08 MB | 13.68 MB | 54.3 s | 65.3 s | 0.8 s |
+| WIT, Winch | 13.09 MB | 12.69 MB | 48.1 s | 53.0 s | 1.0 s |
+| WIT, Cranelift targeting Pulley | 14.02 MB | 13.62 MB | 52.4 s | 59.5 s | 0.8 s |
+| WIT, no compiler (loads precompiled native code) | 1.57 MB | 1.17 MB | 23.5 s | 25.5 s | 0.7 s |
+| WIT, no compiler, Pulley interpreter | 1.68 MB | 1.28 MB | 23.6 s | 24.2 s | 0.8 s |
+| extism, its default features | 22.33 MB | 21.93 MB | 61.6 s | 96.2 s | 1.4 s |
+| extism, `default-features = false` | 18.45 MB | 18.05 MB | 61.1 s | 81.4 s | 1.1 s |
+
+"Cranelift", "Winch" and "Pulley" are `wasmtime` with `default-features = false` and `std`, `runtime`, `component-model` plus that tier. Scoria's own release binary, stripped, is 54.1 MB (the 2026-11-10 build), so the recommended host adds about 25 percent to it. The clean build barely moves between 8 and 128 jobs because it is one long serial chain (`cranelift-codegen` and `wasmtime` itself); inside the workspace it would overlap with gpui's own long crates, which this spike did not measure.
+
+Load and call times, from the same binaries. The guest is the 23 KB component (extism's is 120 KB, most of it `serde_json`). Compile is one component from bytes with wasmtime's cache off; instantiate is a new `Store` and instance from a pre-linked `InstancePre`, median of 200; check is one `check("count-words", "Notes/Spike.md")` from the host, median and 99th percentile of 100,000 calls, the extism one including the JSON both ways as the palette would pay it.
+
+| Host | Engine | Compile | First instantiate | Instantiate | Check, median | Check, p99 |
+| --- | --- | --- | --- | --- | --- | --- |
+| baseline, a Rust function | — | — | — | — | 0.03 µs | 0.03 µs |
+| WIT, default features | 0.16 ms | 15.4 ms | 86 µs | 19 µs | 0.79 µs | 1.19 µs |
+| WIT, Cranelift | 0.13 ms | 28.2 ms | 74 µs | 16 µs | 0.39 µs | 0.44 µs |
+| WIT, Cranelift + parallel | 0.12 ms | 16.8 ms | 74 µs | 16 µs | 0.37 µs | 0.48 µs |
+| WIT, Winch | 0.15 ms | 10.0 ms | 62 µs | 16 µs | 0.41 µs | 0.67 µs |
+| WIT, Pulley | 0.13 ms | 26.9 ms | 97 µs | 25 µs | 1.49 µs | 1.87 µs |
+| WIT, no compiler, native | 0.05 ms | 0.20 ms (deserialize) | 82 µs | 16 µs | 0.39 µs | 0.62 µs |
+| WIT, no compiler, Pulley | 0.04 ms | 0.19 ms (deserialize) | 72 µs | 24 µs | 1.52 µs | 1.82 µs |
+| extism, default features | — | 38.0 ms | 378 µs | 133 µs | 5.26 µs | 8.47 µs |
+| extism, minimal | — | 39.5 ms (2.1 ms from its disk cache) | 391 µs | 136 µs | 5.08 µs | 8.07 µs |
+
+Budgets cost nothing measurable on the compiled tiers: with `epoch_interruption` or `consume_fuel` on, and the deadline or fuel re-armed before every call, the Cranelift check was 0.31 and 0.32 µs and the Winch one 0.33 and 0.37 µs, inside the noise of the unbudgeted runs. On Pulley they cost 18 and 30 percent (1.76 and 1.94 µs). A run of either command, which crosses into the host for a file read (and a write) and a notice, took 30 to 150 µs on every host, dominated by the file system; one Winch run of `append-line` took 7.3 ms once and is taken as a disk stall.
+
+A keystroke at 60 Hz is 16.7 ms. The slowest check measured, extism's p99, would let one keystroke ask about 2,000 checked commands; the Cranelift one about 38,000.
+
+### Numbers, Windows
+
+`run-windows.ps1` on `w11`: Windows 11 in a VM with 16 virtual CPUs of a Threadripper PRO 3995WX, `x86_64-pc-windows-msvc`, Rust 1.100.0, a subset of the hosts, clean builds at cargo's default 16 jobs. The timer there ticks in 0.1 µs, so the check times are rounded to it. A run of a command takes 200 to 700 µs on Windows against 30 to 150 µs on Linux, which is the file system, not the runtime.
+
+| Host | Size | Added | Clean | Incremental | Compile | Instantiate | Check, median | Check, p99 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| baseline (no runtime) | 0.21 MB | — | 8.8 s | 6.0 s | — | — | 0.0 µs | 0.1 µs |
+| WIT, Cranelift | 13.48 MB | 13.27 MB | 196.1 s | 2.4 s | 31.0 ms | 14 µs | 0.5 µs | 0.6 µs |
+| WIT, Cranelift + parallel | 13.66 MB | 13.45 MB | 167.2 s | 2.5 s | 19.3 ms | 12 µs | 0.5 µs | 0.7 µs |
+| WIT, Winch | 13.03 MB | 12.82 MB | 155.5 s | 2.8 s | 14.2 ms | 14 µs | 0.5 µs | 0.9 µs |
+| WIT, no compiler, native | 1.30 MB | 1.09 MB | 41.6 s | 1.8 s | 0.48 ms (deserialize) | 14 µs | 0.5 µs | 0.8 µs |
+| extism, minimal | 18.25 MB | 18.04 MB | 199.4 s | 3.5 s | 46.6 ms | 135 µs | 5.1 µs | 24.6 µs |
+
+The sizes added match Linux's to within 0.3 MB. The clean builds take about three times as long as Linux's at `-j 8` (196 s against 64 s for Cranelift), on a VM and with MSVC's linker; the incremental ones stay within a few seconds.
+
+### Numbers, macOS
+
+Still to be taken, on the macmini: `run.sh` needs `rustup`, `wasm-tools` and `lld` on the path there, and GNU `stat` and `nproc` or two small edits. It is the first aarch64 measurement too; Cranelift and Winch both have aarch64 back ends, and none of the numbers above says how they do on one.
+
+### Toolchains
+
+- **Rust version.** wasmtime raises its minimum Rust with every monthly major: 48 needs 1.95, 49 needs 1.96, 50 needs 1.97 (crates.io's `rust_version` for each). Scoria builds with nixpkgs' rustc 1.95, so the newest wasmtime it can take today is 48; the same `host-wit` source builds on wasmtime 48 with that rustc (14.10 MB for Cranelift + parallel, check 0.49 µs median). Wasmtime 48 is also a long-term-support release: every major divisible by 12 is one, supported for 24 months ([release process](https://docs.wasmtime.dev/stability-release.html)). extism follows wasmtime a major behind and pins one (`^49` in 1.41, `^43` in 1.30), so on extism Scoria's wasmtime version would be extism's choice, and today it needs Rust 1.96.
+- **Guest targets.** nixpkgs' rustc ships `wasm32-unknown-unknown` (and `wasm32v1-none`) but not `wasm32-wasip1` or `wasm32-wasip2`, and has no `lld` on the path, which rustc calls to link wasm. `tools/plugin-spike/shell.nix` adds `lld`, `wasm-tools` 1.249 and `rustup`; `rustup` with `RUSTUP_HOME` inside the spike's target directory installs `wasm32-wasip2` without touching the system or `~/.rustup`. `cargo-component` 0.21.1 is in nixpkgs as well, and was not needed.
+- **The WIT guest needs no WASI.** Built for `wasm32-unknown-unknown` with `wit-bindgen`, then wrapped by `wasm-tools component new`, the component imports exactly the world's three interfaces. Built for `wasm32-wasip2`, the same source comes out as a 53 KB component that also imports fourteen `wasi:cli`, `wasi:io` and `wasi:clocks` interfaces, which Rust's standard library pulls in; a host would have to link `wasmtime-wasi` or stub them. The plugin kit should target `wasm32-unknown-unknown`, which keeps the capability list equal to the world.
+- **The extism guest** builds for `wasm32-unknown-unknown` with `extism-pdk` and nothing else.
+
+### What it settles
+
+- **WIT components, not extism.** Both routes were equally short to write in Rust. Against extism: its host is 4.4 MB larger than the WIT host even with its default features off, because it fixes wasmtime's `cache`, `gc`, `coredump`, `wat` and WASI preview 1 on; its calls are 13 times slower (JSON both ways) and its instances 8 times slower to make; it ties Scoria's wasmtime version to its own, a major behind; it turns on wasmtime's disk cache by default, which writes `~/.cache/wasmtime` unless the host passes `with_cache_disabled`; and its contract is bytes, with nothing checking a plugin's JSON against the host's. What extism offers in return, plugin kits in many languages, matters after the Rust kit, and a component toolchain covers other languages too.
+- **Cranelift, with `parallel-compilation`.** Compiling a plugin is a load-time cost paid once (16.8 ms for the spike's guest), and the host can keep `Component::serialize`'s output in Scoria's own cache directory, keyed by the wasmtime version, so a second launch deserializes in 0.2 ms. Winch compiles faster and calls as fast for this guest but saves only 0.8 MB, because it reuses Cranelift's code generator, and it gives up Cranelift's optimisation on plugins that do real work. Pulley calls four times slower and saves nothing while a compiler is linked; it is for targets Cranelift does not support, which Scoria does not ship. The compiler-less runtime (1.2 MB added) is the cheapest by far, but its precompiled code is specific to the platform and to the wasmtime version, which gives up the one-file plugin.
+- **A cargo feature.** About 13.7 MB of binary and a near-minute serial chain in a clean build is enough to keep out of builds that do not want it, and the host is a self-contained crate. `scoria-plugin` should be an optional dependency of `scoria` behind a `plugins` feature, on in the default features so releases have it, off with `--no-default-features` for a lighter build; the incremental cost with it on is under a second. Pin wasmtime 48, the long-term-support release that builds with the toolchain Scoria already has, and move it by itself, one long-term-support release at a time, as the gpui pin moves.
+- **Sync checks with a budget.** The check callback answers in under half a microsecond and an epoch deadline costs nothing measurable, so `check` can be a synchronous call on the palette's keystroke, guarded by an epoch deadline a ticker thread advances; `run` and anything that touches the vault can stay synchronous for milestone step 2 too, and become async when an API call can block (network, large reads).
+
 ## Open questions
 
 - **Where Scoria plugins live and how they are enabled.** Dual plugins in `.obsidian/plugins/<id>/` sharing `community-plugins.json`, or a folder and list of Scoria's own? Probe what Obsidian does with a plugin folder that has a manifest and no `main.js`, and whether its updater keeps an unknown file in the folder.
 - **Restricted mode.** Where Obsidian stores it, and whether Scoria should share the switch.
-- **WIT or extism.** Typed WIT bindings with the component toolchain, or extism's byte-and-JSON calls with its broader plugin kits. A spike of each on milestone step 2 settles it.
-- **Async.** Zed calls extensions asynchronously; a `checkCallback` must answer within a palette keystroke. Which calls are sync with a budget and which are async?
+- **WIT or extism.** Settled 2026-11-16: WIT components. The spike of both on milestone step 2 found extism's host 4.4 MB larger, its calls 13 times slower and its wasmtime version a major behind and its own; see [[#What it settles]].
+- **Async.** Zed calls extensions asynchronously; a `checkCallback` must answer within a palette keystroke. Partly settled 2026-11-16: a check is 0.4 µs and an epoch deadline costs nothing measurable, so checks are synchronous with a budget (see [[#What it settles]]). Which later calls go async (network, large reads) is still open.
 - **What a post-processor sees.** The parser's spanned AST from `scoria-markdown`, the reading view's `RBlock`s, or only rendered Markdown in and out? The first is the most powerful and the most expensive to keep stable.
 - **Editor extensions.** Whether decorations (a plugin colouring ranges, adding a widget at a position) can be offered without exposing `scoria_text` internals, and what Live Preview does with them.
 - **Distribution.** A registry of Scoria plugins, or install from a URL or a folder only. Signing.
 - **Versioning.** How the WIT world is versioned against Scoria's releases, and what `minAppVersion` means for a Scoria plugin.
-- **Binary size and build time.** wasmtime with Cranelift is a heavy dependency; measure it on the three platforms before committing, and whether it can be a cargo feature.
+- **Binary size and build time.** Measured on Linux and Windows 2026-11-16 (see [[#Spike, 2026-11-16]]): wasmtime with Cranelift adds about 13.7 MB stripped and a clean build of about a minute on Linux, so it goes behind a `plugins` cargo feature, on by default. The macOS numbers are still to be taken.
 
 ## Sources
 
 - Obsidian developer docs: [Plugin API](https://docs.obsidian.md/Reference/TypeScript+API/Plugin), [Manifest](https://docs.obsidian.md/Reference/Manifest), [Commands](https://docs.obsidian.md/Plugins/User+interface/Commands), [Views](https://docs.obsidian.md/Plugins/User+interface/Views), [Settings](https://docs.obsidian.md/Plugins/User+interface/Settings), [Events](https://docs.obsidian.md/Plugins/Events), [Markdown post processing](https://docs.obsidian.md/Plugins/Editor/Markdown+post+processing), [Editor extensions](https://docs.obsidian.md/Plugins/Editor/Editor+extensions)
 - Obsidian help: [Plugin security](https://obsidian.md/help/plugin-security)
 - [obsidianmd/obsidian-api](https://github.com/obsidianmd/obsidian-api) (MIT): `obsidian.d.ts`, `package.json`
-- Wasmtime: [docs](https://docs.wasmtime.dev/), [`wasmtime::component`](https://docs.wasmtime.dev/api/wasmtime/component/index.html), [interrupting Wasm](https://docs.wasmtime.dev/examples-interrupting-wasm.html); [the component model](https://component-model.bytecodealliance.org/)
+- Wasmtime: [docs](https://docs.wasmtime.dev/), [`wasmtime::component`](https://docs.wasmtime.dev/api/wasmtime/component/index.html), [interrupting Wasm](https://docs.wasmtime.dev/examples-interrupting-wasm.html), [release process](https://docs.wasmtime.dev/stability-release.html); [the component model](https://component-model.bytecodealliance.org/)
 - [Extism](https://github.com/extism/extism) and its [runtime manifest](https://github.com/extism/extism/blob/main/runtime/Cargo.toml)
 - [Zed decoded: extensions](https://zed.dev/blog/zed-decoded-extensions)
 - [Rust reference: application binary interface](https://doc.rust-lang.org/reference/abi.html); [abi_stable](https://github.com/rodrimati1992/abi_stable_crates)

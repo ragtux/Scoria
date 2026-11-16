@@ -1,0 +1,35 @@
+// The spike's world: milestone step 2 of docs/scoria/Plugin SDK.md, commands only.
+package scoria:plugin@0.1.0;
+
+// What the host lends a plugin. Paths are vault-relative with `/`, as everywhere in Scoria.
+interface vault {
+  read: func(path: string) -> result<string, string>;
+  modify: func(path: string, text: string) -> result<_, string>;
+}
+
+interface workspace {
+  notice: func(message: string);
+}
+
+interface types {
+  // Obsidian's `Command`: `id` is the plugin's own; the host namespaces it as `<plugin-id>:<id>`.
+  record command {
+    id: string,
+    name: string,
+    // True when the command has a check callback (`checkCallback`); the palette asks `check` per keystroke.
+    has-check: bool,
+  }
+}
+
+world plugin {
+  use types.{command};
+  import vault;
+  import workspace;
+
+  // Called once after instantiation: what the plugin registers.
+  export commands: func() -> list<command>;
+  // `checkCallback(true)`: may the command run now? Must be cheap; the palette asks it per keystroke.
+  export check: func(id: string, active-path: option<string>) -> bool;
+  // `checkCallback(false)`, or `callback()`.
+  export run: func(id: string, active-path: option<string>) -> result<_, string>;
+}
