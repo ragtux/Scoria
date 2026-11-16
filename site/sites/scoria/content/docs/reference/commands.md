@@ -1,13 +1,13 @@
 ---
 title: Commands and hotkeys
-description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 205 Scoria can actually run today, with every id and default key listed.
+description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 210 Scoria can actually run today, with every id and default key listed.
 ---
 
 # Commands and hotkeys
 
 Scoria registers **244 command ids** — the exact strings Obsidian registers, so your
 `hotkeys.json` matches them — of which **227 have an observed desktop name**. **41** carry a
-default hotkey. **205** do something in Scoria today; the 39 that do not are listed
+default hotkey. **210** do something in Scoria today; the 34 that do not are listed
 [below](#the-ones-that-do-not-run).
 
 Those four numbers are different things and the difference is the point:
@@ -20,7 +20,7 @@ Those four numbers are different things and the difference is the point:
   palette](/docs/app/switcher/) offers only these; the [Hotkeys tab](/docs/hotkeys/) lists
   all 244, so you can see your bindings for everything else.
 
-Some of the 205 are runnable only in the right place, which is also how Obsidian treats
+Some of the 210 are runnable only in the right place, which is also how Obsidian treats
 them: **63** need an editor on screen with the keyboard in it, so they leave the palette in
 a reading leaf, and the **fifteen table commands** that act on an existing table are offered
 only while the cursor is in one. `graph:open-local` and the five commands on the active file
