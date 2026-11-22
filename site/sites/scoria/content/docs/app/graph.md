@@ -6,8 +6,8 @@ description: Scoria's graph of your vault — what the nodes and edges are, the 
 # The graph view
 
 `Ctrl + G` (`graph:open`) opens the graph; `Ctrl + G` again returns to the note you were
-reading. `graph:open-local` ("Open local graph") opens the **Local graph** pane in the right
-sidebar, a local graph of whatever file is open.
+reading. `graph:open-local` ("Open local graph") opens a local graph of the open file in a new
+pane to its right.
 
 ## What is in it
 
@@ -55,24 +55,26 @@ that made it. Scoria's steps are a fixed 0.39 s; Obsidian's vary between about 0
 
 ## The local graph
 
-`graph:open-local` adds a **Local graph** tab (the graph's fork icon) at the end of the right
-sidebar's tabs, or shows it if it is there already, and opens the sidebar. It shows the open
-file and the notes one link away from it, in either direction, and follows you: open another
-note, a canvas or an image and it re-centres on that. Over an empty tab, or while the global
-graph is on screen, it is blank. Click a node to open that note in the main area; `Ctrl` +
-click opens it in a new tab. Right-click the tab and choose **Close** to take the pane away;
-the command brings it back.
+`graph:open-local` splits the main area: a new pane to the right of the note holds a tab
+**Graph of** *the note's name* (the graph's fork icon), and that tab is linked to the note's.
+It shows the note and the notes one link away from it, in either direction, and follows the
+note's tab: open another note, a canvas or an image there and it re-centres on that, while
+other tabs leave it alone. Run the command again and you get another linked pane. Close the
+note's tab and the graph is unlinked — its tab reads **Local graph** — and from then on
+follows whatever file is open. Click a node to open that note in the linked tab; `Ctrl` +
+click opens it in a new tab beside the graph.
 
-Its panel adds Obsidian's **Depth** slider (one to five links out) and the three direction
-toggles at the top of Filters — Incoming links, Outgoing links and Neighbor links — opening at
-Obsidian's defaults: depth one, both directions, no neighbor links. Everything you set in the
-pane's panel, the global graph's settings included, belongs to the pane: it is saved with the
-pane's leaf in `workspace.json`, as Obsidian saves it, never in `graph.json`, so the pane
-reopens as you left it, in Scoria and in Obsidian.
+A vault Obsidian has laid out may also have a **Local graph** tab in the right sidebar (in
+Obsidian you drag the graph's tab there). Scoria shows it, at the end of the sidebar's tabs,
+following whatever file is open; right-click its tab and choose **Close** to take it away.
 
-> **Note** In Obsidian, "Open local graph" splits the main area with a tab linked to the note,
-> and you drag that tab into the sidebar to get the pane Scoria makes. Scoria has no linked
-> tabs, so the command makes the sidebar pane directly.
+Each local graph's panel adds Obsidian's **Depth** slider (one to five links out) and the three
+direction toggles at the top of Filters — Incoming links, Outgoing links and Neighbor links —
+opening at Obsidian's defaults: depth one, both directions, no neighbor links. Everything you set
+in a local graph's panel, the global graph's settings included, belongs to that graph: it is saved
+with it in `workspace.json`, as Obsidian saves it, never in `graph.json`, so it reopens as you left
+it, in Scoria and in Obsidian. A local graph opens at its own zoom of 1, zoomed out further if the
+graph would not fit.
 
 ## How the layout works
 
@@ -90,7 +92,7 @@ a large graph stays smooth.
 
 ## Not yet
 
-- The local graph as a tab linked to its note in the main area.
+- **Link with tab** and **Open linked view** in the tab menus.
 - Screenshot export.
 
 ## Next

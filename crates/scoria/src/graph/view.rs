@@ -667,6 +667,11 @@ impl GraphView {
         }
     }
 
+    /// The file a local graph is centred on.
+    pub fn centre(&self) -> Option<String> {
+        self.local.clone()
+    }
+
     pub fn is_local(&self) -> bool {
         self.pane || self.local.is_some()
     }
@@ -837,7 +842,14 @@ impl GraphView {
             .bounds();
         let w = f32::from(self.bounds.size.width);
         let h = f32::from(self.bounds.size.height);
-        if let Some((scale, offset)) = frame(w, h, world, self.pinned_scale) {
+        // A pane opens at Obsidian's scale 1, but a graph wider than the
+        // pane is zoomed out until it fits rather than cut at the edges.
+        let pinned = if self.pane {
+            frame(w, h, world, None).map(|(fitted, _)| fitted.min(1.0))
+        } else {
+            self.pinned_scale
+        };
+        if let Some((scale, offset)) = frame(w, h, world, pinned) {
             self.scale = scale;
             self.offset = offset;
         }

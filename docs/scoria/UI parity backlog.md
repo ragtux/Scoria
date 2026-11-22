@@ -1199,8 +1199,9 @@ there is nowhere to persist them, and the control socket reports them instead. T
 it. OBSERVE: that range, and what Obsidian's interlinks rule does at depth 2 (only the depth-1 case
 was probed).
 
-**Landed 2026-11-22**: the options persist. The right dock's Local graph pane keeps them, with every
-other setting of the pane, in its `localgraph` leaf in `workspace.json`, in Obsidian's bytes; the
+**Landed 2026-11-22**: the options persist. Each local graph (the tab `graph:open-local` links to
+the note, or a right-dock pane) keeps them, with every other setting of its panel, in its
+`localgraph` leaf in `workspace.json`, in Obsidian's bytes; the
 Depth slider's range is observed as 1 to 5, step 1 (`local-graph-pane.mjs` `s08`). See
 [[Development#Local graph pane, 2026-11-22]].
 

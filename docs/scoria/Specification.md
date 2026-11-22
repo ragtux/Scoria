@@ -12082,8 +12082,9 @@ open]]). Run from a note it **splits the main area**: a new `tabs` group to the 
 note's group (`main/split[1]/tabs[0]`), holding one `localgraph` leaf, active, the keyboard not in
 it, the right sidebar left as it was (collapsed stayed collapsed). The note's leaf and the new
 leaf share a `group` id: a **linked** pair. Run again, from the note or with the sidebar
-collapsed, it makes **another** group each time (`split[2]`, `split[3]`), all linked to the same
-note; nothing is reused or revealed. Each linked leaf follows *its note's leaf*: that leaf opening
+collapsed, it makes **another** group each time, all linked to the same note; nothing is reused
+or revealed. The new group goes directly right of the note's, the earlier ones pushed along: after
+the second run the active (new) leaf was at `split[1]` and the first at `split[2]`. Each linked leaf follows *its note's leaf*: that leaf opening
 Beta made every one of them `Graph of Beta`; a different tab becoming active (Delta in a new tab)
 left them on Beta. With the linked note leaf closed (it was on the image), the graph lost its
 `group` key, its title became `Local graph`, and it moved to Delta, the file that became active:

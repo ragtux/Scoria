@@ -7,15 +7,13 @@
 //! graph. Its Depth, direction toggles and every other setting are its
 //! leaf's `options`, read when the layout is and written back into the
 //! leaf with it ([`scoria_formats::local_graph`]); `graph.json` is never
-//! touched. A click on a node opens the file in the main area's active
-//! tab, Mod+click in a new tab.
+//! touched. A click on a node opens the file in the main area (never over
+//! a local graph's tab), Mod+click in a new tab.
 //!
-//! `graph:open-local` makes the leaf (last in the dock's first tab group)
-//! or reveals it, and expands the dock. That is where Scoria departs from
-//! Obsidian on purpose: Obsidian's command splits the main area with a
-//! linked tab, and its sidebar leaf is the one that tab becomes when
-//! dragged into the dock; Scoria has neither linked tabs nor drags into a
-//! dock, so the command makes the sidebar leaf directly.
+//! In Obsidian the sidebar leaf is what the linked tab `graph:open-local`
+//! makes becomes when it is dragged into the dock. Scoria has no drags into
+//! a dock, so the pane comes only from a `workspace.json` that has one; the
+//! command makes the linked tab ([`super::local_graph_tab`]).
 
 use super::*;
 use scoria_formats::local_graph;
@@ -25,26 +23,18 @@ use scoria_formats::local_graph::LocalGraphOptions;
 impl Workspace {
     /// The file the pane centres on: the main area's open file, none while
     /// the global graph is on screen (Obsidian's pane emptied when `Ctrl+G`
-    /// replaced the note, `s06`).
-    pub(super) fn local_graph_file(&self) -> Option<String> {
-        if self.mode == ViewMode::Graph {
-            return None;
+    /// replaced the note, `s06`), and the one it has while a local graph's
+    /// tab is the active one.
+    pub(super) fn local_graph_file(&self, cx: &App) -> Option<String> {
+        match self.local_graph_follow() {
+            super::local_graph_tab::Follow::Keep => self.local_graph.read(cx).centre(),
+            super::local_graph_tab::Follow::File(file) => file,
         }
-        self.current.clone()
-    }
-
-    /// `graph:open-local`: the pane made or revealed, the dock expanded.
-    /// The keyboard stays where it was, as Obsidian left it in the note.
-    pub(super) fn open_local_graph_pane(&mut self, cx: &mut Context<Self>) {
-        self.right_visible = true;
-        self.local_graph_open = true;
-        self.sync_local_graph(cx);
-        self.select_right_tab(RightTab::LocalGraph, cx);
     }
 
     /// Hands the pane the file it centres on; a no-op when it has it.
     pub(super) fn sync_local_graph(&mut self, cx: &mut Context<Self>) {
-        let file = self.local_graph_file();
+        let file = self.local_graph_file(cx);
         self.local_graph.update(cx, |g, cx| g.set_current(file, cx));
     }
 
@@ -71,7 +61,7 @@ impl Workspace {
             return;
         }
         let options = self.local_graph.read(cx).pane_options();
-        let file = self.local_graph_file();
+        let file = self.local_graph_file(cx);
         if leaf_of_kind(right, local_graph::VIEW_TYPE).is_none() {
             let leaf = local_graph::new_leaf(&leaf_id(), file.as_deref(), &options);
             if push_dock_leaf(right, leaf) && self.right_tab == RightTab::LocalGraph {
@@ -96,8 +86,8 @@ impl Workspace {
     }
 
     /// A node clicked in the pane: its file in the main area's active tab,
-    /// leaving the global graph if that is what the tab showed, the
-    /// keyboard with it (`s07`).
+    /// or the last one that is not a local graph's, leaving the global
+    /// graph if that is what the tab showed, the keyboard with it (`s07`).
     pub(super) fn open_from_local_graph(
         &mut self,
         path: String,
@@ -108,7 +98,7 @@ impl Workspace {
             let back = self.mode_before_graph;
             self.set_mode(back, window, cx);
         }
-        self.open_file(path, None, cx);
+        self.open_from_graph_tab(None, path, cx);
         self.focus_main(window, cx);
     }
 
@@ -128,7 +118,7 @@ impl Workspace {
         let mut value = self.local_graph.read(cx).describe();
         if let Some(object) = value.as_object_mut() {
             object.insert("open".into(), json!(self.local_graph_open));
-            object.insert("file".into(), json!(self.local_graph_file()));
+            object.insert("file".into(), json!(self.local_graph_file(cx)));
         }
         value
     }
