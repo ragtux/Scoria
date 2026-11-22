@@ -1,0 +1,1630 @@
+{
+ "run": {
+  "startedAt": "2026-11-22T18:27:16.413Z",
+  "steps": {
+   "s01-merge": {
+    "ok": true,
+    "ms": 34624,
+    "queries": {
+     "Folder/Note.md": {
+      "listed": {
+       "input": "Folder/Note.md",
+       "empty": "No files found.",
+       "rows": []
+      },
+      "after": []
+     },
+     "folder/note.md": {
+      "listed": {
+       "input": "folder/note.md",
+       "empty": "No files found.",
+       "rows": []
+      },
+      "after": []
+     },
+     "FOLDER/NOTE.MD": {
+      "listed": {
+       "input": "FOLDER/NOTE.MD",
+       "empty": "No files found.",
+       "rows": []
+      },
+      "after": []
+     },
+     "Note.md": {
+      "listed": {
+       "input": "Note.md",
+       "empty": "No files found.",
+       "rows": []
+      },
+      "after": []
+     },
+     "Folder/Note": {
+      "listed": {
+       "input": "Folder/Note",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        }
+       ]
+      },
+      "after": [
+       {
+        "title": "Merge file",
+        "content": "Are you sure you want to merge “Source” into “Note”? “Source” will be deleted.",
+        "prompt": false
+       }
+      ]
+     },
+     "older/Note.md": {
+      "listed": {
+       "input": "older/Note.md",
+       "empty": "No files found.",
+       "rows": []
+      },
+      "after": []
+     },
+     "Folder/Note.m": {
+      "listed": {
+       "input": "Folder/Note.m",
+       "empty": "No files found.",
+       "rows": []
+      },
+      "after": []
+     },
+     "Folder/Note.png": {
+      "listed": {
+       "input": "Folder/Note.png",
+       "empty": "No files found.",
+       "rows": []
+      },
+      "after": []
+     },
+     "Folder/Notebook.md": {
+      "listed": {
+       "input": "Folder/Notebook.md",
+       "empty": "No files found.",
+       "rows": []
+      },
+      "after": []
+     }
+    },
+    "sourceAfter": "# Source\n"
+   },
+   "s02-switcher": {
+    "ok": true,
+    "ms": 34647,
+    "queries": {
+     "Folder/Note.md": {
+      "listed": {
+       "input": "Folder/Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note.mdEnter to create",
+         "sel": true,
+         "hl": [],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/Note.md</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-action\">Enter to create</span></div>"
+        }
+       ]
+      },
+      "opened": {
+       "active": "Folder/Note.md",
+       "modal": false
+      }
+     },
+     "folder/note.md": {
+      "listed": {
+       "input": "folder/note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "folder/note.mdEnter to create",
+         "sel": true,
+         "hl": [],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\">folder/note.md</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-action\">Enter to create</span></div>"
+        }
+       ]
+      },
+      "opened": {
+       "active": "Folder/Note.md",
+       "modal": false
+      }
+     },
+     "FOLDER/NOTE.MD": {
+      "listed": {
+       "input": "FOLDER/NOTE.MD",
+       "empty": null,
+       "rows": [
+        {
+         "text": "FOLDER/NOTE.MDEnter to create",
+         "sel": true,
+         "hl": [],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\">FOLDER/NOTE.MD</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-action\">Enter to create</span></div>"
+        }
+       ]
+      },
+      "opened": {
+       "active": "Folder/Note.md",
+       "modal": false
+      }
+     },
+     "Note.md": {
+      "listed": {
+       "input": "Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Note.mdEnter to create",
+         "sel": true,
+         "hl": [],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\">Note.md</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-action\">Enter to create</span></div>"
+        }
+       ]
+      },
+      "opened": {
+       "active": "Note.md",
+       "modal": false
+      }
+     },
+     "Folder/Note": {
+      "listed": {
+       "input": "Folder/Note",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        },
+        {
+         "text": "Folder/Note.png",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>.png</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        },
+        {
+         "text": "Folder/Note.canvas",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>.canvas</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        }
+       ]
+      },
+      "opened": {
+       "active": "Folder/Note.md",
+       "modal": false
+      }
+     },
+     "older/Note.md": {
+      "listed": {
+       "input": "older/Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "older/Note.mdEnter to create",
+         "sel": true,
+         "hl": [],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\">older/Note.md</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-action\">Enter to create</span></div>"
+        }
+       ]
+      },
+      "opened": {
+       "active": "Folder/Note.md",
+       "modal": false
+      }
+     },
+     "Folder/Note.m": {
+      "listed": {
+       "input": "Folder/Note.m",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note.mEnter to create",
+         "sel": true,
+         "hl": [],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/Note.m</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-action\">Enter to create</span></div>"
+        }
+       ]
+      },
+      "opened": {
+       "active": "Folder/Note.m.md",
+       "modal": false
+      }
+     },
+     "Folder/Note.png": {
+      "listed": {
+       "input": "Folder/Note.png",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note.png",
+         "sel": true,
+         "hl": [
+          "Folder/Note.png"
+         ],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.png</span></div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div>"
+        }
+       ]
+      },
+      "opened": {
+       "active": "Folder/Note.png",
+       "modal": false
+      }
+     },
+     "Folder/Notebook.md": {
+      "listed": {
+       "input": "Folder/Notebook.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Notebook.mdEnter to create",
+         "sel": true,
+         "hl": [],
+         "html": "<div class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/Notebook.md</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-action\">Enter to create</span></div>"
+        }
+       ]
+      },
+      "opened": {
+       "active": "Folder/Notebook.md",
+       "modal": false
+      }
+     }
+    }
+   },
+   "s03-picker-note-composer": {
+    "ok": true,
+    "ms": 48632,
+    "queries": {
+     "Folder/Note.md": {
+      "listed": {
+       "input": "Folder/Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"askBeforeMerging\": true,\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "folder/note.md": {
+      "listed": {
+       "input": "folder/note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"askBeforeMerging\": true,\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "FOLDER/NOTE.MD": {
+      "listed": {
+       "input": "FOLDER/NOTE.MD",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"askBeforeMerging\": true,\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "Note.md": {
+      "listed": {
+       "input": "Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Note",
+         "sel": true,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/Folder/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/<span class=\"suggestion-highlight\">Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder Note md",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder <span class=\"suggestion-highlight\">Note</span> md</div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/<span class=\"suggestion-highlight\">Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"askBeforeMerging\": true,\n  \"template\": \"Note.md\"\n}",
+      "label": "Note"
+     },
+     "Folder/Note": {
+      "listed": {
+       "input": "Folder/Note",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>.m</div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"askBeforeMerging\": true,\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "older/Note.md": {
+      "listed": {
+       "input": "older/Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "older/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "older/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/F<span class=\"suggestion-highlight\">older/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "older/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "older/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "older/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"askBeforeMerging\": true,\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "Folder/Note.m": {
+      "listed": {
+       "input": "Folder/Note.m",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note.m"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.m</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"askBeforeMerging\": true,\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "Folder/Note.png": {
+      "listed": {
+       "input": "Folder/Note.png",
+       "empty": null,
+       "rows": []
+      },
+      "stillOpen": true,
+      "file": "{\n  \"askBeforeMerging\": true,\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": ""
+     },
+     "Folder/Notebook.md": {
+      "listed": {
+       "input": "Folder/Notebook.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Notebook",
+         "sel": true,
+         "hl": [
+          "Folder/Notebook"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Notebook</span></div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"askBeforeMerging\": true,\n  \"template\": \"Folder/Notebook.md\"\n}",
+      "label": "Folder/Notebook"
+     }
+    }
+   },
+   "s04-picker-zk-prefixer": {
+    "ok": true,
+    "ms": 48256,
+    "queries": {
+     "Folder/Note.md": {
+      "listed": {
+       "input": "Folder/Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "folder/note.md": {
+      "listed": {
+       "input": "folder/note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "FOLDER/NOTE.MD": {
+      "listed": {
+       "input": "FOLDER/NOTE.MD",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "Note.md": {
+      "listed": {
+       "input": "Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Note",
+         "sel": true,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/Folder/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/<span class=\"suggestion-highlight\">Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder Note md",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder <span class=\"suggestion-highlight\">Note</span> md</div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/<span class=\"suggestion-highlight\">Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Note.md\"\n}",
+      "label": "Note"
+     },
+     "Folder/Note": {
+      "listed": {
+       "input": "Folder/Note",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.png",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>.png</div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>.m</div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        },
+        {
+         "text": "Folder/Note.canvas",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>.canvas</div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "older/Note.md": {
+      "listed": {
+       "input": "older/Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "older/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "older/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/F<span class=\"suggestion-highlight\">older/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "older/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "older/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "older/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "Folder/Note.m": {
+      "listed": {
+       "input": "Folder/Note.m",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note.m"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.m</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "Folder/Note.png": {
+      "listed": {
+       "input": "Folder/Note.png",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note.png",
+         "sel": true,
+         "hl": [
+          "Folder/Note.png"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.png</span></div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.png\"\n}",
+      "label": "Folder/Note.png"
+     },
+     "Folder/Notebook.md": {
+      "listed": {
+       "input": "Folder/Notebook.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Notebook",
+         "sel": true,
+         "hl": [
+          "Folder/Notebook"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Notebook</span></div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Notebook.md\"\n}",
+      "label": "Folder/Notebook"
+     }
+    }
+   },
+   "s05-picker-daily-notes": {
+    "ok": true,
+    "ms": 48598,
+    "queries": {
+     "Folder/Note.md": {
+      "listed": {
+       "input": "Folder/Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "folder/note.md": {
+      "listed": {
+       "input": "folder/note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "FOLDER/NOTE.MD": {
+      "listed": {
+       "input": "FOLDER/NOTE.MD",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "Note.md": {
+      "listed": {
+       "input": "Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Note",
+         "sel": true,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/Folder/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/<span class=\"suggestion-highlight\">Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder Note md",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder <span class=\"suggestion-highlight\">Note</span> md</div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Folder/<span class=\"suggestion-highlight\">Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Note.md\"\n}",
+      "label": "Note"
+     },
+     "Folder/Note": {
+      "listed": {
+       "input": "Folder/Note",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>.m</div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "older/Note.md": {
+      "listed": {
+       "input": "older/Note.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "older/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/Note</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "older/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/F<span class=\"suggestion-highlight\">older/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "older/Note."
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/Note.</span>m</div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "older/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "older/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">F<span class=\"suggestion-highlight\">older/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "Folder/Note.m": {
+      "listed": {
+       "input": "Folder/Note.m",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Note",
+         "sel": true,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Note.m",
+         "sel": false,
+         "hl": [
+          "Folder/Note.m"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note.m</span></div></span>"
+        },
+        {
+         "text": "Other/Folder/Note",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Folder/Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Sub/Note",
+         "sel": false,
+         "hl": [
+          "Folder/",
+          "Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/</span>Sub/<span class=\"suggestion-highlight\">Note</span></div></span>"
+        },
+        {
+         "text": "Folder/Notebook",
+         "sel": false,
+         "hl": [
+          "Folder/Note"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Note</span>book</div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": "Folder/Note"
+     },
+     "Folder/Note.png": {
+      "listed": {
+       "input": "Folder/Note.png",
+       "empty": null,
+       "rows": []
+      },
+      "stillOpen": true,
+      "file": "{\n  \"template\": \"Folder/Note.md\"\n}",
+      "label": ""
+     },
+     "Folder/Notebook.md": {
+      "listed": {
+       "input": "Folder/Notebook.md",
+       "empty": null,
+       "rows": [
+        {
+         "text": "Folder/Notebook",
+         "sel": true,
+         "hl": [
+          "Folder/Notebook"
+         ],
+         "html": "<span class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Folder/Notebook</span></div></span>"
+        }
+       ]
+      },
+      "stillOpen": false,
+      "file": "{\n  \"template\": \"Folder/Notebook.md\"\n}",
+      "label": "Folder/Notebook"
+     }
+    }
+   }
+  },
+  "order": [
+   "s01-merge",
+   "s02-switcher",
+   "s03-picker-note-composer",
+   "s04-picker-zk-prefixer",
+   "s05-picker-daily-notes"
+  ],
+  "elapsedMs": 214825,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-composer/vault-1",
+  "title": "New tab - vault-1 - Obsidian 1.15.0",
+  "version": null,
+  "getFiles": [
+   "Templates/T.md",
+   "Source.md",
+   "Other/Folder/Note.md",
+   "Folder Note md.md",
+   "Note.md",
+   "Folder/Sub/Note.md",
+   "Folder/Notebook.md",
+   "Folder/Note.png",
+   "Folder/Note.md",
+   "Folder/Note.canvas"
+  ],
+  "finishedAt": "2026-11-22T18:30:51.238Z"
+ }
+}

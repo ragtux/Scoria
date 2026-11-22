@@ -54,7 +54,7 @@ use scoria_formats::config::{
     WebviewerConfig, ZkPrefixerConfig, CORE_PLUGINS, DAILY_NOTE_DEFAULT_FORMAT,
     WEBVIEWER_DEFAULT_SEARCH_URL, ZK_PREFIXER_DEFAULT_FORMAT,
 };
-use scoria_search::fuzzy_match;
+use scoria_search::{fuzzy_match, fuzzy_match_path};
 use scoria_templates as templates;
 use serde_json::{json, Value};
 use std::ops::Range;
@@ -2346,7 +2346,9 @@ fn file_choices(state: &VaultState, any: bool) -> Vec<(String, String)> {
 }
 
 /// The rows a query leaves, best match first (ties in list order), each
-/// with the ranges the query matched; every row for an empty query.
+/// with the ranges the query matched; every row for an empty query. The
+/// query meets the whole path, `.md` and all, and lights only the label
+/// (`folder/note.md` picks `Folder/Note`, 2026-11-22).
 fn filter_choices(choices: &[(String, String)], query: &str) -> Vec<(usize, Vec<Range<usize>>)> {
     let query = query.trim();
     if query.is_empty() {
@@ -2355,7 +2357,9 @@ fn filter_choices(choices: &[(String, String)], query: &str) -> Vec<(usize, Vec<
     let mut scored: Vec<(f64, usize, Vec<Range<usize>>)> = choices
         .iter()
         .enumerate()
-        .filter_map(|(ix, (label, _))| fuzzy_match(query, label).map(|m| (m.score, ix, m.ranges)))
+        .filter_map(|(ix, (label, path))| {
+            fuzzy_match_path(query, path, label).map(|m| (m.score, ix, m.ranges))
+        })
         .collect();
     scored.sort_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
     scored.into_iter().map(|(_, ix, r)| (ix, r)).collect()
@@ -9431,6 +9435,20 @@ mod tests {
         assert_eq!(shown("zzqqxx"), Vec::<String>::new());
         assert_eq!(shown("").len(), 7);
         assert_eq!(shown("Templates/Composer")[0], "Templates/Composer");
+        // A full path with its `.md`, any case, puts that note first and
+        // lights the label alone (2026-11-22, composer-picker-path.mjs).
+        assert_eq!(shown("Templates/Composer.md")[0], "Templates/Composer");
+        assert_eq!(
+            shown("templates/deep/nested.md")[0],
+            "Templates/Deep/Nested"
+        );
+        let (ix, ranges) = filter_choices(&notes, "templates/composer.md").remove(0);
+        let lit: Vec<&str> = ranges.iter().map(|r| &notes[ix].0[r.clone()]).collect();
+        assert_eq!(lit, ["Templates/Composer"]);
+        let files = file_choices(&state, true);
+        let (ix, _) = filter_choices(&files, "Templates/Pic.png").remove(0);
+        assert_eq!(files[ix].1, "Templates/Pic.png");
+        assert!(filter_choices(&notes, "Templates/Pic.png").is_empty());
         let (ix, ranges) = filter_choices(&notes, "nested").remove(0);
         assert_eq!(notes[ix].1, "Templates/Deep/Nested.md");
         assert_eq!(&notes[ix].0[ranges[0].clone()], "Nested");

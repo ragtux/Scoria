@@ -11332,7 +11332,8 @@ match selected; a query matching nothing lists nothing (no empty-state line) and
 nothing, the list staying open. Up and Down move the selection; Enter or a click picks, writing the
 path **with** its extension (`"template": "Templates/Deep/Nested.md"`, the same in all three
 files); a typed full path, any case, picks that file (`templates/composer.md` →
-`Templates/Composer.md`). Escape or a click outside closes the list and writes nothing. The clear
+`Templates/Composer.md`: the query meets the path with its extension, see
+[[#Observed a full path typed into the file pickers, Obsidian 1.15.0]]). Escape or a click outside closes the list and writes nothing. The clear
 button writes `"template": ""`.
 
 ## Observed Excluded files, Obsidian 1.15.1
@@ -11739,6 +11740,53 @@ commits on a click away. **Unprobed:** where New folder goes and whether the Fil
 when the command runs with the left dock hidden or on another tab (Scoria shows the Files pane,
 since the field is on the row); a click away from an empty or taken name (Scoria drops the edit
 and keeps the name the row had).
+
+## Observed a full path typed into the file pickers, Obsidian 1.15.0
+
+`tools/obsidian-probe/composer-picker-path.mjs` over CDP on 2026-11-22, Obsidian 1.15.0
+(`document.title` "… - Obsidian 1.15.0"; the installer build 1.13.7 running the 1.15.0 asar) in
+a private headless sway with its own `USER_DATA_DIR`, `CDP_PORT=9483` and
+`OBSIDIAN_ARGS=--ozone-platform=x11`; results in
+`tools/obsidian-probe/results/2026-11-22-composer-picker-path.json`. Five steps, all ok, each
+query typed with real keys into a freshly opened picker. The vault: `Folder/Note.md`, `Note.md`,
+`Folder/Notebook.md`, `Folder/Sub/Note.md`, `Other/Folder/Note.md`, `Folder Note md.md`,
+`Folder/Note.png`, `Folder/Note.canvas`, `Source.md` (open), `Templates/T.md`. The quick
+switcher's step ran before the template pickers' and its Enter on `Folder/Note.m` created
+`Folder/Note.m.md`, so that note is in their lists (it showed where a highlight stops).
+
+**The three pickers do not share a matcher.**
+
+| Query | Merge file ("Merge with") | Template file pickers (all three) | Quick switcher |
+| --- | --- | --- | --- |
+| `Folder/Note.md`, `folder/note.md`, `FOLDER/NOTE.MD` | "No files found."; Enter does nothing | `Folder/Note` first, `Folder/Note` lit; Enter writes `"template": "Folder/Note.md"` | only the `… Enter to create` row, as typed; Enter opens the existing `Folder/Note.md` |
+| `Note.md` | "No files found." | `Note` first, `Note` lit; Enter writes `Note.md` | `Note.md Enter to create`; Enter opens `Note.md` |
+| `Folder/Note` | `Folder/Note` first, then `Folder/Notebook`, `Other/Folder/Note`, `Folder/Sub/Note` | `Folder/Note` first | `Folder/Note` first, then `Folder/Notebook`, `Folder/Note.png`, `Folder/Note.canvas`, … |
+| `older/Note.md` | "No files found." | `Folder/Note` first, `older/Note` lit | `older/Note.md Enter to create`; Enter created no file (what it opened is not settled: the active file read `Folder/Note.md`, the previous query's) |
+| `Folder/Note.png` | "No files found." | Note composer's and Daily notes': nothing listed, Enter does nothing and the list stays; Unique note creator's: `Folder/Note.png` | `Folder/Note.png`, lit whole |
+
+**The template file pickers** (Note composer, Unique note creator, Daily notes, alike) match the
+query fuzzily against the **whole path, extension included**, while the row shows the path
+without `.md`; the `suggestion-highlight` spans are the matched characters that fall in what is
+shown. Evidence beyond the full paths: `Note.md` lists `Folder Note md` with only `Note` lit
+(its `.md` met the file's extension, not the ` md` in its name), and `Folder/Note.md` lights
+`Folder/Note.` in `Folder/Note.m` (the note `Folder/Note.m.md`: the last `md` is the
+extension's). Case is ignored. The order for `folder/note.md` was `Folder/Note`,
+`Other/Folder/Note`, `Folder/Note.m`, `Folder/Sub/Note`, `Folder/Notebook`; for `Note.md`
+`Note`, `Folder/Note`, `Folder/Sub/Note`, `Other/Folder/Note`, `Folder/Note.m`,
+`Folder Note md`.
+
+**Merge file's modal** matches the shown text only, the path without `.md`, so any query with
+`.md` finds nothing. **The quick switcher** lists no file for a query with `.md` either (its
+file rows match the name and the path without `.md`), but its "Enter to create" row, given a
+path that exists, opens that file; `Folder/Note.m` made `Folder/Note.m.md`. A non-note's row
+keeps its extension and matches it.
+
+Scoria matches the template pickers and the merge modal since 2026-11-22
+([[Development#A full path in the template file pickers, 2026-11-22]]):
+`scoria_search::fuzzy_match_path` matches the path and clips the ranges to the label. Scoria's
+quick switcher still matches the path with its `.md` (at a small penalty, nothing lit), so
+`Folder/Note.md` lists `Folder/Note` where Obsidian lists only the create row; Enter opens the
+same file either way.
 
 
 ## Observed audio player extras, Obsidian 1.15.1

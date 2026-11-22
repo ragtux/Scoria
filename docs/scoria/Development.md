@@ -346,6 +346,43 @@ The gate's run, its sheet and its log are in [[Parity gate run]].
 
 | New folder and the file pickers' order | done 2026-11-16: New folder makes `Untitled` and renames it on the Files row, a click away commits a row rename, and the template pickers list in `vault.getFiles()` order, see [[#New folder and the file pickers' order, 2026-11-16]] and [[Specification#Observed New folder and the file pickers' order, Obsidian 1.15.0]] |
 
+### A full path in the template file pickers, 2026-11-22
+
+The Note composer's row of the differences page: a full path typed with its `.md` matched
+nothing in Scoria's template picker, and the 2026-11-16 record said Obsidian picks that file.
+Probed first, see [[Specification#Observed a full path typed into the file pickers, Obsidian 1.15.0]].
+
+**The probe.** `tools/obsidian-probe/composer-picker-path.mjs`, Obsidian 1.15.0 in a private
+headless sway (its own `XDG_RUNTIME_DIR` under `/run/user/1000`, a dead session bus,
+`USER_DATA_DIR` there, `CDP_PORT=9483`, `OBSIDIAN_ARGS=--ozone-platform=x11`), five steps in one
+pass: Merge file's modal, the quick switcher and the three template pickers, nine queries each.
+What surprised: the three do not share a matcher. Only the template pickers take a `.md` — they
+match the whole path, extension and all, and light what of it the row shows (`Note.md` lights
+`Note` alone in `Folder Note md`); Merge file's modal says "No files found." to any `.md`, as
+Scoria's already did; and the quick switcher lists no file for it either but opens the file
+through its "Enter to create" row. That Enter also made a stray `Folder/Note.m.md` in the probe's
+vault, which the later steps then listed — and which showed where a highlight stops.
+
+**What was built.**
+- `scoria_search::fuzzy_match_path(query, path, label)`: the fuzzy match against the path, its
+  ranges clipped to the label, a prefix of the path; a label that is not one is matched alone.
+  Unit tests in `scoria-search` hold the probe's first rows and highlights.
+- The template pickers' `filter_choices` (`settings.rs`) matches through it; the rows, the order
+  with no query and what a pick writes are unchanged. Merge file and the quick switcher are
+  untouched.
+
+**Driven.** The debug build in the same private sway over the control socket, with grim, on a
+scratch copy of the probe's vault: Note composer's picker with `folder/note.md` listed
+`Folder/Note`, `Other/Folder/Note`, `Folder/Sub/Note`, `Folder/Notebook` with Obsidian's
+highlights, and Enter wrote `"template": "Folder/Note.md"`; `Note.md` put `Note` first, lit
+`Note` in `Folder Note md`, and wrote `Note.md`; Merge file with `Folder/Note.md` answered "No
+files found." and Enter did nothing.
+
+**Left.** `older/Note.md` puts `Other/Folder/Note` first in Scoria (`O` + `lder` scores the
+path's start) where Obsidian puts `Folder/Note`: the fuzzy scorer's, not the `.md`'s, and the
+same without it. Scoria's quick switcher still lists `Folder/Note` for `Folder/Note.md` (a path
+match at a penalty) where Obsidian lists only its create row; both open the same file.
+
 ### The 2026-11-16 merge and 0.7.0
 
 Six worktrees went out at once from `3c7c6ed`, each under the rule of the phase: probe first,
