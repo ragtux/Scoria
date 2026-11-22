@@ -9966,7 +9966,8 @@ multi-select input, ready for another alias; Escape then moves focus to the
 
 **By mode.** In Live Preview the field is the note's own properties block (inside
 `.markdown-source-view.is-live-preview`). In reading view it is the reading view's block, and the
-bytes are the same. In **Source mode**, where the note shows its YAML, the command opens or reveals
+bytes are the same (under `propertiesInDocument` `"hidden"` or `"source"` it is the File
+properties pane: [[#Observed Add alias in reading view, Obsidian 1.15.0 (installer build 1.13.7)]]). In **Source mode**, where the note shows its YAML, the command opens or reveals
 the right dock's **File properties** pane (`file-properties` leaf, state `{"file": "Alias.md"}`,
 icon `lucide-info`, title "File properties"; the dock expanded) and focuses the aliases field
 there; the bytes written are the same as in Live Preview.
@@ -12064,3 +12065,59 @@ were loaded, which at launch is `core-plugins.json`'s.
   caret run of Format had no rows to click); the selection run and the commands agree.
 - Strikethrough's check, and the checks in Live Preview (read in Source mode).
 - The highlight swatch's size and colour.
+
+## Observed Add alias in reading view, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/add-alias-reading.mjs`, run 2026-11-22 in a private headless sway with a
+data directory of its own (CDP port 9484, a private `XDG_RUNTIME_DIR`, `DISPLAY` unset); window
+title "… - Obsidian 1.15.0", user agent `obsidian/1.13.7`, Electron 43.1.0. The record is
+`tools/obsidian-probe/results/2026-11-22-add-alias-reading.json`. It settles what
+[[#Observed Add alias, Obsidian 1.15.0 (installer build 1.13.7)]] said of reading view in one
+line ("the reading view's block, and the bytes are the same"). Every case opened the note in
+reading view with the markdown leaf active and the keyboard in `.markdown-preview-view`, then
+ran the command by id, typed `NewAlias` one key at a time (the disk read after the first key and
+after the last), pressed Enter, Escape and Escape. Seeds: `Body only.\n` (none),
+`---\naliases:\n  - one\n  - two\n---\nBody.\n` (list), `---\ntitle: T\ntags: x\n---\nBody.\n`
+(other keys).
+
+**Offered.** `markdown:add-alias` ("Add alias", `lucide-forward`, a check callback) is in the
+palette in reading view over a note with no frontmatter, over one with an aliases list, and
+under `propertiesInDocument` `"hidden"` and `"source"`.
+
+**Where the field goes** depends on `propertiesInDocument`, not on what reading view draws:
+
+| `propertiesInDocument` | Field | File properties pane | Second Escape |
+| --- | --- | --- | --- |
+| `"visible"` (default) | the reading view's own block: `div.multi-select-input` of the `aliases` row inside `.markdown-reading-view`, the markdown leaf still active | untouched: open behind Backlinks it stays behind, closed it stays closed, the dock stays collapsed | focus stays on the row (`div.metadata-property`), the reading view keeps it |
+| `"hidden"` | the pane's aliases input, as from Source mode: the leaf made or revealed, the dock expanded, the leaf active | made or revealed | back to the reading view (`.markdown-preview-view`), the markdown leaf active |
+| `"source"` | the pane, as under `"hidden"` | made or revealed | back to the reading view |
+
+Under `"source"` reading view still draws the properties table (the `metadata-container` shown,
+`show-properties` on the view), yet the command goes to the pane. A note with no frontmatter
+draws no block before the command; the key it writes makes one, and the field is in it at once.
+
+**A folded block.** With the reading view's block collapsed by a click on its heading
+(`metadata-container is-collapsed`), the command unfolds it and focuses the input there; the
+bytes are the same.
+
+**Bytes and when** (identical in every row above, the pane open or not):
+
+| Seed | After the command | After the first key, and after `NewAlias` | After Enter |
+| --- | --- | --- | --- |
+| none | `---\naliases:\n---\nBody only.\n`, on disk at the first poll | unchanged | `---\naliases:\n  - NewAlias\n---\nBody only.\n` |
+| list | unchanged | unchanged | `---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n` |
+| other keys | `---\ntitle: T\ntags: x\naliases:\n---\nBody.\n` | unchanged | `---\ntitle: T\ntags: x\naliases:\n  - NewAlias\n---\nBody.\n` |
+
+Nothing is written while typing; Enter writes at once (at the probe's first 100 ms poll) and
+leaves focus in the emptied input; Escape then writes nothing more.
+
+**Leaving the field.** `Blurred` typed and the field left by a real click in the note's body
+(no Enter) is written as Enter writes it, at once: `  - Blurred` appended to the list, and over
+no frontmatter `---\naliases:\n  - Blurred\n---\nBody only.\n`. Focus goes to the reading view.
+
+**An empty alias.** Enter with nothing typed writes nothing and leaves focus in the input; over
+the list the file stays as it was through Enter, Escape and Escape. Over no frontmatter the
+command's bare `aliases:` key stays on disk, after Enter and Escape and after a click away.
+
+Not run: Escape with text typed in reading view (in Live Preview it abandons the text), Undo
+after an alias added from reading view, and the command with the note open in two tabs.

@@ -22,7 +22,7 @@
 //! `properties` hover source).
 
 use super::*;
-use crate::editor::{pane_field_keys, CloseFind, PANE_CONTEXT};
+use crate::editor::{pane_field_keys, CloseFind, PropertySurface, PANE_CONTEXT};
 use crate::reading::view::{HoverHost, ReadingHost};
 
 /// What the pane says with no file, or a file that is not Markdown: the
@@ -250,9 +250,10 @@ impl Workspace {
         self.focus_main(window, cx);
     }
 
-    /// An edit the pane made in reading view, where the editor holding the
-    /// note is not on screen: the reading view is rebuilt from its buffer,
-    /// as it is after a pill removed there.
+    /// An edit the pane, or Add alias's field in the reading view's own
+    /// block, made in reading view, where the editor holding the note is not
+    /// on screen: the reading view is rebuilt from its buffer, as it is
+    /// after a pill removed there, and the note is written.
     pub(super) fn reading_follows_pane_edit(
         &mut self,
         editor: &Entity<Editor>,
@@ -271,6 +272,10 @@ impl Workspace {
             return;
         };
         self.rebuild_reading_from_editor(&path, &state, cx);
+        // Obsidian wrote a property edit made from reading view at once, the
+        // alias on Enter or on leaving the field within the probe's first
+        // poll (2026-11-22, `s01`, `s05`), not on an editor's debounce.
+        self.flush_save(cx);
     }
 
     /// The pane: the open note's rows drawn by the renderer Live Preview's
@@ -409,7 +414,7 @@ impl Workspace {
             .text_color(theme.tokens.text_normal)
             .children(input)
             .child(content);
-        pane_field_keys(root, &editor).into_any_element()
+        pane_field_keys(root, &editor, PropertySurface::Pane).into_any_element()
     }
 }
 

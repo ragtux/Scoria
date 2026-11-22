@@ -204,37 +204,59 @@ pub fn bind_keys(cx: &mut App) {
     ]);
 }
 
-/// The key context of the File properties pane.
+/// The key context of the File properties pane, which the reading view
+/// wears too while its properties block has a field open.
 pub const PANE_CONTEXT: &str = "PropertyPane";
 
-/// Hands the keys of the File properties pane to `editor`'s own handlers --
-/// the ones a field in the note's block takes -- while the pane has a field
-/// or menu open ([`Editor::pane_field_open`]); with neither, the key goes
-/// on up. Escape is the pane's own (see [`Editor::escape_pane_field`]), so
+/// Where the editor's properties field is drawn and typed into. Every
+/// surface edits through the editor that holds the note, so the bytes are
+/// Live Preview's whichever one it is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum PropertySurface {
+    /// The note's own properties block in Live Preview.
+    #[default]
+    Note,
+    /// The File properties pane.
+    Pane,
+    /// The reading view's properties block, which only
+    /// `markdown:add-alias` opens a field in.
+    Reading,
+}
+
+/// Hands the keys of the File properties pane, or of the reading view's
+/// block, to `editor`'s own handlers -- the ones a field in the note's
+/// block takes -- while `surface` has a field or menu open
+/// ([`Editor::surface_field_open`]); with neither, the key goes on up.
+/// Escape is the surface's own (see [`Editor::escape_surface_field`]), so
 /// it is not forwarded here. The element must wear [`PANE_CONTEXT`].
-pub fn pane_field_keys<E: InteractiveElement>(el: E, editor: &Entity<Editor>) -> E {
+pub fn pane_field_keys<E: InteractiveElement>(
+    el: E,
+    editor: &Entity<Editor>,
+    surface: PropertySurface,
+) -> E {
     fn forward<A: gpui::Action, E: InteractiveElement>(
         el: E,
         editor: &Entity<Editor>,
+        surface: PropertySurface,
         run: fn(&mut Editor, &A, &mut Window, &mut Context<Editor>),
     ) -> E {
         let editor = editor.clone();
         el.on_action(move |action: &A, window, cx| {
-            if !editor.read(cx).pane_field_open() {
+            if !editor.read(cx).surface_field_open(surface) {
                 cx.propagate();
                 return;
             }
             editor.update(cx, |e, cx| run(e, action, window, cx));
         })
     }
-    let el = forward(el, editor, Editor::move_left);
-    let el = forward(el, editor, Editor::move_right);
-    let el = forward(el, editor, Editor::line_start);
-    let el = forward(el, editor, Editor::line_end);
-    let el = forward(el, editor, Editor::backspace);
-    let el = forward(el, editor, Editor::delete);
-    let el = forward(el, editor, Editor::newline);
-    forward(el, editor, Editor::tab)
+    let el = forward(el, editor, surface, Editor::move_left);
+    let el = forward(el, editor, surface, Editor::move_right);
+    let el = forward(el, editor, surface, Editor::line_start);
+    let el = forward(el, editor, surface, Editor::line_end);
+    let el = forward(el, editor, surface, Editor::backspace);
+    let el = forward(el, editor, surface, Editor::delete);
+    let el = forward(el, editor, surface, Editor::newline);
+    forward(el, editor, surface, Editor::tab)
 }
 
 /// The dominant line ending of `text`, which is what a write into it uses.
@@ -887,12 +909,13 @@ pub struct Editor {
     hovered_link: Option<(usize, Range<usize>)>,
     /// The property whose type menu is open.
     property_menu: Option<String>,
-    /// Whether `property_field`, `selected_pill` and `property_menu` belong
-    /// to the File properties pane rather than the note's own block. The
-    /// pane edits through this editor -- the same field, keys and writer --
-    /// and each surface draws the field only when it is its own, so a field
-    /// opened in the pane has no twin caret in Live Preview's block.
-    property_in_pane: bool,
+    /// Which surface `property_field`, `selected_pill` and `property_menu`
+    /// belong to: the note's own block, the File properties pane, or the
+    /// reading view's block. The other two edit through this editor -- the
+    /// same field, keys and writer -- and each surface draws the field only
+    /// when it is its own, so a field opened in the pane has no twin caret
+    /// in Live Preview's block.
+    property_surface: PropertySurface,
     /// The table cell being typed into. Like a properties field, the keys
     /// go to it while it is open and the document changes once, on commit.
     table_field: Option<CellEdit>,
@@ -1053,7 +1076,7 @@ impl Editor {
             hover_line: None,
             hovered_link: None,
             property_menu: None,
-            property_in_pane: false,
+            property_surface: PropertySurface::Note,
             table_field: None,
             table_select: None,
             table_drag: None,
@@ -1104,6 +1127,12 @@ impl Editor {
         self.suggest = None;
         self.table_field = None;
         self.title_edit = None;
+        // A properties field names a row of the note that was open: left
+        // open, the next commit would write it into this one.
+        self.property_field = None;
+        self.selected_pill = None;
+        self.property_menu = None;
+        self.property_surface = PropertySurface::Note;
         // Fold ids are per-note counters, so another note's would collapse
         // whichever callout happened to land on the same number.
         self.callout_folds.clear();
@@ -1344,6 +1373,11 @@ impl Editor {
     /// `propertiesInDocument` from `app.json`.
     pub fn set_properties_in_document(&mut self, mode: PropertiesInDocument) {
         self.properties_in_document = mode;
+    }
+
+    /// `propertiesInDocument` as last set.
+    pub fn properties_in_document(&self) -> PropertiesInDocument {
+        self.properties_in_document
     }
 
     /// The vault the autocompletion popup offers rows from. The state is
@@ -5060,7 +5094,7 @@ impl Editor {
     ) -> bool {
         self.commit_property_field(Some(window), cx);
         self.property_menu = None;
-        self.property_in_pane = false;
+        self.property_surface = PropertySurface::Note;
         let change = properties::alias_key(&self.property_rows());
         let wrote = change.is_some();
         if let Some(change) = change {
@@ -5085,13 +5119,14 @@ impl Editor {
     /// 2026-11-15 probe read it `display: none` under every file).
     pub(crate) fn pane_properties_host(editor: &Entity<Editor>, cx: &App) -> PropertiesHost {
         let e = editor.read(cx);
-        let own = e.property_in_pane;
+        let own = e.property_surface == PropertySurface::Pane;
         PropertiesHost {
             field: e.property_field.clone().filter(|_| own),
             selected_pill: e.selected_pill.filter(|_| own),
             mode: PropertiesInDocument::Visible,
             menu: e.property_menu.clone().filter(|_| own),
             heading: false,
+            edits_rows: true,
             on_action: Rc::new({
                 let editor = editor.clone();
                 move |action, window, cx| {
@@ -5111,7 +5146,7 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        if !self.property_in_pane {
+        if self.property_surface != PropertySurface::Pane {
             self.commit_property_field(Some(window), cx);
             self.property_menu = None;
         }
@@ -5119,48 +5154,74 @@ impl Editor {
             self.commit_table_field(Some(window), cx, None);
         }
         self.title_edit = None;
-        self.property_in_pane = true;
+        self.property_surface = PropertySurface::Pane;
         self.property_action(action, window, cx);
     }
 
-    /// Whether the pane has a field or a type menu open, which is when the
+    /// Whether `surface` has a field or a type menu open, which is when the
     /// keys it forwards ([`pane_field_keys`]) act.
+    pub fn surface_field_open(&self, surface: PropertySurface) -> bool {
+        self.property_surface == surface
+            && (self.property_field.is_some() || self.property_menu.is_some())
+    }
+
+    /// Whether the pane has a field or a type menu open.
     pub fn pane_field_open(&self) -> bool {
-        self.property_in_pane && (self.property_field.is_some() || self.property_menu.is_some())
+        self.surface_field_open(PropertySurface::Pane)
+    }
+
+    /// The field `surface` has open, for the state dump.
+    pub fn surface_field(&self, surface: PropertySurface) -> Option<&Field> {
+        self.property_field
+            .as_ref()
+            .filter(|_| self.property_surface == surface)
     }
 
     /// The field the pane has open, for the state dump.
     pub fn pane_field(&self) -> Option<&Field> {
-        self.property_field
-            .as_ref()
-            .filter(|_| self.property_in_pane)
+        self.surface_field(PropertySurface::Pane)
     }
 
     /// The key whose type menu the pane has open.
     pub fn pane_menu(&self) -> Option<&str> {
         self.property_menu
             .as_deref()
-            .filter(|_| self.property_in_pane)
+            .filter(|_| self.property_surface == PropertySurface::Pane)
     }
 
-    /// The pane lost the keyboard: its field is written, as a field in the
+    /// `surface` lost the keyboard: its field is written, as a field in the
     /// note is when the caret leaves it, and its menu closes.
-    pub fn leave_pane_field(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        if !self.property_in_pane {
+    pub fn leave_surface_field(
+        &mut self,
+        surface: PropertySurface,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.property_surface != surface {
             return;
         }
         self.commit_property_field(Some(window), cx);
         self.property_menu = None;
-        self.property_in_pane = false;
+        self.property_surface = PropertySurface::Note;
         cx.notify();
     }
 
-    /// Escape in the pane: the type menu closes, else the open field is
-    /// abandoned, as Escape abandons it in the note's own block. `false`
-    /// when there was neither, which is the second Escape Obsidian answers
-    /// by handing the keyboard back to the note.
-    pub fn escape_pane_field(&mut self, cx: &mut Context<Self>) -> bool {
-        if !self.property_in_pane {
+    /// The pane lost the keyboard.
+    pub fn leave_pane_field(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.leave_surface_field(PropertySurface::Pane, window, cx);
+    }
+
+    /// Escape in the pane or the reading view's block: the type menu
+    /// closes, else the open field is abandoned, as Escape abandons it in
+    /// the note's own block. `false` when there was neither, which is the
+    /// second Escape Obsidian answers by handing the keyboard back to the
+    /// note from the pane (and by doing nothing in reading view).
+    pub fn escape_surface_field(
+        &mut self,
+        surface: PropertySurface,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        if self.property_surface != surface {
             return false;
         }
         if self.property_menu.take().is_some() {
@@ -5170,20 +5231,67 @@ impl Editor {
         self.cancel_property_field(cx)
     }
 
-    /// `markdown:add-alias` where the note shows no properties table
-    /// (Source mode, or `propertiesInDocument` other than the table): the
-    /// key written exactly as in Live Preview and the caret put in the
-    /// pane's aliases input, where Obsidian 1.15.1 puts it (the
-    /// `file-properties.mjs` probe, `s07`). Returns whether the note
+    /// Escape in the pane.
+    pub fn escape_pane_field(&mut self, cx: &mut Context<Self>) -> bool {
+        self.escape_surface_field(PropertySurface::Pane, cx)
+    }
+
+    /// `markdown:add-alias` with the field on `surface`, which is not the
+    /// note's own block: the File properties pane where the note draws no
+    /// properties table (Source mode, or `propertiesInDocument` other than
+    /// the table: the `file-properties.mjs` probe, `s07`, and the
+    /// 2026-11-22 run in reading view), or the reading view's own block
+    /// where reading view draws one (`add-alias-reading.mjs`, `s01`). The
+    /// key is written exactly as in Live Preview. Returns whether the note
     /// changed.
-    pub fn add_alias_in_pane(&mut self, window: &mut Window, cx: &mut Context<Self>) -> bool {
+    pub fn add_alias_on(
+        &mut self,
+        surface: PropertySurface,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> bool {
         if self.table_field.is_some() {
             self.commit_table_field(Some(window), cx, None);
         }
         self.title_edit = None;
         let wrote = self.add_alias(true, window, cx);
-        self.property_in_pane = true;
+        self.property_surface = surface;
         wrote
+    }
+
+    /// `markdown:add-alias` in the File properties pane.
+    pub fn add_alias_in_pane(&mut self, window: &mut Window, cx: &mut Context<Self>) -> bool {
+        self.add_alias_on(PropertySurface::Pane, window, cx)
+    }
+
+    // ------------------------------------------- the reading view's block
+
+    /// The host the reading view draws its properties block with while
+    /// `markdown:add-alias` has a field open there: the field and the pill
+    /// a Backspace selected, nothing more. The rows stay read-only
+    /// (`edits_rows` off: no value opens, no type menu, no Add property),
+    /// as the reading view's block is everywhere else; a pill's remove
+    /// control keeps going through the reading view's own handler. `None`
+    /// when the reading view has no field, which is the block as it always
+    /// is.
+    pub(crate) fn reading_properties_host(
+        editor: &Entity<Editor>,
+        cx: &App,
+    ) -> Option<PropertiesHost> {
+        let e = editor.read(cx);
+        if e.property_surface != PropertySurface::Reading {
+            return None;
+        }
+        let field = e.property_field.clone()?;
+        Some(PropertiesHost {
+            field: Some(field),
+            selected_pill: e.selected_pill,
+            mode: PropertiesInDocument::Visible,
+            menu: None,
+            heading: true,
+            edits_rows: false,
+            on_action: Rc::new(|_, _, _| {}),
+        })
     }
 
     /// `markdown:clear-metadata-properties`: removes every property, and with
@@ -5221,6 +5329,15 @@ impl Editor {
         window: Option<&mut Window>,
         cx: &mut Context<Self>,
     ) -> bool {
+        // A pill removed in reading view while Add alias has the block's
+        // field open: the click left the field, which writes what was
+        // typed, as a click anywhere else does. The new item goes last, so
+        // `index` still names the pill that was clicked.
+        let mut window = window;
+        if self.property_surface == PropertySurface::Reading {
+            self.commit_property_field(window.as_deref_mut(), cx);
+            self.property_surface = PropertySurface::Note;
+        }
         self.property_field = None;
         let change = self
             .property_rows()
@@ -7668,18 +7785,19 @@ impl Element for EditorElement {
             // Live Preview's properties block is editable: the open field is
             // drawn with its caret, and clicks come back as actions. A field
             // the File properties pane opened is drawn there, not here.
-            let own = !editor.property_in_pane;
+            let own = editor.property_surface == PropertySurface::Note;
             let properties_host = PropertiesHost {
                 field: editor.property_field.clone().filter(|_| own),
                 selected_pill: editor.selected_pill.filter(|_| own),
                 mode: editor.properties_in_document,
                 menu: editor.property_menu.clone().filter(|_| own),
                 heading: true,
+                edits_rows: true,
                 on_action: Rc::new({
                     let entity = entity.clone();
                     move |action, window, cx| {
                         entity.update(cx, |e, cx| {
-                            e.property_in_pane = false;
+                            e.property_surface = PropertySurface::Note;
                             e.property_action(action, window, cx)
                         });
                     }

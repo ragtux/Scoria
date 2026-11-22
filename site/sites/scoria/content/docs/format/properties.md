@@ -62,7 +62,10 @@ Source mode included. Running the command again shows the pane rather than makin
 one, and puts the keyboard in it. `Escape` leaves a field, and a second `Escape` hands the
 keyboard back to the note. In Source mode, where the note shows its YAML, `markdown:add-alias`
 writes the `aliases` key and puts the caret in the pane's alias field, ready for the first
-alias. With no note open, or a file that is not a note, the pane says *No properties found.*
+alias. In reading view the command types into the reading view's own table, unfolding it if
+it is folded, and leaves the pane alone; with `propertiesInDocument` set to hide the table or
+show the YAML it uses the pane, as in Source mode. Either way the key is written at once, the
+alias when you press `Enter` or click away, and an empty `Enter` writes nothing. With no note open, or a file that is not a note, the pane says *No properties found.*
 Right-click its tab and choose **Close**, or press `Ctrl + W` while it has the keyboard, to
 close it; the command opens it again. A link in a value previews with `Ctrl` held, as links in
 the side panes do.
@@ -76,7 +79,8 @@ its quoting, and every other byte in the block stays where it was. A ratchet tes
 
 Choosing a type writes `.obsidian/types.json`, keeping its key order and its unknown keys.
 
-> **Note** The reading view's table is read-only; Obsidian lets you edit there too.
+> **Note** The reading view's table is read-only but for removing a pill and the alias
+> `markdown:add-alias` types there; Obsidian lets you edit everything there too.
 > Drag-to-reorder, a calendar picker for `date` and `datetime`, and value autocompletion
 > from other notes are also not here yet.
 

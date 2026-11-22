@@ -346,6 +346,68 @@ The gate's run, its sheet and its log are in [[Parity gate run]].
 
 | New folder and the file pickers' order | done 2026-11-16: New folder makes `Untitled` and renames it on the Files row, a click away commits a row rename, and the template pickers list in `vault.getFiles()` order, see [[#New folder and the file pickers' order, 2026-11-16]] and [[Specification#Observed New folder and the file pickers' order, Obsidian 1.15.0]] |
 
+### Add alias in reading view, 2026-11-22
+
+`markdown:add-alias` was left out of reading view: the palette did not offer it, because there
+Obsidian types into the reading view's own properties block and Scoria's was read-only. Probed
+first, see [[Specification#Observed Add alias in reading view, Obsidian 1.15.0 (installer build 1.13.7)]].
+
+**The probe.** `tools/obsidian-probe/add-alias-reading.mjs`, Obsidian 1.15.0 in a private
+headless sway (its own `XDG_RUNTIME_DIR`, `DISPLAY` unset) with `USER_DATA_DIR` and
+`CDP_PORT=9484`, seventeen steps in one run. What it settled: the command is offered in
+reading view whatever the note holds; where the field goes follows `propertiesInDocument`, not
+what reading view draws — the reading view's own block under `"visible"`, the File properties
+pane under `"hidden"` and under `"source"` (where reading view still draws the table); with
+the field in the block the pane is left alone, open or closed, and a folded block unfolds; the
+key is written at once, nothing while typing, the alias on Enter or on a click away, at once;
+an empty Enter writes nothing and keeps the input; the first Escape leaves the field and the
+second leaves the keyboard in reading view, where from the pane it returns to the note. The
+bytes are Live Preview's in every case.
+
+**What was built.**
+- The editor's `property_in_pane` flag became `PropertySurface` (`Note`, `Pane`, `Reading`): the
+  surface that owns the open field. The field, its keys, its input handler and its writer stay
+  the editor's, so there is still one property editor; the reading view's block is a third
+  place to draw it. `Editor::add_alias_on(surface)` is the pane's old `add_alias_in_pane` with
+  the surface named, and the pane's keep-field-open, leave and Escape methods take a surface.
+- `PropertiesHost` gains `edits_rows`. Live Preview and the pane set it; the reading view's host
+  (`Editor::reading_properties_host`, present only while the reading view owns a field) does
+  not, so the renderer draws the field and the selected pill among rows that stay read-only — no
+  value opens, no type menu, no `×`, no Add property — and a pill's remove control keeps going
+  through the reading view's own handler.
+- `ReadingView::edit_alias_with` takes the editor, unfolds the block, takes the keyboard and
+  subscribes to the editor (a redraw per keystroke) and to its own focus going out (which writes
+  the field). While a field is open the view wears `PropertyPane` instead of `ReadingView`, so
+  the pane's key bindings and `pane_field_keys` hand the keys to the editor, registers the
+  editor's input handler against its own handle, measures the properties block again each frame
+  (the list cannot see the field grow), and writes the field on a press anywhere but the field.
+  Escape abandons the field; a second does nothing.
+- `markdown:add-alias` leaves `EDITOR_ONLY` for a rule of its own in `can_run`: an editing
+  mode, or reading view over a Markdown note the editor holds, with the keys in the note.
+- An edit the editor makes in reading view (the block's field or the pane) is written at once
+  rather than on the two-second autosave, as Obsidian wrote it; a pill removed while the field
+  is open writes the field first; and `Editor::set_text` drops any open properties field, which
+  would otherwise have been committed into the next note.
+- The state dump's `reading_property_field`, and the focus name `reading-field`, which takes the
+  socket's `type` while reading view is painted.
+
+**Driven.** A debug build in a private headless sway over the control socket, with grim: the
+palette offering "Add alias" in reading view over both seeds; under `"visible"` the field in the
+block over no frontmatter, a list and other keys (focus `reading-field`, the pane untouched),
+`N` as a real keystroke and `ewAlias` through `type`, nothing on disk until Enter, then the
+probe's bytes, Escape and Escape leaving the keyboard in reading view; the same with the pane
+open (it stayed on its tab, empty of a field); `Blurred` left by a click in the body (written);
+an empty Enter (nothing) and a click away with nothing typed (the bare key kept); the block
+folded by a click on its heading and unfolded by the command; and under `"hidden"` and
+`"source"` the field in the pane, the second Escape back in reading view. Every file matched the
+probe's bytes, and a note the runs never touched stayed byte-identical.
+
+**Traps.**
+- `propertiesInDocument: "source"` is not "the table is not drawn": reading view draws it, and
+  the command still goes to the pane. The choice reads the setting, never the screen.
+- The reading view is a `list`, which caches each item's height: a field that grows as it is
+  typed into is clipped unless its block is measured again every frame it is open.
+
 ### The 2026-11-16 merge and 0.7.0
 
 Six worktrees went out at once from `3c7c6ed`, each under the rule of the phase: probe first,
