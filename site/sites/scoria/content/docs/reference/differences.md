@@ -71,7 +71,6 @@ Things Obsidian does that Scoria intends to do and does not.
 |---|---|
 | **System trash on Windows and macOS** | Implemented on Linux (freedesktop trash with a `.trashinfo` record); elsewhere it falls back to the vault's `.trash/` |
 | **Settings Scoria does not act on yet** | The rows write what Obsidian writes, bar Override config folder (Spellcheck languages, which Obsidian keeps outside the vault, goes to `scoria.json`), and the option tabs of plugins Scoria does not have, which show their values only. Rows for behavior Scoria lacks are written for Obsidian and marked "not in Scoria yet": Language, Native menus, and the plugin options above. **Custom app icon** takes effect on X11 only. See [Settings](/docs/settings/) |
-| **Search result context menu** | A file row and a match line have Obsidian's right-click menus. **Copy path** there is one row copying the vault path, where Obsidian opens a submenu of three. See [search](/docs/app/search/) |
 | **URI links from a browser on macOS** | A URI given on the command line works on all three platforms; a `scoria://` or `obsidian://` link clicked in a browser does not reach Scoria on macOS yet |
 
 ### Commands

@@ -221,6 +221,11 @@ icons!(
     "heading-6",
     "file-pen-line",
     "square-sigma",
+    // The Search result menu's Copy path submenu (2026-11-22): `link`,
+    // Lucide's `hard-drive`, and `vault`, which Obsidian draws as its own
+    // icon (`svg.vault`, no `lucide-` class) and Scoria as Lucide's `vault`.
+    "hard-drive",
+    "vault",
 );
 
 /// The logo, the one bundled asset that is not a monochrome icon. It is

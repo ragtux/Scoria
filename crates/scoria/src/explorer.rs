@@ -30,7 +30,7 @@
 
 use crate::assets::icon;
 use crate::canvas::menu::tooltip;
-use crate::file_menu::{self, Menu, Pick, Target};
+use crate::file_menu::{self, CopyAs, Menu, Pick, Target};
 use crate::inline_field;
 use crate::theme::{Theme, ICON_SIZE};
 use gpui::{
@@ -619,8 +619,9 @@ pub enum ExplorerEvent {
     OpenToRight(String),
     /// "Open in new window": this file in a popout window of its own.
     OpenInNewWindow(String),
-    /// "Copy path": the vault-relative path onto the clipboard.
-    CopyPath(String),
+    /// A row of "Copy path"'s submenu: the file's or folder's path onto
+    /// the clipboard in that form, with its notice.
+    CopyPath(String, CopyAs),
     /// "Open in default app": hand the file to the desktop.
     OpenInDefaultApp(String),
     /// "Show in system explorer": the file or folder selected in the
@@ -646,7 +647,7 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         Pick::Move => E::Move(path()),
         Pick::Bookmark => E::Bookmark(path()),
         Pick::MergeWith => E::MergeWith(path()),
-        Pick::CopyPath => E::CopyPath(path()),
+        Pick::CopyPathAs(how) => E::CopyPath(path(), how),
         Pick::OpenInDefaultApp => E::OpenInDefaultApp(path()),
         Pick::ShowInSystemExplorer => E::ShowInSystemExplorer(path()),
         Pick::Rename => E::Rename(path()),
@@ -657,9 +658,11 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         Pick::NewBase => E::NewBase { folder: path() },
         Pick::SearchInFolder => E::SearchInFolder(path()),
         // "Reveal file in navigation" reveals *in* the explorer, the tab
-        // rows are the tab header's, the splits are the view header's, and the rest are the editor menu's rows,
-        // which act on the editor.
+        // rows are the tab header's, the splits are the view header's, Copy
+        // path only opens its submenu (whose rows are above), and the rest
+        // are the editor menu's rows, which act on the editor.
         Pick::RevealInNavigation
+        | Pick::CopyPath
         | Pick::CloseTab
         | Pick::CloseOthers
         | Pick::CloseAfter
@@ -2336,7 +2339,7 @@ mod menu_tests {
             | ExplorerEvent::MergeWith(p)
             | ExplorerEvent::OpenToRight(p)
             | ExplorerEvent::OpenInNewWindow(p)
-            | ExplorerEvent::CopyPath(p)
+            | ExplorerEvent::CopyPath(p, _)
             | ExplorerEvent::OpenInDefaultApp(p)
             | ExplorerEvent::ShowInSystemExplorer(p)
             | ExplorerEvent::SearchInFolder(p) => Some(p),
@@ -2366,7 +2369,15 @@ mod menu_tests {
             ),
             (Target::Blank, ""),
         ] {
-            for item in file_menu::items(&target) {
+            // A row with a submenu only opens it; its rows are what pick.
+            let rows = file_menu::items(&target).into_iter().flat_map(|item| {
+                if item.submenu.is_empty() {
+                    vec![item]
+                } else {
+                    item.submenu
+                }
+            });
+            for item in rows {
                 let event = event_for(item.pick, &target)
                     .unwrap_or_else(|| panic!("{} has no event on {target:?}", item.label));
                 assert_eq!(

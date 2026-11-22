@@ -22,7 +22,7 @@
 //! is the editor command of its name, run by id, each pairing checked byte
 //! for byte against the command run on its own, and Format's Highlight has
 //! a submenu of its own, the six colours and Default. On a wikilink "Copy
-//! path" has one too, still unread, so it keeps the one flat row. The
+//! path" has one too, the three rows every file menu's Copy path opens. The
 //! reading view has no text menu at all: a right click there raises the
 //! file menu on a link and nothing anywhere else, which is what Obsidian
 //! does.
@@ -238,7 +238,12 @@ pub enum Pick {
     /// The editor menu's "Extract current selection...":
     /// `note-composer:split-file`.
     ExtractSelection,
+    /// "Copy path": the parent of its submenu ([`copy_path_row`]), which
+    /// never picks; as a flat row, the vault-relative path, extension and
+    /// all, only on a Bases row's menu, whose Copy path no probe has opened.
     CopyPath,
+    /// A row of **Copy path**'s submenu ([`copy_path_row`]).
+    CopyPathAs(CopyAs),
     OpenInDefaultApp,
     ShowInSystemExplorer,
     /// "Reveal file in navigation": the Files view scrolled to the row.
@@ -563,7 +568,7 @@ pub fn items(target: &Target) -> Vec<Item> {
         .into_iter()
         .chain(merge_row(target.path()))
         .chain([
-            item("Copy path", "clipboard", S::Unsectioned, P::CopyPath),
+            copy_path_row(false),
             item(
                 "Open in default app",
                 "arrow-up-right",
@@ -602,7 +607,7 @@ pub fn items(target: &Target) -> Vec<Item> {
                 P::SearchInFolder,
             ),
             item("Bookmark...", "bookmark", S::Action, P::Bookmark),
-            item("Copy path", "clipboard", S::Unsectioned, P::CopyPath),
+            copy_path_row(true),
             item(
                 "Show in system explorer",
                 "arrow-up-right",
@@ -627,6 +632,9 @@ pub fn items(target: &Target) -> Vec<Item> {
         // Links row but not its icons, so these are the explorer's for the
         // same labels. "Reveal file in navigation" has no explorer twin;
         // `folder-open` is a guess marked OBSERVE until a probe reads it.
+        // Copy path opens its submenu of three on a Backlinks row and on a
+        // reading-view link alike (1.15.1, `search-copy-path.mjs` `s05`,
+        // `s06`).
         Target::Linked(_) => vec![
             item("Open in new tab", "file-plus", S::Open, P::OpenInNewTab),
             item(
@@ -644,7 +652,7 @@ pub fn items(target: &Target) -> Vec<Item> {
             item("Rename...", "pen-line", S::Action, P::Rename),
             item("Move file to...", "folder-tree", S::Action, P::Move),
             item("Bookmark...", "bookmark", S::Action, P::Bookmark),
-            item("Copy path", "clipboard", S::Unsectioned, P::CopyPath),
+            copy_path_row(false),
             item(
                 "Open in default app",
                 "arrow-up-right",
@@ -670,9 +678,7 @@ pub fn items(target: &Target) -> Vec<Item> {
         // `action` (Rename's `lucide-edit-3` is `pen-line`), the three
         // `system` rows with Reveal's `lucide-folder-open`, the danger pair
         // with "Delete file" on a file row only, and "Copy path" last,
-        // unsectioned. Copy path is a submenu there (as Obsidian URL / from
-        // vault folder / from system root) and one row here, as on every
-        // other menu of this module.
+        // unsectioned, opening its submenu of three ([`copy_path_row`]).
         Target::Search { file_row, .. } => {
             let mut rows = vec![
                 item("Open in new tab", "file-plus", S::Open, P::OpenInNewTab),
@@ -716,7 +722,7 @@ pub fn items(target: &Target) -> Vec<Item> {
                     ..item("Delete file", "trash-2", S::Danger, P::Delete)
                 });
             }
-            rows.push(item("Copy path", "clipboard", S::Unsectioned, P::CopyPath));
+            rows.push(copy_path_row(false));
             rows
         }
         // Observed through a CDP right click on a property row: Rename
@@ -825,9 +831,8 @@ pub fn items(target: &Target) -> Vec<Item> {
         }
         // Observed on a base leaf; "Open version history" and the "Open
         // linked view" submenu are left out, as the file row's are, and
-        // dropping the two `view` rows drops their separator. "Copy path" is a submenu there (as Obsidian URL / from
-        // vault folder / from system root) and one row here, like the file
-        // row's. Obsidian draws `lucide-edit-3` on Rename, which is
+        // dropping the two `view` rows drops their separator. "Copy path" opens
+        // its submenu of three ([`copy_path_row`]). Obsidian draws `lucide-edit-3` on Rename, which is
         // `pen-line`.
         // The Bases row's menu is the view header's with the open-in rows
         // in place of the splits; the same three rows are left out.
@@ -900,7 +905,7 @@ pub fn items(target: &Target) -> Vec<Item> {
         .into_iter()
         .chain(merge_row(target.path()))
         .chain([
-            item("Copy path", "clipboard", S::Unsectioned, P::CopyPath),
+            copy_path_row(false),
             item(
                 "Open in default app",
                 "arrow-up-right",
@@ -944,8 +949,8 @@ fn merge_row(path: &str) -> Option<Item> {
 /// and the probe saw no trace of what it starts), a markdown tab's two
 /// view-mode rows (their labels in the other modes were not captured),
 /// **Export to PDF...**, a canvas's **Export as image**, **Open version
-/// history** and the **Open linked view** submenu; Copy path keeps the one
-/// flat row the other menus give it.
+/// history** and the **Open linked view** submenu. Copy path opens its
+/// submenu of three, the view header's row ([`copy_path_row`]).
 fn tab_items(
     path: &str,
     ix: usize,
@@ -1039,6 +1044,59 @@ fn backlinks_row(on: bool) -> Item {
     }
 }
 
+/// What a row of Copy path's submenu puts on the clipboard.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CopyAs {
+    /// "as Obsidian URL": `obsidian://open?vault=…&file=…`, the URL
+    /// `workspace:copy-url` writes ([`crate::uri::open_url`]).
+    ObsidianUrl,
+    /// "from vault folder": the vault path with its `.md` dropped
+    /// ([`vault_folder_text`]).
+    VaultFolder,
+    /// "from system root": the absolute path, extension kept, the string
+    /// `workspace:copy-full-path` writes.
+    SystemRoot,
+}
+
+/// **Copy path** with its submenu: no section of its own,
+/// `lucide-clipboard`, and its rows in one `copy` group — *as Obsidian URL*
+/// (`lucide-link`), *from vault folder* (Obsidian's own `vault` icon, drawn
+/// as Lucide's of that name) and *from system root* (`lucide-hard-drive`),
+/// as the Search result menu draws them (Obsidian 1.15.1,
+/// `bases-cells-search-menu.mjs` `s08`) and the Files view on a file
+/// (1.15.0, `search-copy-path.mjs` `s03`). On a folder (`folder`) the
+/// Files view draws the two path rows alone: a folder has no URL. The
+/// parent row only opens the submenu, so its pick is never reported.
+pub fn copy_path_row(folder: bool) -> Item {
+    use CopyAs as C;
+    let mut row = item(
+        "Copy path",
+        "clipboard",
+        Section::Unsectioned,
+        Pick::CopyPath,
+    );
+    row.submenu = [
+        ("as Obsidian URL", "link", C::ObsidianUrl),
+        ("from vault folder", "vault", C::VaultFolder),
+        ("from system root", "hard-drive", C::SystemRoot),
+    ]
+    .into_iter()
+    .filter(|(_, _, how)| !(folder && *how == C::ObsidianUrl))
+    .map(|(label, icon, how)| item(label, icon, Section::Group(0), Pick::CopyPathAs(how)))
+    .collect();
+    row
+}
+
+/// What *from vault folder* copies for the vault path `path`: the path with
+/// a trailing `.md` dropped and any other extension kept (`search/One.md`
+/// copied as `search/One`, `search/Board.canvas` and `search/Paper.pdf` as
+/// they are; Obsidian 1.15.1 and 1.15.0, `search-copy-path.mjs`), the way
+/// the Obsidian URL drops it. The command "Copy current file path from
+/// vault folder" keeps the extension; this row does not.
+pub fn vault_folder_text(path: &str) -> &str {
+    path.strip_suffix(".md").unwrap_or(path)
+}
+
 /// One row, enabled.
 fn item(label: &'static str, icon: &'static str, section: Section, pick: Pick) -> Item {
     Item {
@@ -1058,8 +1116,8 @@ fn item(label: &'static str, icon: &'static str, section: Section, pick: Pick) -
 ///
 /// **Format**, **Paragraph** and **Insert** open their submenus
 /// ([`format_rows`], [`paragraph_rows`], [`insert_rows`]); on a wikilink
-/// **Copy path**'s submenu is unread, so it keeps the one flat row the rest
-/// of Scoria's menus give it. Three rows are left out for want of
+/// **Copy path** opens its submenu of three ([`copy_path_row`], seen there
+/// on 1.15.1, `search-copy-path.mjs` `s05`). Three rows are left out for want of
 /// a command: **Edit link** and **Edit tag** (no inline rename of a link or
 /// a tag) and
 /// **Start presentation** (no presentation mode). Dropping the only row of a section drops its
@@ -1176,7 +1234,7 @@ fn editor_items(click: &EditorClick) -> Vec<Item> {
         });
     }
     if on_link {
-        out.push(item("Copy path", "clipboard", S::Unsectioned, P::CopyPath));
+        out.push(copy_path_row(false));
         out.push(item("Rename...", "pen-line", S::Action, P::Rename));
         out.push(item("Move file to...", "folder-tree", S::Action, P::Move));
         out.push(item("Bookmark...", "bookmark", S::Action, P::Bookmark));
@@ -1408,6 +1466,14 @@ pub fn describe(menu: &Menu) -> Value {
         "disabled": disabled,
         "submenu": menu.submenu.row.is_some(),
     });
+    // The open submenu's rows, so a harness that hovered one can read it.
+    if let Some(row) = menu.submenu.row.and_then(|ix| items.get(ix)) {
+        value["submenu_items"] = json!(row
+            .submenu
+            .iter()
+            .map(|i| i.label.to_string())
+            .collect::<Vec<_>>());
+    }
     // What the editor's menu was built from, which no other target has.
     if let Target::Editor(click) = &menu.target {
         value["selection"] = json!(click.selection);
@@ -2022,6 +2088,106 @@ mod tests {
         assert!(delete.warning);
         assert_eq!(delete.icon, "trash-2");
         assert!(!items(&target(false)).iter().any(|i| i.pick == Pick::Delete));
+    }
+
+    /// Copy path opens Obsidian's submenu of three on every file menu a
+    /// probe has opened it on — a Search result's file and match rows
+    /// (1.15.1, `bases-cells-search-menu.mjs` `s08`), the Files view's file
+    /// row (1.15.0, `search-copy-path.mjs` `s03`), the tab header and the
+    /// view header, a wikilink in the editor, a reading-view link and a
+    /// Backlinks row (1.15.1, `s04`-`s06`) — each row with its icon and the
+    /// copy it stands for; a folder's has the two path rows alone, and
+    /// *from vault folder* drops a note's `.md` only.
+    #[test]
+    fn copy_path_is_obsidians_submenu_on_every_probed_menu() {
+        let three = ["as Obsidian URL", "from vault folder", "from system root"];
+        let copy_of = |target: &Target| {
+            items(target)
+                .into_iter()
+                .find(|i| i.label == "Copy path")
+                .unwrap_or_else(|| panic!("no Copy path on {target:?}"))
+        };
+        let tab = Target::Tab {
+            group: 1,
+            ix: 0,
+            path: "search/One.md".into(),
+            tabs: 1,
+            pinned: false,
+            active: true,
+            backlinks: Some(false),
+        };
+        let link = Target::Editor(EditorClick {
+            checks: MenuChecks::default(),
+            spot: Spot::Link("search/One.md".into()),
+            selection: String::new(),
+            selected: false,
+            spelling: None,
+        });
+        for target in [
+            Target::Search {
+                path: "search/One.md".into(),
+                file_row: true,
+            },
+            Target::Search {
+                path: "search/One.md".into(),
+                file_row: false,
+            },
+            Target::File("search/One.md".into()),
+            Target::File("search/Board.canvas".into()),
+            Target::View("search/One.md".into()),
+            Target::Note {
+                path: "search/One.md".into(),
+                backlinks: false,
+            },
+            tab,
+            link,
+            Target::Linked("Linker.md".into()),
+        ] {
+            let copy = copy_of(&target);
+            assert_eq!(copy.icon, "clipboard", "{target:?}");
+            assert_eq!(copy.section, Section::Unsectioned, "{target:?}");
+            assert_eq!(submenu_drawn(&copy.submenu), three, "{target:?}");
+            let picks: Vec<(&str, Pick)> = copy.submenu.iter().map(|i| (i.icon, i.pick)).collect();
+            assert_eq!(
+                picks,
+                [
+                    ("link", Pick::CopyPathAs(CopyAs::ObsidianUrl)),
+                    ("vault", Pick::CopyPathAs(CopyAs::VaultFolder)),
+                    ("hard-drive", Pick::CopyPathAs(CopyAs::SystemRoot)),
+                ],
+                "{target:?}"
+            );
+            for row in &copy.submenu {
+                let path = format!("icons/{}.svg", row.icon);
+                assert!(
+                    crate::assets::Assets.load(&path).unwrap().is_some(),
+                    "{path} is not bundled"
+                );
+            }
+        }
+        // A Search result's Copy path is still the menu's last row.
+        let search = items(&Target::Search {
+            path: "search/One.md".into(),
+            file_row: false,
+        });
+        assert_eq!(search.last().unwrap().label, "Copy path");
+        // A folder has no URL.
+        let folder = copy_of(&Target::Folder("search/Sub".into()));
+        assert_eq!(
+            submenu_drawn(&folder.submenu),
+            ["from vault folder", "from system root"]
+        );
+        assert_eq!(vault_folder_text("search/One.md"), "search/One");
+        assert_eq!(
+            vault_folder_text("search/Board.canvas"),
+            "search/Board.canvas"
+        );
+        assert_eq!(vault_folder_text("search/Paper.pdf"), "search/Paper.pdf");
+        assert_eq!(vault_folder_text("search/One.md.md"), "search/One.md");
+        // A Bases row's menu, never probed for it, keeps the flat row.
+        let row = copy_of(&Target::Row("Notes/Plan.md".into()));
+        assert!(row.submenu.is_empty());
+        assert_eq!(row.pick, Pick::CopyPath);
     }
 
     /// The view header's More options over a base leaf (`s02` `moreOptions`,

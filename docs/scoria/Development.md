@@ -539,6 +539,70 @@ probe's bytes, and a note the runs never touched stayed byte-identical.
 - The reading view is a `list`, which caches each item's height: a field that grows as it is
   typed into is clipped unless its block is measured again every frame it is open.
 
+### Copy path's submenu on every file menu, 2026-11-22
+
+The last clause of the manual's "Search result context menu" row: a result's **Copy path** was
+one row copying the vault path, where Obsidian opens a submenu of three. Every other file menu
+in Scoria drew the same flat row. The 2026-11-16 record had the submenu's rows, icons and
+strings from one Search match row; a probe read the rest, see
+[[Specification#Observed Search result menus, Obsidian 1.15.1]].
+
+**The probe.** `tools/obsidian-probe/search-copy-path.mjs`, in a private headless sway with
+`USER_DATA_DIR` and `CDP_PORT=9482`, seven steps run twice: `s00`-`s03` on 1.15.0 (the
+submenu on each Search file row and a match row, each row clicked for the clipboard and any
+notice, the same in the Files view on a note, a canvas, a PDF and a folder), then `s04`-`s06`
+on 1.15.1 after the data folder updated itself (the tab header and the view header on a note,
+a canvas and a PDF, a wikilink in Live Preview and Source mode, a reading-view link, a
+Backlinks row). What it settled: every one of those menus draws the same submenu; *from vault
+folder* drops only `.md` (a canvas keeps `.canvas`); every row raises the notice its command
+shows ("URL copied to your clipboard", "Copied to your clipboard"); a folder's submenu has no
+URL row. The first `s04`-`s06` run missed every selector: detaching all leaves before each
+open left no active root leaf in time. A run held open (`HOLD=1`) and short CDP scripts
+showed the menus were there; the script now reuses the one leaf and waits for its selectors.
+
+**What was built.**
+- `file_menu::copy_path_row(folder)`: Copy path with the three rows in one group, `link`,
+  `vault` and `hard-drive`, each a `Pick::CopyPathAs(CopyAs)`; on a folder the two path rows.
+  It is the Copy path of the Search result menus, the Files view's file and folder rows, the
+  view header (and so the tab header, which takes the view header's file rows), a wikilink's
+  editor menu, and `Target::Linked` (Backlinks and Outgoing links rows, reading-view links).
+  `file_menu::vault_folder_text` is the `.md`-dropping path. `describe` reports an open
+  submenu's rows as `submenu_items`, so a harness that hovered one can read it back.
+- `Workspace::copy_path_as`: the string and the notice for each `CopyAs`, the one place that
+  writes them. The Files view's `ExplorerEvent::CopyPath` carries the `CopyAs` to it, and
+  `workspace:copy-url` and `workspace:copy-full-path` go through it too, so the commands and
+  the rows cannot drift apart.
+- Two icons from Lucide: `hard-drive`, and `vault` standing in for Obsidian's own `vault`
+  drawing (its `svg` has no `lucide-` class).
+- `copy_path_is_obsidians_submenu_on_every_probed_menu`: the rows, icons and picks on nine
+  menus, the folder's two, the icons bundled, the `.md` rule, and the Bases row still flat. The
+  explorer's every-row-has-an-event test now walks submenu rows.
+
+**Driven.** The debug build in the private sway over the control socket: the Search match and
+file rows' menus, the Files view's note row (three rows) and folder row (two), the tab header, a
+wikilink's editor menu and a reading-view link's menu, each with Copy path hovered
+(`submenu_items` read back, the screenshot the submenu beside it) and a row clicked (the menu
+closed, the notice up). A markdown leaf's header has no More options button in Scoria (only a
+base's does), so the view header's menu was reached through the tab header, which draws its
+rows. Seen on the way and left alone: the reading view's hover preview of the link opened over
+the menu raised on it, and the tab menu's Split down row draws no icon. The
+headless compositor's clipboard stayed empty, as on 2026-11-16 (gpui's write under synthetic
+input never reaches it, and a paste into the editor read nothing back), so the strings rest on
+the unit tests of `open_url`, `full_path_text` and `vault_folder_text`.
+
+**Traps.**
+- The login profile here sets `LD_LIBRARY_PATH` to an `alsa-lib` built on a newer glibc, and
+  Electron dies loading it ("GLIBC_2.43 not found"), which `run-block.sh` reports only as no
+  booted `app`. Unset it for the probe; keep `nix-shell`'s for Scoria.
+- Running sway through `nix-shell -p sway --run` drags the same mismatch in; start the store's
+  `sway` binary directly.
+
+**Left out.** A Bases row's menu keeps the flat row (the vault path, extension kept, silent):
+no probe has opened its Copy path. The Backlinks row's menu in 1.15.1 is the Search result
+file row's (Delete file, then Copy path last) and a reading-view link's adds Copy, where
+Scoria's `Target::Linked` keeps the older order with neither; only Copy path's submenu moved
+here.
+
 ### The 2026-11-16 merge and 0.7.0
 
 Six worktrees went out at once from `3c7c6ed`, each under the rule of the phase: probe first,

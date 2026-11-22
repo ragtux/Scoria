@@ -1,0 +1,2616 @@
+{
+ "note": "run: s00-s03 on 1.15.0; run2: s00 and s04-s06 on 1.15.1 (ONLY_STEPS), the same day",
+ "run": {
+  "startedAt": "2026-11-22T18:36:42.405Z",
+  "steps": {
+   "s00-context": {
+    "ok": true,
+    "ms": 3,
+    "version": "1.15.0",
+    "apiVersion": null,
+    "title": "New tab - Probe Vault - Obsidian 1.15.0"
+   },
+   "s01-search-file-rows": {
+    "ok": true,
+    "ms": 36685,
+    "rows": [
+     {
+      "cls": "tree-item-self search-result-file-title is-clickable",
+      "text": "Board.canvas"
+     },
+     {
+      "cls": "search-result-file-match tappable",
+      "text": "needle on a card"
+     },
+     {
+      "cls": "tree-item-self search-result-file-title is-clickable",
+      "text": "One2"
+     },
+     {
+      "cls": "search-result-file-match tappable",
+      "text": "The first needle."
+     },
+     {
+      "cls": "search-result-file-match tappable",
+      "text": "A second needle line."
+     },
+     {
+      "cls": "tree-item-self search-result-file-title is-clickable",
+      "text": "Two words & #21"
+     },
+     {
+      "cls": "search-result-file-match tappable",
+      "text": "Another needle here."
+     }
+    ],
+    "files": [
+     {
+      "name": "Board.canvas",
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Open in new tab",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-plus"
+         },
+         {
+          "title": "Open to the right",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-vertical"
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Reveal file in navigation",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-open"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         }
+        ]
+       }
+      ],
+      "submenu": null,
+      "copied": {
+       "Copy path": {
+        "clipboard": "SENTINEL",
+        "notices": [],
+        "menusLeft": 2
+       }
+      }
+     },
+     {
+      "name": "One2",
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Open in new tab",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-plus"
+         },
+         {
+          "title": "Open to the right",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-vertical"
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Reveal file in navigation",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-open"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         }
+        ]
+       }
+      ],
+      "submenu": {
+       "items": [
+        {
+         "title": "as Obsidian URL",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-link"
+        },
+        {
+         "title": "from vault folder",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon vault"
+        },
+        {
+         "title": "from system root",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-hard-drive"
+        }
+       ]
+      },
+      "copied": {
+       "as Obsidian URL": {
+        "clipboard": "obsidian://open?vault=<name>&file=search%2FOne",
+        "notices": [
+         "URL copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from vault folder": {
+        "clipboard": "search/One",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from system root": {
+        "clipboard": "<vault>/search/One.md",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       }
+      }
+     },
+     {
+      "name": "Two words & #21",
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Create this file",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         }
+        ]
+       }
+      ],
+      "copyPath": null
+     }
+    ]
+   },
+   "s02-search-match-row": {
+    "ok": true,
+    "ms": 20605,
+    "menu": [
+     {
+      "items": [
+       {
+        "title": "Open in new tab",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-file-plus"
+       },
+       {
+        "title": "Open to the right",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-separator-vertical"
+       },
+       {
+        "title": "Open in new window",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-picture-in-picture-2"
+       },
+       {
+        "separator": true
+       },
+       {
+        "title": "Rename...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-edit-3"
+       },
+       {
+        "title": "Move file to...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-folder-tree"
+       },
+       {
+        "title": "Bookmark...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-bookmark"
+       },
+       {
+        "separator": true
+       },
+       {
+        "title": "Open in default app",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-arrow-up-right"
+       },
+       {
+        "title": "Show in system explorer",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-arrow-up-right"
+       },
+       {
+        "title": "Reveal file in navigation",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-folder-open"
+       },
+       {
+        "separator": true
+       },
+       {
+        "title": "Copy path",
+        "section": null,
+        "cls": "menu-item tappable has-submenu",
+        "icon": "svg-icon lucide-clipboard"
+       }
+      ]
+     }
+    ],
+    "submenu": {
+     "items": [
+      {
+       "title": "as Obsidian URL",
+       "section": "copy",
+       "cls": "menu-item tappable",
+       "icon": "svg-icon lucide-link"
+      },
+      {
+       "title": "from vault folder",
+       "section": "copy",
+       "cls": "menu-item tappable",
+       "icon": "svg-icon vault"
+      },
+      {
+       "title": "from system root",
+       "section": "copy",
+       "cls": "menu-item tappable",
+       "icon": "svg-icon lucide-hard-drive"
+      }
+     ]
+    },
+    "copied": {
+     "as Obsidian URL": {
+      "clipboard": "obsidian://open?vault=<name>&file=search%2FBoard.canvas",
+      "notices": [
+       "URL copied to your clipboard"
+      ],
+      "menusLeft": 0
+     },
+     "from vault folder": {
+      "clipboard": "search/Board.canvas",
+      "notices": [
+       "Copied to your clipboard"
+      ],
+      "menusLeft": 0
+     },
+     "from system root": {
+      "clipboard": "<vault>/search/Board.canvas",
+      "notices": [
+       "Copied to your clipboard"
+      ],
+      "menusLeft": 0
+     }
+    }
+   },
+   "s03-files-view": {
+    "ok": true,
+    "ms": 51353,
+    "targets": {
+     "search/One.md": {
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Open in new tab",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-plus"
+         },
+         {
+          "title": "Open to the right",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-vertical"
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Make a copy",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-files"
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "title": "Merge entire file with...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-git-merge"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-history"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "danger",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Delete",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         }
+        ]
+       }
+      ],
+      "submenu": {
+       "items": [
+        {
+         "title": "as Obsidian URL",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-link"
+        },
+        {
+         "title": "from vault folder",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon vault"
+        },
+        {
+         "title": "from system root",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-hard-drive"
+        }
+       ]
+      },
+      "copied": {
+       "as Obsidian URL": {
+        "clipboard": "obsidian://open?vault=<name>&file=search%2FOne",
+        "notices": [
+         "URL copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from vault folder": {
+        "clipboard": "search/One",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from system root": {
+        "clipboard": "<vault>/search/One.md",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       }
+      }
+     },
+     "search/Two words & #2.md": {
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Open in new tab",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-plus"
+         },
+         {
+          "title": "Open to the right",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-vertical"
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Make a copy",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-files"
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "title": "Merge entire file with...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-git-merge"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-history"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "danger",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Delete",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         }
+        ]
+       }
+      ],
+      "submenu": {
+       "items": [
+        {
+         "title": "as Obsidian URL",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-link"
+        },
+        {
+         "title": "from vault folder",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon vault"
+        },
+        {
+         "title": "from system root",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-hard-drive"
+        }
+       ]
+      },
+      "copied": {
+       "as Obsidian URL": {
+        "clipboard": "obsidian://open?vault=<name>&file=search%2FTwo%20words%20%26%20%232",
+        "notices": [
+         "URL copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from vault folder": {
+        "clipboard": "search/Two words & #2",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from system root": {
+        "clipboard": "<vault>/search/Two words & #2.md",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       }
+      }
+     },
+     "search/Board.canvas": {
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Open in new tab",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-plus"
+         },
+         {
+          "title": "Open to the right",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-vertical"
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Make a copy",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-files"
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-history"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "danger",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Delete",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         }
+        ]
+       }
+      ],
+      "submenu": {
+       "items": [
+        {
+         "title": "as Obsidian URL",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-link"
+        },
+        {
+         "title": "from vault folder",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon vault"
+        },
+        {
+         "title": "from system root",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-hard-drive"
+        }
+       ]
+      },
+      "copied": {
+       "as Obsidian URL": {
+        "clipboard": "obsidian://open?vault=<name>&file=search%2FBoard.canvas",
+        "notices": [
+         "URL copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from vault folder": {
+        "clipboard": "search/Board.canvas",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from system root": {
+        "clipboard": "<vault>/search/Board.canvas",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       }
+      }
+     },
+     "search/Paper.pdf": {
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Open in new tab",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-plus"
+         },
+         {
+          "title": "Open to the right",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-vertical"
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Make a copy",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-files"
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-history"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "danger",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Delete",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         }
+        ]
+       }
+      ],
+      "submenu": {
+       "items": [
+        {
+         "title": "as Obsidian URL",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-link"
+        },
+        {
+         "title": "from vault folder",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon vault"
+        },
+        {
+         "title": "from system root",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-hard-drive"
+        }
+       ]
+      },
+      "copied": {
+       "as Obsidian URL": {
+        "clipboard": "obsidian://open?vault=<name>&file=search%2FPaper.pdf",
+        "notices": [
+         "URL copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from vault folder": {
+        "clipboard": "search/Paper.pdf",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from system root": {
+        "clipboard": "<vault>/search/Paper.pdf",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       }
+      }
+     },
+     "search/Sub": {
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "New note",
+          "section": "action-primary",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit"
+         },
+         {
+          "title": "New folder",
+          "section": "action-primary",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-open"
+         },
+         {
+          "title": "New canvas",
+          "section": "action-primary",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-layout-dashboard"
+         },
+         {
+          "title": "New base",
+          "section": "action-primary",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-layout-list"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Make a copy",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-files"
+         },
+         {
+          "title": "Move folder to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Search in folder",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-search"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "danger",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Delete",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         }
+        ]
+       }
+      ],
+      "submenu": {
+       "items": [
+        {
+         "title": "from vault folder",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon vault"
+        },
+        {
+         "title": "from system root",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-hard-drive"
+        }
+       ]
+      },
+      "copied": {
+       "from vault folder": {
+        "clipboard": "search/Sub",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from system root": {
+        "clipboard": "<vault>/search/Sub",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       }
+      }
+     }
+    }
+   }
+  },
+  "order": [
+   "s00-context",
+   "s01-search-file-rows",
+   "s02-search-match-row",
+   "s03-files-view"
+  ],
+  "elapsedMs": 108693
+ },
+ "run2": {
+  "startedAt": "2026-11-22T19:27:28.479Z",
+  "steps": {
+   "s00-context": {
+    "ok": true,
+    "ms": 4,
+    "version": "1.15.1",
+    "apiVersion": null,
+    "title": "New tab - Probe Vault - Obsidian 1.15.1"
+   },
+   "s04-tab-and-view-header": {
+    "ok": true,
+    "ms": 68754,
+    "search/One.md": {
+     "tab": {
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Close",
+          "section": "close",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-x"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Pin",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-pin"
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-link"
+         },
+         {
+          "title": "Backlinks in document",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon links-coming-in"
+         },
+         {
+          "title": "Reading view",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-book-open"
+         },
+         {
+          "title": "Source mode",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-code-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture"
+         },
+         {
+          "title": "Split right",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-vertical"
+         },
+         {
+          "title": "Split down",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-horizontal"
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "title": "Merge entire file with...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-git-merge"
+         },
+         {
+          "title": "Add file property",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-plus-circle"
+         },
+         {
+          "title": "Export to PDF...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-down"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Find...",
+          "section": "find",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-search"
+         },
+         {
+          "title": "Replace...",
+          "section": "find",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-search"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-history"
+         },
+         {
+          "title": "Open linked view",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-link"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Reveal file in navigation",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-open"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         }
+        ]
+       }
+      ],
+      "submenu": null,
+      "copied": {
+       "Copy path": {
+        "clipboard": "SENTINEL",
+        "notices": [],
+        "menusLeft": 2
+       }
+      }
+     },
+     "viewHeader": {
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Backlinks in document",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon links-coming-in"
+         },
+         {
+          "title": "Reading view",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-book-open"
+         },
+         {
+          "title": "Source mode",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-code-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Split right",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-vertical"
+         },
+         {
+          "title": "Split down",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-horizontal"
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "title": "Merge entire file with...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-git-merge"
+         },
+         {
+          "title": "Add file property",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-plus-circle"
+         },
+         {
+          "title": "Export to PDF...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-down"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Find...",
+          "section": "find",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-search"
+         },
+         {
+          "title": "Replace...",
+          "section": "find",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-file-search"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-history"
+         },
+         {
+          "title": "Open linked view",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-link"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Reveal file in navigation",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-open"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         }
+        ]
+       }
+      ],
+      "submenu": {
+       "items": [
+        {
+         "title": "as Obsidian URL",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-link"
+        },
+        {
+         "title": "from vault folder",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon vault"
+        },
+        {
+         "title": "from system root",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-hard-drive"
+        }
+       ]
+      },
+      "copied": {
+       "as Obsidian URL": {
+        "clipboard": "obsidian://open?vault=<name>&file=search%2FOne",
+        "notices": [
+         "URL copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from vault folder": {
+        "clipboard": "search/One",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from system root": {
+        "clipboard": "<vault>/search/One.md",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       }
+      }
+     }
+    },
+    "search/Board.canvas": {
+     "tab": {
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Close",
+          "section": "close",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-x"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Pin",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-pin"
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-link"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture"
+         },
+         {
+          "title": "Split right",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-vertical"
+         },
+         {
+          "title": "Split down",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-horizontal"
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "title": "Export as image",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-image"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-history"
+         },
+         {
+          "title": "Open linked view",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-link"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Reveal file in navigation",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-open"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         }
+        ]
+       }
+      ],
+      "submenu": {
+       "items": [
+        {
+         "title": "as Obsidian URL",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-link"
+        },
+        {
+         "title": "from vault folder",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon vault"
+        },
+        {
+         "title": "from system root",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-hard-drive"
+        }
+       ]
+      },
+      "copied": {
+       "as Obsidian URL": {
+        "clipboard": "obsidian://open?vault=<name>&file=search%2FBoard.canvas",
+        "notices": [
+         "URL copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from vault folder": {
+        "clipboard": "search/Board.canvas",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from system root": {
+        "clipboard": "<vault>/search/Board.canvas",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       }
+      }
+     },
+     "viewHeader": {
+      "menu": [],
+      "copyPath": null
+     }
+    },
+    "search/Paper.pdf": {
+     "tab": {
+      "menu": [
+       {
+        "items": [
+         {
+          "title": "Close",
+          "section": "close",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-x"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Pin",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-pin"
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-link"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture"
+         },
+         {
+          "title": "Split right",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-vertical"
+         },
+         {
+          "title": "Split down",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-separator-horizontal"
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-picture-in-picture-2"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Rename...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-edit-3"
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-tree"
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-bookmark"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-clipboard"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-history"
+         },
+         {
+          "title": "Open linked view",
+          "section": null,
+          "cls": "menu-item tappable has-submenu",
+          "icon": "svg-icon lucide-link"
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-arrow-up-right"
+         },
+         {
+          "title": "Reveal file in navigation",
+          "section": "system",
+          "cls": "menu-item tappable",
+          "icon": "svg-icon lucide-folder-open"
+         },
+         {
+          "separator": true
+         },
+         {
+          "separator": true
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "cls": "menu-item tappable is-warning",
+          "icon": "svg-icon lucide-trash-2"
+         }
+        ]
+       }
+      ],
+      "submenu": {
+       "items": [
+        {
+         "title": "as Obsidian URL",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-link"
+        },
+        {
+         "title": "from vault folder",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon vault"
+        },
+        {
+         "title": "from system root",
+         "section": "copy",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-hard-drive"
+        }
+       ]
+      },
+      "copied": {
+       "as Obsidian URL": {
+        "clipboard": "obsidian://open?vault=<name>&file=search%2FPaper.pdf",
+        "notices": [
+         "URL copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from vault folder": {
+        "clipboard": "search/Paper.pdf",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       },
+       "from system root": {
+        "clipboard": "<vault>/search/Paper.pdf",
+        "notices": [
+         "Copied to your clipboard"
+        ],
+        "menusLeft": 0
+       }
+      }
+     },
+     "viewHeader": {
+      "menu": [],
+      "copyPath": null
+     }
+    }
+   },
+   "s05-wikilink": {
+    "ok": true,
+    "ms": 50086,
+    "livePreview": {
+     "menu": [
+      {
+       "items": [
+        {
+         "title": "Open in new tab",
+         "section": "open",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-file-plus"
+        },
+        {
+         "title": "Open to the right",
+         "section": "open",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-separator-vertical"
+        },
+        {
+         "title": "Open in new window",
+         "section": "open",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-picture-in-picture-2"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Add link",
+         "section": "selection-link",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-link"
+        },
+        {
+         "title": "Add external link",
+         "section": "selection-link",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-external-link"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Edit link",
+         "section": "selection",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-text-cursor-input"
+        },
+        {
+         "title": "Paragraph",
+         "section": null,
+         "cls": "menu-item tappable has-submenu",
+         "icon": "svg-icon lucide-pilcrow"
+        },
+        {
+         "title": "Insert",
+         "section": null,
+         "cls": "menu-item tappable has-submenu",
+         "icon": "svg-icon lucide-list-plus"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Cut",
+         "section": "clipboard",
+         "cls": "menu-item tappable is-disabled",
+         "icon": "svg-icon lucide-scissors"
+        },
+        {
+         "title": "Copy",
+         "section": "clipboard",
+         "cls": "menu-item tappable is-disabled",
+         "icon": "svg-icon lucide-copy"
+        },
+        {
+         "title": "Paste",
+         "section": "clipboard",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-clipboard-check"
+        },
+        {
+         "title": "Paste as plain text",
+         "section": "clipboard",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-clipboard-type"
+        },
+        {
+         "title": "Select all",
+         "section": "clipboard",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-box-select"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Copy path",
+         "section": null,
+         "cls": "menu-item tappable has-submenu",
+         "icon": "svg-icon lucide-clipboard"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Rename...",
+         "section": "action",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-edit-3"
+        },
+        {
+         "title": "Move file to...",
+         "section": "action",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-folder-tree"
+        },
+        {
+         "title": "Bookmark...",
+         "section": "action",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-bookmark"
+        },
+        {
+         "separator": true
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Open in default app",
+         "section": "system",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-arrow-up-right"
+        },
+        {
+         "title": "Show in system explorer",
+         "section": "system",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-arrow-up-right"
+        },
+        {
+         "title": "Reveal file in navigation",
+         "section": "system",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-folder-open"
+        }
+       ]
+      }
+     ],
+     "submenu": {
+      "items": [
+       {
+        "title": "as Obsidian URL",
+        "section": "copy",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-link"
+       },
+       {
+        "title": "from vault folder",
+        "section": "copy",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon vault"
+       },
+       {
+        "title": "from system root",
+        "section": "copy",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-hard-drive"
+       }
+      ]
+     },
+     "copied": {
+      "as Obsidian URL": {
+       "clipboard": "obsidian://open?vault=<name>&file=search%2FOne",
+       "notices": [
+        "URL copied to your clipboard"
+       ],
+       "menusLeft": 0
+      },
+      "from vault folder": {
+       "clipboard": "search/One",
+       "notices": [
+        "Copied to your clipboard"
+       ],
+       "menusLeft": 0
+      },
+      "from system root": {
+       "clipboard": "<vault>/search/One.md",
+       "notices": [
+        "Copied to your clipboard"
+       ],
+       "menusLeft": 0
+      }
+     }
+    },
+    "source": {
+     "menu": [
+      {
+       "items": [
+        {
+         "title": "Open in new tab",
+         "section": "open",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-file-plus"
+        },
+        {
+         "title": "Open to the right",
+         "section": "open",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-separator-vertical"
+        },
+        {
+         "title": "Open in new window",
+         "section": "open",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-picture-in-picture-2"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Add link",
+         "section": "selection-link",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-link"
+        },
+        {
+         "title": "Add external link",
+         "section": "selection-link",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-external-link"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Edit link",
+         "section": "selection",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-text-cursor-input"
+        },
+        {
+         "title": "Paragraph",
+         "section": null,
+         "cls": "menu-item tappable has-submenu",
+         "icon": "svg-icon lucide-pilcrow"
+        },
+        {
+         "title": "Insert",
+         "section": null,
+         "cls": "menu-item tappable has-submenu",
+         "icon": "svg-icon lucide-list-plus"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Cut",
+         "section": "clipboard",
+         "cls": "menu-item tappable is-disabled",
+         "icon": "svg-icon lucide-scissors"
+        },
+        {
+         "title": "Copy",
+         "section": "clipboard",
+         "cls": "menu-item tappable is-disabled",
+         "icon": "svg-icon lucide-copy"
+        },
+        {
+         "title": "Paste",
+         "section": "clipboard",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-clipboard-check"
+        },
+        {
+         "title": "Paste as plain text",
+         "section": "clipboard",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-clipboard-type"
+        },
+        {
+         "title": "Select all",
+         "section": "clipboard",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-box-select"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Copy path",
+         "section": null,
+         "cls": "menu-item tappable has-submenu",
+         "icon": "svg-icon lucide-clipboard"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Rename...",
+         "section": "action",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-edit-3"
+        },
+        {
+         "title": "Move file to...",
+         "section": "action",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-folder-tree"
+        },
+        {
+         "title": "Bookmark...",
+         "section": "action",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-bookmark"
+        },
+        {
+         "separator": true
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Open in default app",
+         "section": "system",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-arrow-up-right"
+        },
+        {
+         "title": "Show in system explorer",
+         "section": "system",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-arrow-up-right"
+        },
+        {
+         "title": "Reveal file in navigation",
+         "section": "system",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-folder-open"
+        }
+       ]
+      }
+     ],
+     "submenu": {
+      "items": [
+       {
+        "title": "as Obsidian URL",
+        "section": "copy",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-link"
+       },
+       {
+        "title": "from vault folder",
+        "section": "copy",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon vault"
+       },
+       {
+        "title": "from system root",
+        "section": "copy",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-hard-drive"
+       }
+      ]
+     },
+     "copied": {
+      "as Obsidian URL": {
+       "clipboard": "obsidian://open?vault=<name>&file=search%2FOne",
+       "notices": [
+        "URL copied to your clipboard"
+       ],
+       "menusLeft": 0
+      },
+      "from vault folder": {
+       "clipboard": "search/One",
+       "notices": [
+        "Copied to your clipboard"
+       ],
+       "menusLeft": 0
+      },
+      "from system root": {
+       "clipboard": "<vault>/search/One.md",
+       "notices": [
+        "Copied to your clipboard"
+       ],
+       "menusLeft": 0
+      }
+     }
+    },
+    "reading": {
+     "menu": [
+      {
+       "items": [
+        {
+         "title": "Open in new tab",
+         "section": "open",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-file-plus"
+        },
+        {
+         "title": "Open to the right",
+         "section": "open",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-separator-vertical"
+        },
+        {
+         "title": "Open in new window",
+         "section": "open",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-picture-in-picture-2"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Rename...",
+         "section": "action",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-edit-3"
+        },
+        {
+         "title": "Move file to...",
+         "section": "action",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-folder-tree"
+        },
+        {
+         "title": "Bookmark...",
+         "section": "action",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-bookmark"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Copy",
+         "section": "clipboard",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-copy"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Copy path",
+         "section": null,
+         "cls": "menu-item tappable has-submenu",
+         "icon": "svg-icon lucide-clipboard"
+        },
+        {
+         "separator": true
+        },
+        {
+         "title": "Open in default app",
+         "section": "system",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-arrow-up-right"
+        },
+        {
+         "title": "Show in system explorer",
+         "section": "system",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-arrow-up-right"
+        },
+        {
+         "title": "Reveal file in navigation",
+         "section": "system",
+         "cls": "menu-item tappable",
+         "icon": "svg-icon lucide-folder-open"
+        }
+       ]
+      }
+     ],
+     "submenu": {
+      "items": [
+       {
+        "title": "as Obsidian URL",
+        "section": "copy",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-link"
+       },
+       {
+        "title": "from vault folder",
+        "section": "copy",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon vault"
+       },
+       {
+        "title": "from system root",
+        "section": "copy",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-hard-drive"
+       }
+      ]
+     },
+     "copied": {
+      "as Obsidian URL": {
+       "clipboard": "obsidian://open?vault=<name>&file=search%2FOne",
+       "notices": [
+        "URL copied to your clipboard"
+       ],
+       "menusLeft": 0
+      },
+      "from vault folder": {
+       "clipboard": "search/One",
+       "notices": [
+        "Copied to your clipboard"
+       ],
+       "menusLeft": 0
+      },
+      "from system root": {
+       "clipboard": "<vault>/search/One.md",
+       "notices": [
+        "Copied to your clipboard"
+       ],
+       "menusLeft": 0
+      }
+     }
+    }
+   },
+   "s06-backlinks-row": {
+    "ok": true,
+    "ms": 22671,
+    "menu": [
+     {
+      "items": [
+       {
+        "title": "Open in new tab",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-file-plus"
+       },
+       {
+        "title": "Open to the right",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-separator-vertical"
+       },
+       {
+        "title": "Open in new window",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-picture-in-picture-2"
+       },
+       {
+        "separator": true
+       },
+       {
+        "title": "Rename...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-edit-3"
+       },
+       {
+        "title": "Move file to...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-folder-tree"
+       },
+       {
+        "title": "Bookmark...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-bookmark"
+       },
+       {
+        "separator": true
+       },
+       {
+        "title": "Open in default app",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-arrow-up-right"
+       },
+       {
+        "title": "Show in system explorer",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-arrow-up-right"
+       },
+       {
+        "title": "Reveal file in navigation",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-folder-open"
+       },
+       {
+        "separator": true
+       },
+       {
+        "separator": true
+       },
+       {
+        "title": "Delete file",
+        "section": "danger",
+        "cls": "menu-item tappable is-warning",
+        "icon": "svg-icon lucide-trash-2"
+       },
+       {
+        "separator": true
+       },
+       {
+        "title": "Copy path",
+        "section": null,
+        "cls": "menu-item tappable has-submenu",
+        "icon": "svg-icon lucide-clipboard"
+       }
+      ]
+     }
+    ],
+    "submenu": {
+     "items": [
+      {
+       "title": "as Obsidian URL",
+       "section": "copy",
+       "cls": "menu-item tappable",
+       "icon": "svg-icon lucide-link"
+      },
+      {
+       "title": "from vault folder",
+       "section": "copy",
+       "cls": "menu-item tappable",
+       "icon": "svg-icon vault"
+      },
+      {
+       "title": "from system root",
+       "section": "copy",
+       "cls": "menu-item tappable",
+       "icon": "svg-icon lucide-hard-drive"
+      }
+     ]
+    },
+    "copied": {
+     "as Obsidian URL": {
+      "clipboard": "obsidian://open?vault=<name>&file=Linker",
+      "notices": [
+       "URL copied to your clipboard"
+      ],
+      "menusLeft": 0
+     },
+     "from vault folder": {
+      "clipboard": "Linker",
+      "notices": [
+       "Copied to your clipboard"
+      ],
+      "menusLeft": 0
+     },
+     "from system root": {
+      "clipboard": "<vault>/Linker.md",
+      "notices": [
+       "Copied to your clipboard"
+      ],
+      "menusLeft": 0
+     }
+    }
+   }
+  },
+  "order": [
+   "s00-context",
+   "s04-tab-and-view-header",
+   "s05-wikilink",
+   "s06-backlinks-row"
+  ],
+  "elapsedMs": 141562
+ }
+}

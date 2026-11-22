@@ -106,6 +106,11 @@ Right-click a file or a folder for:
 | Delete | Rename... |
 | | Delete |
 
+**Copy path** opens a submenu, the same one every file menu in Scoria draws: **as Obsidian
+URL** (`obsidian://open?vault=…&file=…`), **from vault folder** (the path inside the vault, a
+note's `.md` dropped: `Projects/Plan`, but `Boards/Map.canvas`) and **from system root** (the
+full path on disk). A folder has the two path rows alone. Each says so in a notice.
+
 **Open in new window** opens the file in a [popout window](/docs/app/window/#popout-windows)
 of its own. **New folder** asks nothing first, as in Obsidian: it makes `Untitled` (then
 `Untitled 1`, `Untitled 2`, …) at once, in the folder you right-clicked or, from the header,
