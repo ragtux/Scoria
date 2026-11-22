@@ -54,12 +54,15 @@ pub(super) fn listen<E: ?Sized, T: 'static>(
     }
 }
 
-/// Whose sections a list draws: a dock pane's, or the backlinks block of the
-/// note group `u64` shows.
+/// Whose sections a list draws: a dock pane's, the backlinks block of the
+/// note group `u64` shows (or that group's Backlinks leaf, a linked view
+/// whose state is held the same way, [`super::linked_view`]), or the
+/// Outgoing links leaf group `u64` shows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum SectionsOwner {
     Pane(RightTab),
     Doc(u64),
+    Outgoing(u64),
 }
 
 impl SectionsOwner {
@@ -68,6 +71,7 @@ impl SectionsOwner {
         match self {
             SectionsOwner::Pane(which) => which,
             SectionsOwner::Doc(_) => RightTab::Backlinks,
+            SectionsOwner::Outgoing(_) => RightTab::Outgoing,
         }
     }
 }
@@ -83,10 +87,32 @@ pub(super) struct DocBacklinks {
     opts: Option<Map<String, Value>>,
     /// Groups folded by hand away from what `collapseAll` says, by
     /// [`Section::group_key`]. Not written: the pane keeps none either.
-    toggled: HashSet<String>,
+    pub(super) toggled: HashSet<String>,
 }
 
 impl DocBacklinks {
+    /// A view leaf's whole inner `state` held as the options, shown: how a
+    /// Backlinks, Outgoing links, Outline or File properties leaf of the
+    /// main area keeps its keys ([`super::linked_view`]).
+    pub(super) fn for_view(state: Map<String, Value>) -> DocBacklinks {
+        DocBacklinks {
+            shown: Some(true),
+            opts: Some(state),
+            toggled: HashSet::new(),
+        }
+    }
+
+    /// A view leaf's state replaced, its hand folds kept.
+    pub(super) fn set_view_state(&mut self, state: Map<String, Value>) {
+        self.shown = Some(true);
+        self.opts = Some(state);
+    }
+
+    /// The options as they stand, `None` until there were any.
+    pub(super) fn opts(&self) -> Option<&Map<String, Value>> {
+        self.opts.as_ref()
+    }
+
     /// The block's state from a markdown leaf's inner `state`.
     pub(super) fn read(inner: Option<&Value>) -> DocBacklinks {
         DocBacklinks {
@@ -112,7 +138,7 @@ impl DocBacklinks {
     }
 
     /// One of `backlinkOpts`' flags, at its default when the leaf has none.
-    fn flag(&self, key: &str) -> bool {
+    pub(super) fn flag(&self, key: &str) -> bool {
         match self.opts.as_ref().and_then(|o| o.get(key)) {
             Some(value) => value.as_bool().unwrap_or(false),
             None => default_opts()
@@ -123,12 +149,12 @@ impl DocBacklinks {
     }
 
     /// Sets a flag in place, the other keys and their order left alone.
-    fn set_flag(&mut self, key: &str, on: bool) {
+    pub(super) fn set_flag(&mut self, key: &str, on: bool) {
         self.set_value(key, json!(on));
     }
 
     /// Sets one of `backlinkOpts`' keys in place.
-    fn set_value(&mut self, key: &str, value: Value) {
+    pub(super) fn set_value(&mut self, key: &str, value: Value) {
         self.opts
             .get_or_insert_with(default_opts)
             .insert(key.into(), value);
@@ -144,7 +170,7 @@ impl DocBacklinks {
     }
 
     /// Sets `searchQuery`; `false` when it already held `query`.
-    fn set_query(&mut self, query: &str) -> bool {
+    pub(super) fn set_query(&mut self, query: &str) -> bool {
         if self.query() == query {
             return false;
         }
@@ -156,7 +182,7 @@ impl DocBacklinks {
         self.set_value("sortOrder", json!(order.as_str()));
     }
 
-    fn sort(&self) -> SortOrder {
+    pub(super) fn sort(&self) -> SortOrder {
         self.opts
             .as_ref()
             .and_then(|o| o.get("sortOrder"))
@@ -283,7 +309,7 @@ impl Workspace {
     }
 
     /// The tab group `id` is showing, by the group's id.
-    fn doc_tab(&self, id: u64) -> Option<&Tab> {
+    pub(super) fn doc_tab(&self, id: u64) -> Option<&Tab> {
         let ix = self.group_ix(id)?;
         if ix == self.active_group {
             return self.tabs.get(self.active_tab);
@@ -292,7 +318,7 @@ impl Workspace {
         g.tabs.get(g.active_tab)
     }
 
-    fn doc_tab_mut(&mut self, id: u64) -> Option<&mut Tab> {
+    pub(super) fn doc_tab_mut(&mut self, id: u64) -> Option<&mut Tab> {
         let ix = self.group_ix(id)?;
         if ix == self.active_group {
             return self.tabs.get_mut(self.active_tab);
@@ -322,7 +348,7 @@ impl Workspace {
     /// The block's two sections for `path`: the pane's own when the note is
     /// the open one and the context setting agrees, computed here
     /// otherwise; then put in the leaf's sort order.
-    fn doc_sections(&self, path: &str, doc: &DocBacklinks) -> Vec<Section> {
+    pub(super) fn doc_sections(&self, path: &str, doc: &DocBacklinks) -> Vec<Section> {
         let Some(state) = self.state.as_ref() else {
             return Vec::new();
         };
@@ -551,7 +577,7 @@ impl Workspace {
     /// orders in three pairs, a check against the leaf's, the menu's
     /// top-left corner at the pointer (observed: two pixels off it) and held
     /// inside the window.
-    fn doc_sort_menu_element(
+    pub(super) fn doc_sort_menu_element(
         &self,
         id: u64,
         current: SortOrder,
@@ -653,7 +679,12 @@ impl Workspace {
 
     /// "Show search filter" in the block: shown, with the keyboard in the
     /// field; hidden, with the query emptied and the keyboard on the note.
-    fn doc_toggle_search(&mut self, id: u64, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn doc_toggle_search(
+        &mut self,
+        id: u64,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let Some(tab) = self.doc_tab_mut(id) else {
             return;
         };
@@ -679,7 +710,12 @@ impl Workspace {
     }
 
     /// The field's "Clear search": emptied, the keyboard kept there.
-    fn doc_clear_filter(&mut self, id: u64, window: &mut Window, cx: &mut Context<Self>) {
+    pub(super) fn doc_clear_filter(
+        &mut self,
+        id: u64,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let Some(input) = self
             .group_ix(id)
             .map(|ix| self.groups[ix].doc_filter.clone())
@@ -742,7 +778,7 @@ impl Workspace {
     }
 
     /// One of the block's `backlinkOpts` flags flipped in group `id`'s leaf.
-    fn doc_toggle_flag(&mut self, id: u64, key: &str, cx: &mut Context<Self>) {
+    pub(super) fn doc_toggle_flag(&mut self, id: u64, key: &str, cx: &mut Context<Self>) {
         if let Some(tab) = self.doc_tab_mut(id) {
             let doc = &mut tab.doc_backlinks;
             let on = !doc.flag(key);
@@ -762,6 +798,13 @@ impl Workspace {
             SectionsOwner::Doc(id) => self.doc_tab(id).is_some_and(|t| {
                 t.doc_backlinks.flag(if ix == 0 {
                     "backlinkCollapsed"
+                } else {
+                    "unlinkedCollapsed"
+                })
+            }),
+            SectionsOwner::Outgoing(id) => self.doc_tab(id).is_some_and(|t| {
+                t.doc_backlinks.flag(if ix == 0 {
+                    "linksCollapsed"
                 } else {
                     "unlinkedCollapsed"
                 })
@@ -786,6 +829,15 @@ impl Workspace {
                 },
                 cx,
             ),
+            SectionsOwner::Outgoing(id) => self.doc_toggle_flag(
+                id,
+                if ix == 0 {
+                    "linksCollapsed"
+                } else {
+                    "unlinkedCollapsed"
+                },
+                cx,
+            ),
         }
     }
 
@@ -797,6 +849,10 @@ impl Workspace {
             SectionsOwner::Doc(id) => self.doc_tab(id).is_some_and(|t| {
                 t.doc_backlinks.flag("collapseAll") ^ t.doc_backlinks.toggled.contains(key)
             }),
+            // The Outgoing links pane has no "Collapse results".
+            SectionsOwner::Outgoing(id) => self
+                .doc_tab(id)
+                .is_some_and(|t| t.doc_backlinks.toggled.contains(key)),
         }
     }
 
@@ -808,7 +864,7 @@ impl Workspace {
     ) {
         match owner {
             SectionsOwner::Pane(which) => self.toggle_group(which, key, cx),
-            SectionsOwner::Doc(id) => {
+            SectionsOwner::Doc(id) | SectionsOwner::Outgoing(id) => {
                 if let Some(tab) = self.doc_tab_mut(id) {
                     let toggled = &mut tab.doc_backlinks.toggled;
                     if !toggled.remove(&key) {

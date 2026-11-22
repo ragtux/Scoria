@@ -63,8 +63,9 @@ after only when there is a tab to its right), **Pin** or **Unpin**, **Link with 
 **Unlink tab**, and **Move to new window**. On the tab in front the menu goes on with **Split right**, **Split down** and
 **Open in new window**, then the tab's file rows — Rename, Move, Bookmark, Copy path,
 Delete and the rest of the [file menu](/docs/app/files/#the-right-click-menu), plus **Add
-file property**, **Find...** and **Replace...** on a note. The right click does not bring
-the tab to the front. The view header's **More options** offers the same split and window
+file property**, **Find...** and **Replace...** on a note, and **Open linked view**, whose
+rows open a [linked view](/docs/app/panes/#linked-views) of the tab's file beside it. The
+right click does not bring the tab to the front. The view header's **More options** offers the same split and window
 rows.
 
 A pinned tab shows a pin where its close button was; click the pin to unpin it. A note

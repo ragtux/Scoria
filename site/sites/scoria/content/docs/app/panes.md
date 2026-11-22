@@ -13,7 +13,7 @@ them when its command asks for it, and can be closed again.
 
 ## Backlinks
 
-`backlink:open`, `backlink:open-backlinks`
+`backlink:open` (`backlink:open-backlinks` opens it [beside the note](#linked-views))
 
 Every note that points at the one you are reading, in two sections.
 
@@ -50,7 +50,7 @@ startup and written back in place.
 
 ## Outgoing links
 
-`outgoing-links:open`, `outgoing-links:open-for-current`
+`outgoing-links:open` (`outgoing-links:open-for-current` opens it [beside the note](#linked-views))
 
 Where this note points, as Obsidian lists it: one row per target and subpath, so
 `[[Beta]]`, `[Beta](Beta.md)` and `![[Beta]]` in the same note are one row. Each row wears a
@@ -113,7 +113,7 @@ a note, it says *No properties found.* A right click on its tab offers **Close**
 
 ## Outline
 
-`outline:open`, `outline:open-for-current`
+`outline:open` (`outline:open-for-current` opens it [beside the note](#linked-views))
 
 The note's headings, nested structurally: a heading sits under the nearest preceding heading
 of a smaller level, whatever the numbers. Click one to put the cursor on its line, centred.
@@ -130,6 +130,32 @@ Each pane's own state — its sort order, its folds, whether its filter box is s
 what is typed into it — lives in that leaf of `.obsidian/workspace.json` and is read at
 startup and written back in place. A vault Obsidian never laid out gets Obsidian's default
 docks written for it, so nothing is lost on quit.
+
+## Linked views
+
+Backlinks, Outgoing links, File properties and Outline can also be opened in the main area,
+beside a note and about that note only. Right-click the tab of the note in front and choose
+**Open linked view**: on a note it offers **Open local graph**, **Open backlinks**, **Open
+outgoing links**, **Open file properties** and **Open outline**; on a canvas, a PDF, an image
+or a base, **Open backlinks** alone. The view opens in a new pane — below the note for
+Backlinks, Outgoing links and File properties, to its right for the Outline and the [local
+graph](/docs/app/graph/#the-local-graph) — and its tab is linked to the note's: **Backlinks
+for** *the note's name*, **Outgoing links from** …, **File properties for** …, **Outline of**
+…. Choose the row again and you get another pane.
+
+A linked view follows the note's tab, whatever is opened there, and leaves the other tabs
+alone. A row clicked in it opens in the note's tab and brings that tab to the front; an
+Outline heading puts the note's cursor on it. Each view keeps its own buttons' state — a
+linked Backlinks pane's collapse, context, sort order, search and folds are its own, not the
+dock's — and takes it along when the note moves on. Close the note's tab, or choose **Unlink
+tab** on the view's own tab, and the view is unlinked: its tab reads plainly, **Backlinks**, and from then on it follows whatever file is
+open. Linked File properties edits the note through the note's own tab; it takes the keyboard
+when it opens.
+
+The commands `backlink:open-backlinks`, `outgoing-links:open-for-current` and
+`outline:open-for-current` open the same view unlinked, in a new pane to the right, following
+whatever file is open. All of these are written to `.obsidian/workspace.json` as Obsidian
+writes them, the link included, and open again where they were.
 
 ## Right-click menus
 

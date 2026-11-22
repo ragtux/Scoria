@@ -94,7 +94,6 @@ a large graph stays smooth.
 
 ## Not yet
 
-- **Open linked view** in the tab menus.
 - Screenshot export.
 
 ## Next
