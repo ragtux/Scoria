@@ -61,6 +61,10 @@ navigation**, and **Copy path** last. A file row adds **Delete file** above Copy
 line's menu is the same without it, and every row acts on the whole file — opening from a match
 line opens the note at its top, not at the line.
 
+**Copy path** opens the submenu of three every file menu has (see the
+[Files view's menu](/docs/app/files/#the-right-click-menu)): as Obsidian URL, from vault folder
+and from system root.
+
 The header has the same controls as Obsidian's:
 
 - **`Aa`** inside the field — *Match case*. Matching is case-insensitive unless this is on or
@@ -98,8 +102,6 @@ it.
 
 - **Search and replace across the vault.** Replace works inside one note — see [find and
   replace](/docs/app/find/).
-- **Copy path's submenu.** On a result's menu Copy path is one row that copies the vault path;
-  Obsidian opens a submenu of three (as Obsidian URL, from vault folder, from system root).
 - The sort order and the copy modal's selects are menus rather than native drop-downs, and
   the modal's preview is read-only where Obsidian's is a text area you can edit before
   copying.

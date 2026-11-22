@@ -3182,11 +3182,10 @@ consecutive separators before Rename in both menus — an empty section.
 items: New note, New folder, New canvas, New base.
 
 Two payloads the capture did not record, both decided when the menus were
-built on 2026-10-28 and both still worth a probe. **OBSERVE: what "Copy path"
-puts on the clipboard** — Scoria writes the vault-relative path
-(`Notes/Plan.md`), which is the only path the rest of the app speaks, but
-Obsidian may well write the absolute one. **OBSERVE: what "Search in folder"
-puts in the search box** — Scoria writes `path:"<folder>/"`, with the trailing
+built on 2026-10-28. *What "Copy path" puts on the clipboard* is settled since:
+it is a submenu of three on a file and two on a folder, see
+[[#Observed Search result menus, Obsidian 1.15.1]] (2026-11-22). Still worth a
+probe: **OBSERVE: what "Search in folder" puts in the search box** — Scoria writes `path:"<folder>/"`, with the trailing
 slash so that `Notes/` does not also match `Notes archive/`. Neither the item's
 payload nor the resulting query string was read out of Obsidian, only the menu
 row itself.
@@ -11518,6 +11517,47 @@ delete “Two.md”?"). Copy path's submenu (section `copy`) is *as Obsidian URL
 (`lucide-link`: `obsidian://open?vault=…&file=search%2FOne`), *from vault folder* (`vault`:
 `search/One`, with no extension) and *from system root* (`lucide-hard-drive`: the absolute path
 with its extension).
+
+**Copy path, read again (2026-11-22).** `tools/obsidian-probe/search-copy-path.mjs` on Obsidian
+1.15.0 (the data folder's asar; the window title said so) in a private headless sway, CDP port
+9482, results in `tools/obsidian-probe/results/2026-11-22-search-copy-path.json`. Fixtures:
+`search/One.md`, `search/Two words & #2.md` and `search/Board.canvas` (a text card) holding
+`needle`, `search/Paper.pdf`, and a folder `search/Sub`.
+- The submenu is the same three rows, icons and `copy` section on a match row and a file row.
+  A canvas comes up in Search (its card's text is matched), and its match row's rows copy
+  `obsidian://open?vault=…&file=search%2FBoard.canvas`, `search/Board.canvas` and the absolute
+  path: *from vault folder* drops **only** `.md`, as the URL does, and keeps any other
+  extension. `Two words & #2.md` gave `…&file=search%2FTwo%20words%20%26%20%232`,
+  `search/Two words & #2` and the absolute path.
+- **Each row raises a notice**: *as Obsidian URL* "URL copied to your clipboard", the two path
+  rows "Copied to your clipboard" — the notices the three commands show
+  ([[#Copy path, full path, Obsidian URL]]). The click closes both menus.
+- The Files view's menu has the same submenu on a note, a canvas and a PDF, with the same
+  strings, and on a folder only *from vault folder* (`search/Sub`) and *from system root*: no
+  URL row.
+- Harness note: the step that walked every file row in turn lost its row after the first (the
+  search re-ran between menus and the rows moved), so the canvas was read from its match row and
+  the escaped name from the Files view.
+
+**The other file menus (2026-11-22, `s04`-`s06`).** A second run of the same script, on Obsidian
+1.15.1 this time (the data folder had updated itself), with a note `Linker.md` holding
+`See [[One]] for the first.`. Every menu below draws **Copy path** with the same submenu of three
+— same icons, `copy` section — and each row copies the strings and raises the notices above:
+- the **tab header** menu on a canvas tab and a PDF tab (on the note's tab the hover missed, but
+  the 2026-11-09 record has the submenu there too, [[#Observed tab header menu and pinned tabs, Obsidian 1.15.0]]);
+- the **view header**'s More options on a note (on the canvas and the PDF leaf the script found
+  no More options button and read nothing);
+- a **wikilink's editor menu**, in Live Preview and in Source mode alike, on `[[One]]`: the
+  rows act on the linked note (`…&file=search%2FOne`, `search/One`, `<vault>/search/One.md`);
+- a **reading-view link**'s menu: Open in new tab, Open to the right, Open in new window, ---,
+  Rename..., Move file to..., Bookmark..., ---, Copy, ---, Copy path, ---, the three system
+  rows;
+- a **Backlinks pane** file row (`Linker`): Open in new tab, Open to the right, Open in new
+  window, ---, Rename..., Move file to..., Bookmark..., ---, Open in default app, Show in system
+  explorer, Reveal file in navigation, ---, ---, Delete file, ---, Copy path — the Search result
+  file row's menu, row for row. The copies were `…&file=Linker`, `Linker`, `<vault>/Linker.md`.
+
+A Bases row's menu was not opened.
 
 ## Observed Bases cell undo, Obsidian 1.15.1
 

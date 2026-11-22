@@ -22,7 +22,7 @@ use crate::explorer::{
     self, display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder,
 };
 use crate::export_modals::{ImageExport, ImageExportEvent, PdfExport, PdfExportEvent};
-use crate::file_menu::{self, Pick};
+use crate::file_menu::{self, CopyAs, Pick};
 use crate::fold;
 use crate::graph::{GraphEvent, GraphView};
 use crate::help::HelpWindow;
@@ -4173,7 +4173,7 @@ impl Workspace {
                     ExplorerEvent::OpenInNewWindow(path) => {
                         this.open_path_in_new_window(path.clone(), window, cx)
                     }
-                    ExplorerEvent::CopyPath(path) => this.copy_path(path, cx),
+                    ExplorerEvent::CopyPath(path, how) => this.copy_path_as(path, *how, cx),
                     ExplorerEvent::OpenInDefaultApp(path) => this.open_in_default_app(path, cx),
                     ExplorerEvent::ShowInSystemExplorer(path) => {
                         this.show_in_system_explorer(path, cx)
@@ -6702,13 +6702,15 @@ impl Workspace {
             }
             // The file menu's rows for the active file, by their command
             // names: "Copy current file path from vault folder" is the path
-            // the menu's "Copy path" writes, "...from system root" the same
-            // file's absolute path, and "Open in default app" / "Show in
-            // system explorer" the menu's two rows of the same names.
+            // the old flat "Copy path" wrote (extension kept, where the
+            // submenu's "from vault folder" drops a `.md`), "...from system
+            // root" and the URL what the submenu's rows of those names
+            // write, and "Open in default app" / "Show in system explorer"
+            // the menu's two rows of the same names.
             //
-            // The menu row is silent, but the commands are not: each says
-            // "Copied to your clipboard", and the URL "URL copied to your
-            // clipboard" (Obsidian 1.15.0).
+            // Each says "Copied to your clipboard", and the URL "URL copied
+            // to your clipboard" (Obsidian 1.15.0); so do the submenu's
+            // rows. The flat row a Bases row's menu keeps stays silent.
             "workspace:copy-path" => {
                 if let Some(current) = self.current.clone() {
                     self.copy_path(&current, cx);
@@ -6716,18 +6718,13 @@ impl Workspace {
                 }
             }
             "workspace:copy-full-path" => {
-                if let (Some(state), Some(current)) = (self.state.clone(), self.current.clone()) {
-                    let text = full_path_text(state.vault().absolute(&current));
-                    cx.write_to_clipboard(ClipboardItem::new_string(text));
-                    self.report("Copied to your clipboard", cx);
+                if let Some(current) = self.current.clone() {
+                    self.copy_path_as(&current, CopyAs::SystemRoot, cx);
                 }
             }
             "workspace:copy-url" => {
-                if let (Some(state), Some(current)) = (self.state.clone(), self.current.clone()) {
-                    let name = vault_folder_name(&state.root);
-                    let url = crate::uri::open_url(&name, &current);
-                    cx.write_to_clipboard(ClipboardItem::new_string(url));
-                    self.report("URL copied to your clipboard", cx);
+                if let Some(current) = self.current.clone() {
+                    self.copy_path_as(&current, CopyAs::ObsidianUrl, cx);
                 }
             }
             // "Show trash", offered only under `trashOption: "local"`: the
@@ -9497,13 +9494,40 @@ impl Workspace {
     /// the status bar keeps only what stays true.
     /// The explorer menu's "Copy path": the **vault-relative** path, which is
     /// the only path the rest of the app speaks and the one the vault is the
-    /// source of truth for. Silent, because Obsidian shows no notice for it
-    /// and a notice Obsidian does not show is a divergence of its own. The
-    /// capture records the item but not its payload, so the shape of the
-    /// string is marked OBSERVE in
-    /// [[Specification#The file explorer's context menus]].
+    /// source of truth for. Silent. Obsidian draws no such flat row where a
+    /// probe has looked: its Copy path opens a submenu whose rows each raise
+    /// a notice ([`Self::copy_path_as`]). Only a Bases row's menu, never
+    /// probed for it, still offers this one, and `workspace:copy-path`.
     fn copy_path(&mut self, path: &str, cx: &mut Context<Self>) {
         cx.write_to_clipboard(ClipboardItem::new_string(path.to_string()));
+    }
+
+    /// A row of Copy path's submenu, and the two copy commands that write
+    /// the same strings: the Obsidian URL, the vault path without its
+    /// `.md`, or the absolute path, each with the notice Obsidian shows for
+    /// it ("URL copied to your clipboard" for the URL, "Copied to your
+    /// clipboard" for the two paths; the rows and the commands alike,
+    /// Obsidian 1.15.0, `search-copy-path.mjs`). Nothing with no vault open.
+    fn copy_path_as(&mut self, path: &str, how: CopyAs, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let (text, notice) = match how {
+            CopyAs::ObsidianUrl => (
+                crate::uri::open_url(&vault_folder_name(&state.root), path),
+                "URL copied to your clipboard",
+            ),
+            CopyAs::VaultFolder => (
+                file_menu::vault_folder_text(path).to_string(),
+                "Copied to your clipboard",
+            ),
+            CopyAs::SystemRoot => (
+                full_path_text(state.vault().absolute(path)),
+                "Copied to your clipboard",
+            ),
+        };
+        cx.write_to_clipboard(ClipboardItem::new_string(text));
+        self.report(notice, cx);
     }
 
     /// The explorer menu's "Open in default app": the file handed to the
@@ -17420,6 +17444,7 @@ impl Workspace {
             Pick::MergeWith => self.start_merge_of(path, window, cx),
             Pick::ExtractSelection => self.run_command("note-composer:split-file", window, cx),
             Pick::CopyPath => self.copy_path(&path, cx),
+            Pick::CopyPathAs(how) => self.copy_path_as(&path, how, cx),
             Pick::OpenInDefaultApp => self.open_in_default_app(&path, cx),
             Pick::ShowInSystemExplorer => self.show_in_system_explorer(&path, cx),
             Pick::RevealInNavigation => self.reveal_in_navigation(&path, window, cx),
