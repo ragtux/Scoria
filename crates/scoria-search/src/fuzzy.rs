@@ -129,6 +129,29 @@ pub fn fuzzy_match(query: &str, candidate: &str) -> Option<FuzzyMatch> {
     Some(FuzzyMatch { score, ranges })
 }
 
+/// A file picker's row: `query` is matched against the whole vault `path`,
+/// extension included, while the row shows `label`, a prefix of it (the
+/// path without `.md`). The ranges are clipped to the label, so a query
+/// that runs on into the hidden `.md` highlights only what is shown.
+///
+/// This is the template file pickers' rule in Obsidian 1.15.0
+/// (`composer-picker-path.mjs`, 2026-11-22): `folder/note.md` lists
+/// `Folder/Note` first with `Folder/Note` lit, and `Note.md` lights only
+/// `Note` in `Folder Note md`, the `.md` coming from the extension. A
+/// `label` that is not a prefix of `path` is matched on its own.
+pub fn fuzzy_match_path(query: &str, path: &str, label: &str) -> Option<FuzzyMatch> {
+    if !path.starts_with(label) {
+        return fuzzy_match(query, label);
+    }
+    let mut m = fuzzy_match(query, path)?;
+    let shown = label.len();
+    m.ranges.retain_mut(|r| {
+        r.end = r.end.min(shown);
+        r.start < r.end
+    });
+    Some(m)
+}
+
 /// Every whitespace-separated token of `query` must be a case-insensitive
 /// substring of `candidate`; returns the first occurrence of each.
 pub fn simple_search(query: &str, candidate: &str) -> Option<Vec<Range<usize>>> {
@@ -195,6 +218,64 @@ mod tests {
         assert_eq!(shown, vec!["D", "v", "l"]);
         let m = fuzzy_match("dev", "Development").unwrap();
         assert_eq!(m.ranges, vec![0..3]);
+    }
+
+    /// The template pickers' rows (Obsidian 1.15.0, 2026-11-22): the query
+    /// meets the path with its extension, the highlight stays in the label.
+    #[test]
+    fn a_path_match_reaches_the_extension_and_lights_the_label() {
+        let rows = [
+            ("Other/Folder/Note.md", "Other/Folder/Note"),
+            ("Folder Note md.md", "Folder Note md"),
+            ("Note.md", "Note"),
+            ("Folder/Sub/Note.md", "Folder/Sub/Note"),
+            ("Folder/Notebook.md", "Folder/Notebook"),
+            ("Folder/Note.md", "Folder/Note"),
+            ("Folder/Note.png", "Folder/Note.png"),
+        ];
+        let first = |q: &str| -> (&str, Vec<&str>) {
+            let mut best: Option<(f64, &str, Vec<Range<usize>>)> = None;
+            for (path, label) in rows {
+                if let Some(m) = fuzzy_match_path(q, path, label) {
+                    if best.as_ref().is_none_or(|b| m.score > b.0) {
+                        best = Some((m.score, label, m.ranges));
+                    }
+                }
+            }
+            let (_, label, ranges) = best.expect("a row");
+            (label, ranges.into_iter().map(|r| &label[r]).collect())
+        };
+        assert_eq!(
+            first("Folder/Note.md"),
+            ("Folder/Note", vec!["Folder/Note"])
+        );
+        assert_eq!(
+            first("folder/note.md"),
+            ("Folder/Note", vec!["Folder/Note"])
+        );
+        assert_eq!(
+            first("FOLDER/NOTE.MD"),
+            ("Folder/Note", vec!["Folder/Note"])
+        );
+        assert_eq!(first("Note.md"), ("Note", vec!["Note"]));
+        assert_eq!(first("Folder/Note"), ("Folder/Note", vec!["Folder/Note"]));
+        assert_eq!(first("Folder/Note.png").0, "Folder/Note.png");
+        assert_eq!(first("Folder/Notebook.md").0, "Folder/Notebook");
+        // `.md` lit nowhere: it is the hidden extension.
+        let m = fuzzy_match_path("Note.md", "Folder Note md.md", "Folder Note md").unwrap();
+        let lit: Vec<&str> = m
+            .ranges
+            .iter()
+            .map(|r| &"Folder Note md"[r.clone()])
+            .collect();
+        assert_eq!(lit, ["Note"]);
+        // A query no path holds lists nothing, and a label that is not the
+        // path's prefix is matched on its own.
+        assert!(fuzzy_match_path("Folder/Note.pdf", "Folder/Note.md", "Folder/Note").is_none());
+        assert!(fuzzy_match_path("al", "x.md", "Alias").is_some());
+        // The Merge file modal matches the label alone, and there the
+        // `.md` finds nothing: "No files found." in Obsidian too.
+        assert!(fuzzy_match("Folder/Note.md", "Folder/Note").is_none());
     }
 
     #[test]
