@@ -1,0 +1,2479 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-22T21:14:28.399Z",
+  "env": {
+   "ONLY": null,
+   "vault": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-linktab/run3-vault"
+  },
+  "steps": {},
+  "order": []
+ },
+ "run": {
+  "startedAt": "2026-11-22T21:14:29.555Z",
+  "env": {
+   "ONLY": null,
+   "vault": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-linktab/run3-vault"
+  },
+  "steps": {
+   "s00-meta": {
+    "ok": true,
+    "title": "New tab - run3-vault - Obsidian 1.15.1",
+    "commands": [
+     "editor:follow-link | Follow link under cursor",
+     "editor:open-link-in-new-leaf | Open link under cursor in new tab",
+     "editor:open-link-in-new-window | Open link under cursor in new window",
+     "editor:open-link-in-new-split | Open link under cursor to the right",
+     "editor:focus-top | Focus on tab group above",
+     "editor:focus-bottom | Focus on tab group below",
+     "editor:focus-left | Focus on tab group to the left",
+     "editor:focus-right | Focus on tab group to the right",
+     "workspace:close-tab-group | Close this tab group",
+     "workspace:close-others-tab-group | Close others in tab group",
+     "editor:insert-wikilink | Add internal link",
+     "editor:insert-link | Insert Markdown link",
+     "backlink:open | Backlinks: Show backlinks",
+     "backlink:open-backlinks | Backlinks: Open backlinks for the current note",
+     "backlink:toggle-backlinks-in-document | Backlinks: Toggle backlinks in document",
+     "canvas:jump-to-group | Canvas: Jump to group",
+     "outgoing-links:open | Outgoing links: Show outgoing links",
+     "outgoing-links:open-for-current | Outgoing links: Open outgoing links for the current file"
+    ],
+    "window": [
+     1596,
+     973
+    ]
+   },
+   "s01-pick-mode": {
+    "ok": true,
+    "menuActive": [
+     {
+      "title": "Close",
+      "icon": "lucide-x",
+      "section": "close",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 44.4453125
+     },
+     {
+      "title": "Close others",
+      "icon": "lucide-x",
+      "section": "close",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 69.3359375
+     },
+     {
+      "title": "Close tabs after",
+      "icon": "lucide-x",
+      "section": "close",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 94.2265625
+     },
+     {
+      "title": "Close all",
+      "icon": "lucide-x",
+      "section": "close",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 119.1171875
+     },
+     "---",
+     {
+      "title": "Pin",
+      "icon": "lucide-pin",
+      "section": "pane",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 157.0078125
+     },
+     {
+      "title": "Link with tab...",
+      "icon": "lucide-link",
+      "section": "pane",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 181.8984375
+     },
+     {
+      "title": "Backlinks in document",
+      "icon": "links-coming-in",
+      "section": "pane",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 206.7890625
+     },
+     {
+      "title": "Reading view",
+      "icon": "lucide-book-open",
+      "section": "pane",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 231.6796875
+     },
+     {
+      "title": "Source mode",
+      "icon": "lucide-code-2",
+      "section": "pane",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 256.5703125
+     },
+     "---",
+     {
+      "title": "Move to new window",
+      "icon": "lucide-picture-in-picture",
+      "section": "open",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 294.4609375
+     },
+     {
+      "title": "Split right",
+      "icon": "lucide-separator-vertical",
+      "section": "open",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 319.3515625
+     },
+     {
+      "title": "Split down",
+      "icon": "lucide-separator-horizontal",
+      "section": "open",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 344.2421875
+     },
+     {
+      "title": "Open in new window",
+      "icon": "lucide-picture-in-picture-2",
+      "section": "open",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 369.1328125
+     },
+     "---",
+     {
+      "title": "Rename...",
+      "icon": "lucide-edit-3",
+      "section": "action",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 407.0234375
+     },
+     {
+      "title": "Move file to...",
+      "icon": "lucide-folder-tree",
+      "section": "action",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 431.9140625
+     },
+     {
+      "title": "Bookmark...",
+      "icon": "lucide-bookmark",
+      "section": "action",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 456.8046875
+     },
+     {
+      "title": "Merge entire file with...",
+      "icon": "lucide-git-merge",
+      "section": "action",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 481.6953125
+     },
+     {
+      "title": "Add file property",
+      "icon": "lucide-plus-circle",
+      "section": "action",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 506.5859375
+     },
+     {
+      "title": "Export to PDF...",
+      "icon": "lucide-file-down",
+      "section": "action",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 531.4765625
+     },
+     "---",
+     {
+      "title": "Find...",
+      "icon": "lucide-file-search",
+      "section": "find",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 569.3671875
+     },
+     {
+      "title": "Replace...",
+      "icon": "lucide-file-search",
+      "section": "find",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 594.2578125
+     },
+     "---",
+     {
+      "title": "Copy path",
+      "icon": "lucide-clipboard",
+      "section": null,
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 632.1484375
+     },
+     "---",
+     {
+      "title": "Open version history",
+      "icon": "lucide-history",
+      "section": "view",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 670.0390625
+     },
+     {
+      "title": "Open linked view",
+      "icon": "lucide-link",
+      "section": null,
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 694.9296875
+     },
+     "---",
+     {
+      "title": "Open in default app",
+      "icon": "lucide-arrow-up-right",
+      "section": "system",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 732.8203125
+     },
+     {
+      "title": "Show in system explorer",
+      "icon": "lucide-arrow-up-right",
+      "section": "system",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 757.7109375
+     },
+     {
+      "title": "Reveal file in navigation",
+      "icon": "lucide-folder-open",
+      "section": "system",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 782.6015625
+     },
+     "---",
+     "---",
+     {
+      "title": "Delete file",
+      "icon": "lucide-trash-2",
+      "section": "danger",
+      "disabled": false,
+      "x": 555.3828125,
+      "y": 820.4921875
+     }
+    ],
+    "menuInactive": [
+     {
+      "title": "Close",
+      "icon": "lucide-x",
+      "section": "close",
+      "disabled": false,
+      "x": 745.390625,
+      "y": 44.4453125
+     },
+     {
+      "title": "Close others",
+      "icon": "lucide-x",
+      "section": "close",
+      "disabled": false,
+      "x": 745.390625,
+      "y": 69.3359375
+     },
+     {
+      "title": "Close all",
+      "icon": "lucide-x",
+      "section": "close",
+      "disabled": false,
+      "x": 745.390625,
+      "y": 94.2265625
+     },
+     "---",
+     {
+      "title": "Pin",
+      "icon": "lucide-pin",
+      "section": "pane",
+      "disabled": false,
+      "x": 745.390625,
+      "y": 132.1171875
+     },
+     {
+      "title": "Link with tab...",
+      "icon": "lucide-link",
+      "section": "pane",
+      "disabled": false,
+      "x": 745.390625,
+      "y": 157.0078125
+     },
+     "---",
+     {
+      "title": "Move to new window",
+      "icon": "lucide-picture-in-picture",
+      "section": "open",
+      "disabled": false,
+      "x": 745.390625,
+      "y": 194.8984375
+     }
+    ],
+    "clicked": true,
+    "beforeMove": {
+     "bodyBefore": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused is-maximized",
+     "body": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused is-maximized",
+     "added": [],
+     "cursor": "auto",
+     "notices": [],
+     "modals": 0,
+     "menus": 0,
+     "activeLeaf": "3460e9f821bef2f7",
+     "focus": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused is-maximized",
+     "overlay": {
+      "present": false
+     }
+    },
+    "hoverOther": {
+     "overlay": {
+      "present": true,
+      "shown": true,
+      "rect": [
+       970,
+       40,
+       626,
+       933
+      ],
+      "position": "fixed",
+      "zIndex": "5",
+      "transition": "0.1s ease-in-out",
+      "before": {
+       "bg": "rgb(138, 92, 245)",
+       "opacity": "0.5",
+       "radius": "8px",
+       "inset": "0px"
+      }
+     },
+     "on": {
+      "id": "ffaaab25f521b843",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     "cursor": "auto",
+     "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-linktab/run3-shots/link-pick-hover.png"
+    },
+    "hoverSelf": {
+     "overlay": {
+      "present": true,
+      "shown": true,
+      "rect": [
+       344,
+       40,
+       626,
+       933
+      ],
+      "position": "fixed",
+      "zIndex": "5",
+      "transition": "0.1s ease-in-out",
+      "before": {
+       "bg": "rgb(138, 92, 245)",
+       "opacity": "0.5",
+       "radius": "8px",
+       "inset": "0px"
+      }
+     },
+     "on": {
+      "id": "3460e9f821bef2f7",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Alpha",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    },
+    "hoverInactiveHeader": {
+     "overlay": {
+      "present": true,
+      "shown": true,
+      "rect": [
+       344,
+       40,
+       626,
+       933
+      ],
+      "position": "fixed",
+      "zIndex": "5",
+      "transition": "0.1s ease-in-out",
+      "before": {
+       "bg": "rgb(138, 92, 245)",
+       "opacity": "0.5",
+       "radius": "8px",
+       "inset": "0px"
+      }
+     },
+     "on": {
+      "id": "3460e9f821bef2f7",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Alpha",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    },
+    "hoverOtherHeader": {
+     "overlay": {
+      "present": true,
+      "shown": true,
+      "rect": [
+       970,
+       40,
+       626,
+       933
+      ],
+      "position": "fixed",
+      "zIndex": "5",
+      "transition": "0.1s ease-in-out",
+      "before": {
+       "bg": "rgb(138, 92, 245)",
+       "opacity": "0.5",
+       "radius": "8px",
+       "inset": "0px"
+      }
+     },
+     "on": {
+      "id": "ffaaab25f521b843",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    },
+    "hoverFiles": {
+     "overlay": {
+      "present": true,
+      "shown": false,
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "position": "fixed",
+      "zIndex": "5",
+      "transition": "0.1s ease-in-out",
+      "before": {
+       "bg": "rgb(138, 92, 245)",
+       "opacity": "0.5",
+       "radius": "8px",
+       "inset": "0px"
+      }
+     },
+     "on": null
+    },
+    "hoverRibbon": {
+     "overlay": {
+      "present": true,
+      "shown": false,
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "position": "fixed",
+      "zIndex": "5",
+      "transition": "0.1s ease-in-out",
+      "before": {
+       "bg": "rgb(138, 92, 245)",
+       "opacity": "0.5",
+       "radius": "8px",
+       "inset": "0px"
+      }
+     },
+     "on": null
+    },
+    "leaves": [
+     {
+      "id": "3460e9f821bef2f7",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Alpha",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e95006e0a65d155c",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "ffaaab25f521b843",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ]
+   },
+   "s02-targets": {
+    "ok": true,
+    "sidebars": {
+     "file-explorer": [
+      "none",
+      "none",
+      "none",
+      "none"
+     ],
+     "search": [
+      "none",
+      "none",
+      "none",
+      "none"
+     ],
+     "bookmarks": [
+      "bookmarks",
+      "bookmarks",
+      "bookmarks",
+      "bookmarks"
+     ],
+     "backlink": [
+      "backlink",
+      "backlink",
+      "backlink",
+      "backlink"
+     ],
+     "outgoing-link": [
+      "outgoing-link",
+      "outgoing-link",
+      "outgoing-link",
+      "outgoing-link"
+     ],
+     "tag": [
+      "none",
+      "none",
+      "none",
+      "none"
+     ],
+     "all-properties": [
+      "all-properties",
+      "all-properties",
+      "all-properties",
+      "all-properties"
+     ],
+     "outline": [
+      "outline",
+      "outline",
+      "outline",
+      "outline"
+     ]
+    },
+    "emptyTab": "empty",
+    "stillPicking": true
+   },
+   "s03-cancel": {
+    "ok": true,
+    "afterEscape": {
+     "id": "ffaaab25f521b843",
+     "type": "markdown",
+     "file": "Gamma.md",
+     "group": null,
+     "mode": "source",
+     "pinned": false,
+     "active": false,
+     "title": "Gamma",
+     "linkIcon": false,
+     "back": [],
+     "fwd": [],
+     "root": "main"
+    },
+    "afterRibbonClick": null,
+    "linkedAfterRibbon": [],
+    "afterSelfClick": null,
+    "linkedAfterSelf": [],
+    "rightClickMenu": [
+     "Pin [lucide-pin]",
+     "Link with tab... [lucide-link]",
+     "Backlinks in document [links-coming-in]",
+     "Reading view [lucide-book-open]",
+     "Source mode [lucide-code-2]"
+    ],
+    "afterRightClick": null,
+    "linkedAfterRightClick": [
+     {
+      "id": "3460e9f821bef2f7",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": "7bde9fdf97912409",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Alpha",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "ffaaab25f521b843",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "7bde9fdf97912409",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ]
+   },
+   "s04-link": {
+    "ok": true,
+    "before": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Alpha",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "after": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Alpha",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "overlayAfter": {
+     "present": false
+    },
+    "iconA": {
+     "aria": "Unlink tab",
+     "cls": "workspace-tab-header-status-icon mod-linked",
+     "svg": "svg-icon lucide-link",
+     "svgSize": "14px",
+     "box": [
+      505,
+      12.5,
+      18,
+      18
+     ],
+     "color": "rgb(166, 138, 249)",
+     "bg": "rgba(0, 0, 0, 0)",
+     "radius": "8px",
+     "cursor": "default",
+     "order": [
+      "workspace-tab-header-inner-icon",
+      "workspace-tab-header-inner-title",
+      "workspace-tab-header-status-container",
+      "workspace-tab-header-inner-close-button"
+     ],
+     "closeShown": true,
+     "x": 514,
+     "y": 21.5
+    },
+    "iconG": {
+     "aria": "Unlink tab",
+     "cls": "workspace-tab-header-status-icon mod-linked",
+     "svg": "svg-icon lucide-link",
+     "svgSize": "14px",
+     "box": [
+      1131,
+      12.5,
+      18,
+      18
+     ],
+     "color": "rgb(166, 138, 249)",
+     "bg": "rgba(0, 0, 0, 0)",
+     "radius": "8px",
+     "cursor": "default",
+     "order": [
+      "workspace-tab-header-inner-icon",
+      "workspace-tab-header-inner-title",
+      "workspace-tab-header-status-container",
+      "workspace-tab-header-inner-close-button"
+     ],
+     "closeShown": true,
+     "x": 1140,
+     "y": 21.5
+    },
+    "headerHtml": "<div class=\"workspace-tab-header tappable is-active\" draggable=\"true\" aria-label=\"Alpha\" data-tooltip-delay=\"300\" data-type=\"markdown\"><div class=\"workspace-tab-header-inner\"><div class=\"workspace-tab-header-inner-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-file\"></svg></div><div class=\"workspace-tab-header-inner-title\">Alpha</div><div class=\"workspace-tab-header-status-container\"><div class=\"workspace-tab-header-status-icon mod-linked\" aria-label=\"Unlink tab\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-link\"></svg></div></div><div class=\"workspace-tab-header-inner-close-button\" aria-label=\"Close\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"></svg></div></div></div>",
+    "iconHover": {
+     "aria": "Unlink tab",
+     "cls": "workspace-tab-header-status-icon mod-linked",
+     "svg": "svg-icon lucide-unlink",
+     "svgSize": "14px",
+     "box": [
+      505,
+      12.5,
+      18,
+      18
+     ],
+     "color": "rgb(166, 138, 249)",
+     "bg": "oklch(0.603458 0.21722 292.49 / 0.1)",
+     "radius": "8px",
+     "cursor": "default",
+     "order": [
+      "workspace-tab-header-inner-icon",
+      "workspace-tab-header-inner-title",
+      "workspace-tab-header-status-container",
+      "workspace-tab-header-inner-close-button"
+     ],
+     "closeShown": true,
+     "x": 514,
+     "y": 21.5,
+     "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-linktab/run3-shots/link-icon-hover.png"
+    },
+    "highlighted": {
+     "ids": [
+      "c827314240b028f2",
+      "e119c0f13f17c1dc"
+     ],
+     "before": {
+      "bg": "oklch(0.603458 0.21722 292.49 / 0.25)",
+      "inset": "0px",
+      "zIndex": "30",
+      "content": "\" \""
+     }
+    },
+    "tooltip": null,
+    "highlightedAfter": {
+     "ids": [],
+     "before": null
+    },
+    "menuA": [
+     "Pin [lucide-pin]",
+     "Unlink tab [lucide-link]",
+     "Backlinks in document [links-coming-in]",
+     "Reading view [lucide-book-open]",
+     "Source mode [lucide-code-2]"
+    ],
+    "menuG": [
+     "Pin [lucide-pin]",
+     "Unlink tab [lucide-link]",
+     "Backlinks in document [links-coming-in]",
+     "Reading view [lucide-book-open]",
+     "Source mode [lucide-code-2]"
+    ],
+    "menuB": [
+     "Pin [lucide-pin]",
+     "Link with tab... [lucide-link]"
+    ],
+    "ws": [
+     {
+      "where": "main/split[0]/tabs[0]",
+      "id": "c827314240b028f2",
+      "group": "9d346de92eff6e15",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "markdown",
+      "raw": "{\n            \"id\": \"c827314240b028f2\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Alpha\"\n            },\n            \"group\": \"9d346de92eff6e15\"\n          }"
+     },
+     {
+      "where": "main/split[1]/tabs[0]",
+      "id": "e119c0f13f17c1dc",
+      "group": "9d346de92eff6e15",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "markdown",
+      "raw": "{\n            \"id\": \"e119c0f13f17c1dc\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Gamma.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Gamma\"\n            },\n            \"group\": \"9d346de92eff6e15\"\n          }"
+     }
+    ]
+   },
+   "s05-follow": {
+    "ok": true,
+    "clickInA": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Beta",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "clickInG": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "openInInactive": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "back": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md"
+      ],
+      "fwd": [
+       "Gamma.md"
+      ],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "modes": [
+     {
+      "file": "Alpha.md",
+      "mode": "source",
+      "source": true
+     },
+     {
+      "file": "Alpha.md",
+      "mode": "preview",
+      "source": false
+     }
+    ],
+    "kinds": [
+     [
+      "canvas Board.canvas ",
+      "canvas Board.canvas "
+     ],
+     [
+      "image pic.png ",
+      "image pic.png "
+     ],
+     [
+      "markdown Alpha.md source",
+      "markdown Alpha.md source"
+     ]
+    ],
+    "scrollBefore": [
+     0,
+     0
+    ],
+    "scrollAfterWheel": [
+     69.83333333333333,
+     70.75
+    ],
+    "scrollAfterLine": [
+     181.875,
+     181.875
+    ],
+    "scrollMixedModes": [
+     [
+      "source",
+      256.875
+     ],
+     [
+      "preview",
+      256.8919068736142
+     ]
+    ],
+    "emptyLinked": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "376f0e9df0b0b17d",
+      "type": "empty",
+      "file": null,
+      "group": "9d346de92eff6e15",
+      "mode": null,
+      "pinned": false,
+      "active": false,
+      "title": "New tab",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Beta",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "emptyOpens": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "376f0e9df0b0b17d",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "end": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Alpha",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Alpha",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ]
+   },
+   "s06-join": {
+    "ok": true,
+    "menu": [
+     "Pin [lucide-pin]",
+     "Link with tab... [lucide-link]",
+     "Backlinks in document [links-coming-in]",
+     "Reading view [lucide-book-open]",
+     "Source mode [lucide-code-2]"
+    ],
+    "after": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Alpha",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Alpha",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "threeFollow": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md",
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Beta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md",
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "ws": [
+     {
+      "where": "main/split[0]/tabs[0]",
+      "id": "c827314240b028f2",
+      "group": "9d346de92eff6e15",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "markdown",
+      "raw": "{\n            \"id\": \"c827314240b028f2\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Delta.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Delta\"\n            },\n            \"group\": \"9d346de92eff6e15\"\n          }"
+     },
+     {
+      "where": "main/split[0]/tabs[1]",
+      "id": "57387157e011dd0b",
+      "group": "9d346de92eff6e15",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "markdown",
+      "raw": "{\n            \"id\": \"57387157e011dd0b\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Delta.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Delta\"\n            },\n            \"group\": \"9d346de92eff6e15\"\n          }"
+     },
+     {
+      "where": "main/split[1]/tabs[0]",
+      "id": "e119c0f13f17c1dc",
+      "group": "9d346de92eff6e15",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "markdown",
+      "raw": "{\n            \"id\": \"e119c0f13f17c1dc\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Delta.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Delta\"\n            },\n            \"group\": \"9d346de92eff6e15\"\n          }"
+     }
+    ]
+   },
+   "s07-pin": {
+    "ok": true,
+    "afterPin": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": true,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md",
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": true,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Beta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": true,
+      "active": true,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md",
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "headerG": [
+     "workspace-tab-header-status-icon mod-linked Unlink tab",
+     "workspace-tab-header-status-icon mod-pinned Unpin"
+    ],
+    "menuG": [
+     "Unpin [lucide-pin]",
+     "Unlink tab [lucide-link]",
+     "Backlinks in document [links-coming-in]",
+     "Reading view [lucide-book-open]",
+     "Source mode [lucide-code-2]"
+    ],
+    "afterUnpin": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md",
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Beta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md",
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ]
+   },
+   "s08-unlink": {
+    "ok": true,
+    "menuB": [
+     "Pin [lucide-pin]",
+     "Unlink tab [lucide-link]",
+     "Backlinks in document [links-coming-in]",
+     "Reading view [lucide-book-open]",
+     "Source mode [lucide-code-2]"
+    ],
+    "afterUnlinkB": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md",
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": false,
+      "back": [
+       "Beta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": "9d346de92eff6e15",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Delta",
+      "linkIcon": true,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md",
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "iconClickedAt": {
+     "aria": "Unlink tab",
+     "cls": "workspace-tab-header-status-icon mod-linked",
+     "svg": "svg-icon lucide-link",
+     "svgSize": "14px",
+     "box": [
+      505,
+      12.5,
+      18,
+      18
+     ],
+     "color": "rgb(166, 138, 249)",
+     "bg": "rgba(0, 0, 0, 0)",
+     "radius": "8px",
+     "cursor": "default",
+     "order": [
+      "workspace-tab-header-inner-icon",
+      "workspace-tab-header-inner-title",
+      "workspace-tab-header-status-container",
+      "workspace-tab-header-inner-close-button"
+     ],
+     "closeShown": true,
+     "x": 514,
+     "y": 21.5
+    },
+    "afterIconA": [
+     {
+      "id": "c827314240b028f2",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": false,
+      "back": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md",
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "57387157e011dd0b",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Delta",
+      "linkIcon": false,
+      "back": [
+       "Beta.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e119c0f13f17c1dc",
+      "type": "markdown",
+      "file": "Delta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Delta",
+      "linkIcon": false,
+      "back": [
+       "Gamma.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md",
+       "Delta.md",
+       "Alpha.md",
+       "Board.canvas",
+       "pic.png",
+       "Alpha.md",
+       "Long.md",
+       "Beta.md",
+       "Gamma.md",
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "ws": []
+   },
+   "s09-sidebar": {
+    "ok": true,
+    "linked": [
+     {
+      "id": "44459d4ecb23a07b",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "2854155e991090da",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "894ce92bbe30a5e6",
+      "type": "backlink",
+      "file": "Alpha.md",
+      "group": "2854155e991090da",
+      "mode": null,
+      "pinned": false,
+      "active": true,
+      "title": "Backlinks for Alpha",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "right"
+     }
+    ],
+    "activeAfter": {
+     "id": "894ce92bbe30a5e6",
+     "type": "backlink",
+     "file": "Alpha.md",
+     "group": "2854155e991090da",
+     "mode": null,
+     "pinned": false,
+     "active": true,
+     "title": "Backlinks for Alpha",
+     "linkIcon": true,
+     "back": [],
+     "fwd": [],
+     "root": "right"
+    },
+    "unlinkedActiveMoves": [
+     {
+      "id": "894ce92bbe30a5e6",
+      "type": "backlink",
+      "file": "Alpha.md",
+      "group": "2854155e991090da",
+      "mode": null,
+      "pinned": false,
+      "active": false,
+      "title": "Backlinks for Alpha",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "right"
+     },
+     {
+      "id": "44459d4ecb23a07b",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "2854155e991090da",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "linkedNoteMoves": [
+     {
+      "id": "894ce92bbe30a5e6",
+      "type": "backlink",
+      "file": "Delta.md",
+      "group": "2854155e991090da",
+      "mode": null,
+      "pinned": false,
+      "active": false,
+      "title": "Backlinks for Delta",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "right"
+     },
+     {
+      "type": "backlink",
+      "state": {
+       "file": "Delta.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      },
+      "icon": "links-coming-in",
+      "title": "Backlinks for Delta"
+     }
+    ],
+    "sidebarHeader": {
+     "aria": "Unlink tab",
+     "cls": "workspace-tab-header-status-icon mod-linked",
+     "svg": "svg-icon lucide-link",
+     "svgSize": "14px",
+     "box": [
+      1328,
+      10.5,
+      18,
+      18
+     ],
+     "color": "rgb(179, 179, 179)",
+     "bg": "rgba(0, 0, 0, 0)",
+     "radius": "8px",
+     "cursor": "default",
+     "order": [
+      "workspace-tab-header-inner-icon",
+      "workspace-tab-header-inner-title",
+      "workspace-tab-header-status-container",
+      "workspace-tab-header-inner-close-button"
+     ],
+     "closeShown": false,
+     "x": 1337,
+     "y": 19.5
+    },
+    "ws": [
+     {
+      "where": "main/split[1]/tabs[0]",
+      "id": "44459d4ecb23a07b",
+      "group": "2854155e991090da",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "markdown",
+      "raw": "{\n            \"id\": \"44459d4ecb23a07b\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Delta.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Delta\"\n            },\n            \"group\": \"2854155e991090da\"\n          }"
+     },
+     {
+      "where": "right/split[0]/tabs[0]",
+      "id": "894ce92bbe30a5e6",
+      "group": "2854155e991090da",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "backlink",
+      "raw": "{\n            \"id\": \"894ce92bbe30a5e6\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Delta.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks for Delta\"\n            },\n            \"group\": \"2854155e991090da\"\n          }"
+     }
+    ],
+    "outlineMenu": null,
+    "backlinkMenu": [
+     "Pin [lucide-pin]",
+     "Unlink tab [lucide-link]"
+    ],
+    "afterUnlink": []
+   },
+   "s10-local-graph": {
+    "ok": true,
+    "pair": [
+     {
+      "id": "167673f88eedb42e",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": "390ef8297d7e8448",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Alpha",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "967044f283980dd3",
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "group": "390ef8297d7e8448",
+      "mode": null,
+      "pinned": false,
+      "active": true,
+      "title": "Graph of Alpha",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "menuNote": [
+     "Pin [lucide-pin]",
+     "Unlink tab [lucide-link]",
+     "Backlinks in document [links-coming-in]",
+     "Reading view [lucide-book-open]",
+     "Source mode [lucide-code-2]"
+    ],
+    "menuGraph": [
+     "Pin [lucide-pin]",
+     "Unlink tab [lucide-link]"
+    ],
+    "iconGraph": {
+     "aria": "Unlink tab",
+     "cls": "workspace-tab-header-status-icon mod-linked",
+     "svg": "svg-icon lucide-link",
+     "svgSize": "14px",
+     "box": [
+      922.328125,
+      12.5,
+      18,
+      18
+     ],
+     "color": "rgb(166, 138, 249)",
+     "bg": "rgba(0, 0, 0, 0)",
+     "radius": "8px",
+     "cursor": "default",
+     "order": [
+      "workspace-tab-header-inner-icon",
+      "workspace-tab-header-inner-title",
+      "workspace-tab-header-status-container",
+      "workspace-tab-header-inner-close-button"
+     ],
+     "closeShown": true,
+     "x": 931.328125,
+     "y": 21.5
+    },
+    "afterUnlinkNote": [],
+    "graphAfter": {
+     "id": "967044f283980dd3",
+     "type": "localgraph",
+     "file": "Alpha.md",
+     "group": null,
+     "mode": null,
+     "pinned": false,
+     "active": true,
+     "title": "Local graph",
+     "linkIcon": false,
+     "back": [],
+     "fwd": [],
+     "root": "main"
+    },
+    "menuGraphUnlinked": [
+     "Pin [lucide-pin]",
+     "Link with tab... [lucide-link]"
+    ],
+    "graphLinkedToGamma": [
+     {
+      "id": "967044f283980dd3",
+      "type": "localgraph",
+      "file": "Gamma.md",
+      "group": "f58dd874838d05d1",
+      "mode": null,
+      "pinned": false,
+      "active": false,
+      "title": "Graph of Gamma",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "b283e1c4c4444880",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "f58dd874838d05d1",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "graphState": "Gamma.md",
+    "graphFollows": [
+     "Delta.md",
+     "Graph of Delta",
+     "Delta.md"
+    ]
+   },
+   "s11-close": {
+    "ok": true,
+    "setGroupApi": [
+     {
+      "id": "e9318fe321299771",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": "0123456789abcdef",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Alpha",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "c1962ea1a6b0278e",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "0123456789abcdef",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "afterClose": [
+     {
+      "id": "e9318fe321299771",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Alpha",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "1e7826e45dd4ace0",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "final": [
+     {
+      "id": "e9318fe321299771",
+      "type": "markdown",
+      "file": "Alpha.md",
+      "group": "431583e91b55dc53",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Alpha",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "1e7826e45dd4ace0",
+      "type": "markdown",
+      "file": "Beta.md",
+      "group": null,
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e857fb52d4cdf134",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "431583e91b55dc53",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "ws": [
+     {
+      "where": "main/split[0]/tabs[0]",
+      "id": "e9318fe321299771",
+      "group": "431583e91b55dc53",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "markdown",
+      "raw": "{\n            \"id\": \"e9318fe321299771\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Alpha\"\n            },\n            \"group\": \"431583e91b55dc53\"\n          }"
+     },
+     {
+      "where": "main/split[1]/tabs[0]",
+      "id": "e857fb52d4cdf134",
+      "group": "431583e91b55dc53",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "markdown",
+      "raw": "{\n            \"id\": \"e857fb52d4cdf134\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Gamma.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Gamma\"\n            },\n            \"group\": \"431583e91b55dc53\"\n          }"
+     }
+    ],
+    "wsFinal": "{\n  \"main\": {\n    \"id\": \"a3105dadfc4996f7\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"2bc46c3f8945ff65\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"e9318fe321299771\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Alpha\"\n            },\n            \"group\": \"431583e91b55dc53\"\n          },\n          {\n            \"id\": \"1e7826e45dd4ace0\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Beta.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Beta\"\n            }\n          }\n        ]\n      },\n      {\n        \"id\": \"296c3f37982f3202\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"e857fb52d4cdf134\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Gamma.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Gamma\"\n            },\n            \"group\": \"431583e91b55dc53\"\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"80da17170a579cdd\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"b15b795a647ef8c7\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"6ba2c97e8da90217\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"cce49eba4021737f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"e98332dea017a613\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"845c7578504b2dea\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"0b69cf7e7a249e9b\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"894ce92bbe30a5e6\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"5ed907afaf321b77\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"176eeaf841ea7ccf\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"3d0ae0f58f199bd9\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"65631078f18bd25b\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"e9318fe321299771\",\n  \"lastOpenFiles\": [\n    \"Gamma.md\",\n    \"Alpha.md\",\n    \"Beta.md\",\n    \"Delta.md\",\n    \"Long.md\",\n    \"pic.png\",\n    \"Board.canvas\"\n  ]\n}"
+   }
+  },
+  "order": [
+   "s00-meta",
+   "s01-pick-mode",
+   "s02-targets",
+   "s03-cancel",
+   "s04-link",
+   "s05-follow",
+   "s06-join",
+   "s07-pin",
+   "s08-unlink",
+   "s09-sidebar",
+   "s10-local-graph",
+   "s11-close"
+  ],
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-linktab/run3-vault"
+ },
+ "after-restart": {
+  "startedAt": "2026-11-22T21:16:24.516Z",
+  "env": {
+   "ONLY": null,
+   "vault": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-linktab/run3-vault"
+  },
+  "steps": {
+   "r00-reloaded": {
+    "ok": true,
+    "title": "Gamma - run3-vault - Obsidian 1.15.1",
+    "main": [
+     {
+      "id": "e9318fe321299771",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "431583e91b55dc53",
+      "mode": "source",
+      "pinned": false,
+      "active": false,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [
+       "Alpha.md"
+      ],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "1e7826e45dd4ace0",
+      "type": "markdown",
+      "file": null,
+      "group": null,
+      "mode": null,
+      "pinned": false,
+      "active": false,
+      "title": "Beta",
+      "linkIcon": false,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     },
+     {
+      "id": "e857fb52d4cdf134",
+      "type": "markdown",
+      "file": "Gamma.md",
+      "group": "431583e91b55dc53",
+      "mode": "source",
+      "pinned": false,
+      "active": true,
+      "title": "Gamma",
+      "linkIcon": true,
+      "back": [],
+      "fwd": [],
+      "root": "main"
+     }
+    ],
+    "icons": [
+     "Unlink tab",
+     null,
+     "Unlink tab"
+    ],
+    "ws": [
+     {
+      "where": "main/split[0]/tabs[0]",
+      "id": "e9318fe321299771",
+      "group": "431583e91b55dc53",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "markdown",
+      "raw": "{\n            \"id\": \"e9318fe321299771\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Gamma.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Gamma\"\n            },\n            \"group\": \"431583e91b55dc53\"\n          }"
+     },
+     {
+      "where": "main/split[1]/tabs[0]",
+      "id": "e857fb52d4cdf134",
+      "group": "431583e91b55dc53",
+      "keys": [
+       "id",
+       "type",
+       "state",
+       "group"
+      ],
+      "stateType": "markdown",
+      "raw": "{\n            \"id\": \"e857fb52d4cdf134\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Gamma.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Gamma\"\n            },\n            \"group\": \"431583e91b55dc53\"\n          }"
+     }
+    ]
+   }
+  },
+  "order": [
+   "r00-reloaded"
+  ],
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-linktab/run3-vault"
+ }
+}

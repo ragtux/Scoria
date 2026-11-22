@@ -567,7 +567,8 @@ rows, Pin, Link with tab..., Move to new window — no splits and no file rows.
 **Effects.** Close others leaves the clicked tab, active. Close all leaves one empty "New tab"
 when nothing is pinned. Move to new window from the menu is `workspace:move-to-new-window`.
 Link with tab... closed the menu and left no trace the probe could find (no modal, notice,
-class or overlay): unresolved.
+class or overlay): it starts a pick mode that draws nothing until the pointer moves, see
+[[#Observed Link with tab, Obsidian 1.15.1]].
 
 **Pinned tabs.** Pin sets the leaf's `pinned`, and the row reads **Unpin**. The header draws
 `div.workspace-tab-header-status-icon.mod-pinned` (`lucide-pin`, `aria-label="Unpin"`) and hides
@@ -12321,3 +12322,124 @@ around Alpha (all five notes); the linked tab came back linked, with its default
 - Whether an unlinked local graph in the main area goes on following the active file after the
   one move the probe saw (its linked leaf closing).
 - Pin and Link with tab on the sidebar pane, and the Copy screenshot row's output.
+
+## Observed Link with tab, Obsidian 1.15.1
+
+`tools/obsidian-probe/link-with-tab.mjs`, 2026-11-22, in a private headless sway with a data
+directory of its own (`document.title` "… - Obsidian 1.15.1"; a first run the same day was on
+1.15.0 until its relaunch and agreed on every row it reached), CDP port 9491, real mouse
+events. Vault: `Alpha → Beta, Gamma`, `Beta → Delta`, `Gamma → Beta`, `Delta → Alpha`, a
+300-line `Long.md`, a canvas and a PNG. Results in `results/2026-11-22-link-with-tab.json`.
+Each step starts from Alpha and Beta as tabs of one group and Gamma in a group to its right.
+Some rows were checked by hand against the same build first (noted below).
+
+### The row and the pick mode
+
+"Link with tab..." (`lucide-link`, `pane` section) follows Pin on **every** tab's menu: the
+active tab's, an inactive tab's short one (Close rows, Pin, Link with tab..., Move to new
+window), a local graph's, a sidebar tab's. No command carries it: the registered commands
+whose id or name says link, group or unlink are the editor's link commands, the tab-group focus
+and close commands and the panes' Show commands, nothing else.
+
+Clicking it closes the menu and **nothing changes** until the pointer moves: no body class, no
+new element, no notice or modal, the cursor `auto`, the keyboard on `body`. That is the mode:
+a move over a target draws the **drop overlay** a dragged tab shows, `div.workspace-drop-overlay`
+(`position: fixed`, `z-index: 5`, `transition: 0.1s ease-in-out`, its `::before` the
+`--interactive-accent` at `opacity: 0.5` with an 8 px radius) over the target **leaf** — the
+group's view header and content, below its tab strip (Gamma's group: 970, 40, 626 × 933 in a
+1596 × 973 window). The cursor stays `auto`.
+
+**Targets.** The tab a group shows, from anywhere in that group: over Beta's inactive header the
+overlay covered the group's shown leaf (Alpha), and a press there linked Alpha (the click also
+made Beta's tab active, as any click on a header does). The source's own leaf is drawn as a
+target too. An empty tab is one. In the docks: Bookmarks, Backlinks, Outgoing links, All
+properties and Outline are; **Files, Search and Tags are not** (no overlay at any point of them,
+header included). The ribbon is not.
+
+**Ending it.** A press of **any button** on a target links (a right click on Gamma's header
+linked Alpha with Gamma and then opened Gamma's menu). A press on the source itself, or on
+the ribbon's empty part, ends the mode with nothing linked. **Escape does not end it**, twice
+over: the overlay still came up on the next move.
+
+### The id
+
+The target becomes the **active** leaf. The source **joins the target's `group`**; when the
+target had none, both get a **new** 16-hex id (`e47f88ecd2cab5de`: neither leaf's id). Beta,
+unlinked, picking Gamma (linked with Alpha) took Gamma's id: three linked. A linked tab's row
+reads **Unlink tab** instead (same icon), so a linked tab never starts a pick. **Linking opens
+nothing**: Alpha and Gamma stayed on their files; the files meet the first time one moves.
+`workspace.json` writes the id after the leaf's other keys, as the local graph's does:
+
+```
+{"id": "23b8a0940700e8b0", "type": "leaf",
+ "state": {"type": "markdown", "state": {"file": "Alpha.md", "mode": "source", "source": false},
+           "icon": "lucide-file", "title": "Alpha"},
+ "group": "e47f88ecd2cab5de"}
+```
+
+A link that would hold one leaf is not written: `setGroup` on a single leaf left no `group` in the
+file (by hand).
+
+### The header's link
+
+Every linked tab draws, between its title and its close button, a
+`div.workspace-tab-header-status-container` holding
+`div.workspace-tab-header-status-icon.mod-linked` (`aria-label` "Unlink tab", no tooltip came up
+under the pointer): `lucide-link`, 14 px in an 18 × 18 box with an 8 px radius, coloured
+`--text-accent` (rgb 166, 138, 249) in the main area and the muted text colour on a sidebar tab.
+The close button stays (unlike a pin, which takes its place). **Under the pointer** the glyph
+becomes `lucide-unlink` on the accent at 0.1 alpha, and **every leaf of the link** gets
+`is-highlighted`: a `::before` over the leaf (z-index 30) in the accent at 0.25 alpha. A
+**click** on it unlinks that tab alone.
+
+### Unlinking
+
+Unlink tab (the menu row, or the icon) takes the one tab out; the others stay linked. A link
+left with **one** leaf is dissolved: that leaf loses its `group` and its icon. Closing a tab of
+a pair does the same to the other. On a three-way link, unlinking Beta left Alpha and Gamma
+linked; then Alpha's icon unlinked Alpha and Gamma with it.
+
+### Two linked tabs follow each other
+
+Whichever of the linked leaves opens a file, **every other** opens it, in both directions: a
+real link click in Alpha (Beta) moved Gamma to Beta; a link click in Gamma (Delta) moved Alpha;
+an open in a leaf that was **not active** moved the others too, and the active leaf stayed
+active. Each follower **pushes the file onto its own history** (Alpha's back list Alpha, Beta,
+Delta; Gamma's Gamma, Beta, Delta); **back** in one is a move like any other, so the others
+push the file it went back to rather than going back themselves. Each keeps **its own mode**:
+Gamma in Reading view stayed in Reading view while Alpha in Source mode moved it. A canvas, an
+image and a note all followed (a follower turning into a canvas view and back comes back in
+the default mode). A **pinned** follower follows; and **Pin on one linked tab pins all of
+them** (Unpin likewise). An **empty** tab in a link does not follow, but a file opened in it
+leads the others. Three linked leaves move as one.
+
+**Scroll.** Two linked leaves on the same note scroll together: a wheel over one (three
+600 px ticks) put both at line 70, one in Source mode and one in Reading view at 257; an open
+at a line (`setEphemeralState({line: 200})`) moved both. (A first hand check, both in editing
+modes, saw the other leaf take only the first step, then not.)
+
+**Relaunch.** A linked pair saved on different files (Alpha first in the layout, Gamma after,
+Alpha the active leaf) came back **both on Gamma**: the later leaf in the layout wins, and the
+earlier took Gamma onto its history (by hand, a pair saved on Alpha and Beta came back on
+Beta the same way, and the active leaf after the relaunch was the later one).
+
+### Linked sidebar leaves and the local graph
+
+Backlinks picked as a target became the active leaf, linked, and **kept its file** (Alpha, while
+Gamma showed Gamma). It then followed Gamma's moves when Gamma was the active leaf (`Backlinks for
+Beta`), and an unlinked tab opening a file left it alone. Twice, though, Gamma opening Beta
+while an unlinked tab was active on Delta ended with **both** Gamma and Backlinks on Delta: the
+linked pane took the active file and passed it to its link. Its leaf in `workspace.json` carries
+the `group` like any other (`right/split[0]/tabs[0]`, after `state`). A linked sidebar tab's menu
+reads Pin, Unlink tab.
+
+`graph:open-local`'s pair shows the link in both headers; the note's menu and the graph's read
+Unlink tab. Unlinking the note dissolves the pair: the graph loses its `group` and reads `Local
+graph`. The graph tab can then be the **source**: picking Gamma linked it, and unlike two notes
+it **took Gamma's file at once** (`Graph of Gamma`), then followed Gamma to Delta.
+
+### Not settled: Link with tab
+- What a press on a dock pane that is not a target (Files, Search, Tags) does to the mode, and
+  whether a popout's leaves are targets from the vault window.
+- Why the linked Backlinks pane passed on the active file (above) when its note moved while
+  another tab was active.
