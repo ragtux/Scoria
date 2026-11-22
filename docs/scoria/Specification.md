@@ -12443,3 +12443,127 @@ it **took Gamma's file at once** (`Graph of Gamma`), then followed Gamma to Delt
   whether a popout's leaves are targets from the vault window.
 - Why the linked Backlinks pane passed on the active file (above) when its note moved while
   another tab was active.
+
+## Observed Open linked view, Obsidian 1.15.1
+
+`tools/obsidian-probe/open-linked-view.mjs`, 2026-11-22, in a private headless sway with a data
+directory of its own and CDP on 9492 (`document.title` "… - Obsidian 1.15.1"; the first launch of
+the fresh data directory read 1.15.0 and updated itself, and the run was made again whole on
+1.15.1). Every menu was opened with real clicks and the submenu with a real hover; `s07` was run
+on its own afterwards. Vault: `Alpha` (frontmatter `tags`, `status`; headings Alpha, One, Two;
+links to Beta, Gamma and a missing Nowhere; Beta named unlinked), `Beta → Delta`, `Gamma → Beta,
+Alpha#One` (Alpha named unlinked), `Delta → Epsilon, Beta`, `Epsilon` (a `rating`), a canvas with
+a card for Alpha, a PNG, a one-page PDF and a one-view base. Results in
+`results/2026-11-22-open-linked-view.json`.
+
+### The submenu
+
+"Open linked view" (`lucide-link`, section `view`, after Open version history) opens a submenu
+whose rows are all in section `linked`:
+
+| File | Rows |
+| --- | --- |
+| a note, in Live Preview or reading view | Open local graph (`lucide-git-fork`), Open backlinks (`links-coming-in`), Open outgoing links (`links-going-out`), Open file properties (`lucide-info`), Open outline (`lucide-list`) |
+| a canvas, a PDF, an image, a base | Open backlinks alone |
+
+The view header's More options and the tab header's right-click menu carry the same row and the
+same submenu, on every kind. An inactive tab's menu and an empty tab's have none (the short menu,
+[[#Observed tab header menu and pinned tabs, Obsidian 1.15.0]]).
+
+### Where each row puts its view
+
+Each row links the note's leaf (its `group` set, a new id if it had none) and splits the main
+area beside the note's group with a **new** tab group holding one leaf in the same link, made
+active:
+
+| Row | Split | Leaf `type` | Title | View header title |
+| --- | --- | --- | --- | --- |
+| Open local graph | right (`vertical`) | `localgraph` | `Graph of Alpha` | `Local graph` |
+| Open backlinks | **below** (`horizontal`) | `backlink` | `Backlinks for Alpha` | `Backlinks` |
+| Open outgoing links | below | `outgoing-link` | `Outgoing links from Alpha` | `Outgoing links` |
+| Open file properties | below | `file-properties` | `File properties for Alpha` | `File properties` |
+| Open outline | right | `outline` | `Outline of Alpha` | `Outline` |
+
+The right sidebar stays as it was (collapsed stayed collapsed). After a row the keyboard is in no
+leaf (`document.activeElement` is the body) — except **Open file properties**, which puts it in
+the new leaf's `.metadata-container`. Run again, a row makes **another** group each time, linked to
+the same note, put directly beside the note with the earlier ones pushed along (after the second
+Open backlinks the new leaf was at `split[1]` under the note and the first at `split[2]`); nothing
+is reused or revealed. The view header's title is the plain name until the leaf's first change of
+file, then the leaf's title (`Backlinks for Beta`), as the local graph's was.
+
+### The leaves
+
+Key order exact; `group` comes after `state`, the leaf's last key:
+
+```
+{"type": "backlink", "state": {"file": "Alpha.md", "collapseAll": false, "extraContext": false,
+  "sortOrder": "alphabetical", "showSearch": false, "searchQuery": "",
+  "backlinkCollapsed": false, "unlinkedCollapsed": true},
+ "icon": "links-coming-in", "title": "Backlinks for Alpha"}
+{"type": "outgoing-link", "state": {"file": "Alpha.md", "linksCollapsed": false, "unlinkedCollapsed": true},
+ "icon": "links-going-out", "title": "Outgoing links from Alpha"}
+{"type": "file-properties", "state": {"file": "Alpha.md"},
+ "icon": "lucide-info", "title": "File properties for Alpha"}
+{"type": "outline", "state": {"file": "Alpha.md", "followCursor": false, "showSearch": false, "searchQuery": ""},
+ "icon": "lucide-list", "title": "Outline of Alpha"}
+```
+
+(the local graph's is in [[#Observed local graph pane, Obsidian 1.15.1]]). The views are the dock
+panes' own: the Backlinks leaf has the pane's four nav buttons, the Outline leaf its three, the
+Outgoing links and File properties leaves none. A linked leaf's More options is Split right and
+Split down; its tab's menu is Close, Pin, **Unlink tab**, Move to new window, Split right, Split
+down.
+
+### Following
+
+Each linked view follows **its note's leaf**, whatever that leaf opens: Beta made every one `… for
+Beta`, a canvas `Backlinks for Board` (no backlinks), the image `… for pic`, the PDF `… for doc`
+(Outline "No headings found.", File properties "No properties found."), Gamma `… for Gamma`. A
+different tab becoming active (Delta in a new tab) left them on their note's file, and so did the
+view made active itself. With the note's leaf **closed**, each lost its `group` key, its title
+became the plain name (`Backlinks`, `Outgoing links`, `File properties`, `Outline`), and it moved to
+Delta, the file that became active, then to Epsilon: unlinked, it follows the active file, and the
+leaf as written was `{"type": "backlink", "state": {"file": "Delta.md", …}, "icon":
+"links-coming-in", "title": "Backlinks"}` with no `group`. A relaunch restored the five views of a
+note linked, in place, titled from their leaves, and still following the note (its leaf opening
+Beta moved all of them).
+
+### Their own state
+
+The linked Backlinks leaf keeps its own: Collapse results, Show more context, File name (Z to A)
+from its sort menu, Show search filter with `Gam` typed, Linked mentions folded and Unlinked
+mentions opened wrote `collapseAll: true, extraContext: true, sortOrder: "alphabeticalReverse",
+showSearch: true, searchQuery: "Gam", backlinkCollapsed: true, unlinkedCollapsed: false` into the
+leaf, every key in place; the dock's Backlinks leaf stayed on its defaults, and `backlink.json` was
+not written. The state **travels with the leaf**: the note moving to Delta kept every one of those
+values. The Outline leaf's Show search filter set its `showSearch: true`.
+
+### Clicks in a view
+
+A row clicked in a linked view opens in the **note's leaf**, which becomes active with the keyboard
+in its editor: a Backlinks group row (Gamma, in the view of Beta) and an Outgoing links row (Gamma,
+from Alpha) opened Gamma there, and both views then followed to Gamma; an Outline heading (Two)
+moved the note's cursor to that heading's line.
+
+### The commands
+
+| Command (name) | What it does with a note open |
+| --- | --- |
+| `backlink:open-backlinks` (Backlinks: Open backlinks for the current note) | a `backlink` leaf, **unlinked** (no `group`), titled `Backlinks`, in a new group **right** of the note, active |
+| `outgoing-links:open-for-current` (Outgoing links: Open outgoing links for the current file) | the same with an `outgoing-link` leaf, `Outgoing links` |
+| `outline:open-for-current` (Outline: Open outline of the current file) | the same with an `outline` leaf, `Outline` |
+| `properties:open-local` (Properties view: Show file properties) | the right dock's `file-properties` leaf, sixth, revealed, keyboard in it — not a main-area leaf |
+| `graph:open-local` | the linked local graph, as the submenu's row |
+| `backlink:open`, `outgoing-links:open`, `outline:open`, `properties:open` | reveal the dock's leaf |
+
+None has a default hotkey. The unlinked leaf a command makes follows the active file (Beta opened
+in the note's tab moved it to Beta), and with an empty tab active its `file` key is **dropped**
+(`state` is the other seven keys), as the local graph's was. There is no command for "Open file
+properties" as a main-area view.
+
+### Not settled: Open linked view
+- What a linked File properties leaf's edits write (the view drew Alpha's `tags` and `status` and
+  Add property; no edit was made in it).
+- What the linked Outline's `followCursor` does to its rows while the note's cursor moves.
+- Whether a row of the submenu is withheld when its core plugin is off.
