@@ -91,6 +91,8 @@ mod doc_backlinks;
 mod file_properties_pane;
 mod footnotes_pane;
 mod layouts;
+mod local_graph_pane;
+mod local_graph_tab;
 mod stacked;
 
 use doc_backlinks::{listen, DocBacklinks, SectionsOwner};
@@ -1614,6 +1616,9 @@ enum RightTab {
     /// view core plugin's pane. Like File properties it has a tab only
     /// once `footnotes:open` made its leaf or the file has one.
     Footnotes,
+    /// Local graph (`localgraph`): a local graph of the active file. A
+    /// tab only once `graph:open-local` made its leaf or the file has one.
+    LocalGraph,
 }
 
 /// The Outline pane's headings for one note's metadata, whether that
@@ -2020,6 +2025,10 @@ struct Tab {
     /// last note" reads to find the last note. 0 for a tab never active
     /// over a note this session.
     note_stamp: u64,
+    /// The leaf's `group`: tabs sharing it are linked, and a local graph
+    /// in a link follows the file of the other tab in it
+    /// ([`local_graph_tab`]). Read from and written to every leaf.
+    link: Option<String>,
 }
 
 impl Tab {
@@ -2034,6 +2043,7 @@ impl Tab {
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
             note_stamp: 0,
+            link: None,
         }
     }
 
@@ -2051,6 +2061,9 @@ impl Tab {
     /// The tab's title as the strip shows it: the note's name, or Obsidian's
     /// "New tab" for one with nothing in it.
     fn title(&self) -> SharedString {
+        if local_graph_tab::is_local_graph(self) {
+            return local_graph_tab::title(self).into();
+        }
         match release_notes::version_of(self) {
             Some(version) => release_notes::title(&version).into(),
             None => leaf_title(self.path.as_deref(), self.mode),
@@ -3625,6 +3638,14 @@ pub struct Workspace {
     /// when that is a `.pdf`.
     pdf: Entity<PdfView>,
     graph: Entity<GraphView>,
+    /// The right dock's Local graph pane, a graph view of its own.
+    local_graph: Entity<GraphView>,
+    /// Whether the right dock has a `localgraph` leaf: `workspace.json`
+    /// had one. `graph:open-local` makes a linked tab, not this.
+    local_graph_open: bool,
+    /// The views of the local-graph tabs, by leaf id, with their event
+    /// subscriptions ([`local_graph_tab`]).
+    local_graph_tabs: HashMap<String, (Entity<GraphView>, Subscription)>,
     /// The mode to return to when the graph closes.
     mode_before_graph: ViewMode,
     mode: ViewMode,
@@ -4035,6 +4056,7 @@ impl Workspace {
         let bases = cx.new(BasesView::new);
         let pdf = cx.new(PdfView::new);
         let graph = cx.new(GraphView::new);
+        let local_graph = cx.new(GraphView::new_pane);
         // The registry of embedded bases' views. A view is made while a
         // host is being updated, so the workspace's own subscription to it
         // waits for the next turn of the app.
@@ -4097,10 +4119,38 @@ impl Workspace {
             cx.observe(&editor, |this, _, cx| this.follow_heading(cx)),
             cx.observe(&reading, |this, _, cx| this.follow_heading(cx)),
             cx.subscribe_in(
+                &local_graph,
+                window,
+                |this, _, event: &GraphEvent, window, cx| match event {
+                    GraphEvent::Open(path) => this.open_from_local_graph(path.clone(), window, cx),
+                    GraphEvent::OpenInNewTab(path) => {
+                        this.open_link_in_new_tab(path.clone(), None, cx)
+                    }
+                    GraphEvent::Hover(Some(hover)) => {
+                        let where_ = this.window_of_group(this.groups[this.active_group].id);
+                        this.row_hover(
+                            crate::hover_preview::Source::Graph,
+                            where_,
+                            crate::hover_preview::exact(&hover.path),
+                            hover.path.clone(),
+                            true,
+                            hover.anchor,
+                            hover.modifiers,
+                            cx,
+                        )
+                    }
+                    GraphEvent::Hover(None) => {
+                        this.source_left(crate::hover_preview::Source::Graph, cx)
+                    }
+                },
+            ),
+            cx.subscribe_in(
                 &graph,
                 window,
                 |this, _, event: &GraphEvent, window, cx| match event {
-                    GraphEvent::Open(path) => {
+                    // The main area's graph opens a node in its own tab,
+                    // Mod or not: only the pane's Mod+click was observed.
+                    GraphEvent::Open(path) | GraphEvent::OpenInNewTab(path) => {
                         let back = this.mode_before_graph;
                         this.set_mode(back, window, cx);
                         this.open_file(path.clone(), None, cx);
@@ -4590,6 +4640,9 @@ impl Workspace {
             bases,
             pdf,
             graph,
+            local_graph,
+            local_graph_open: false,
+            local_graph_tabs: HashMap::new(),
             mode_before_graph: ViewMode::Reading,
             mode: ViewMode::Reading,
             current: None,
@@ -5609,6 +5662,8 @@ impl Workspace {
             .update(cx, |s, cx| s.set_state(state.clone(), cx));
         self.graph
             .update(cx, |g, cx| g.set_state(state.clone(), cx));
+        self.local_graph
+            .update(cx, |g, cx| g.set_state(state.clone(), cx));
         self.settings
             .update(cx, |s, cx| s.set_state(state.clone(), cx));
         self.name_finder = None;
@@ -6212,7 +6267,7 @@ impl Workspace {
             // Obsidian's `checkCallback` does rather than falling back to the
             // global graph.
             "graph:open-local" if self.current.is_none() => {}
-            "graph:open-local" => self.show_graph(true, window, cx),
+            "graph:open-local" => self.open_linked_local_graph(window, cx),
             // Both check callbacks: asked for by id where the palette would
             // not offer them, they do nothing.
             "graph:animate" if !self.global_graph_active(cx) => {}
@@ -12309,6 +12364,13 @@ impl Workspace {
         {
             return self.release_notes_view(&version, cx).into_any_element();
         }
+        if let Some(element) = view
+            .tabs
+            .get(view.active_tab)
+            .and_then(|tab| self.local_graph_tab_element(tab))
+        {
+            return element;
+        }
         match Self::main_view_for(view.mode, has_note, image, has_buffer, canvas, bases, pdf) {
             MainView::Canvas => view.canvas.clone().into_any_element(),
             MainView::Bases => view.bases.clone().into_any_element(),
@@ -12472,6 +12534,7 @@ impl Workspace {
         // the tab as the pin does.
         let doc_backlinks = slot.map(|t| t.doc_backlinks.clone()).unwrap_or_default();
         let note_stamp = slot.map_or(0, |t| t.note_stamp);
+        let link = slot.and_then(|t| t.link.clone());
         let tab = Tab {
             path: self.current.clone(),
             mode: self.mode,
@@ -12482,6 +12545,7 @@ impl Workspace {
             pinned,
             doc_backlinks,
             note_stamp,
+            link,
         };
         match self.tabs.get_mut(self.active_tab) {
             Some(slot) => *slot = tab,
@@ -12983,6 +13047,7 @@ impl Workspace {
                 .map(|t| t.doc_backlinks.clone())
                 .unwrap_or_default(),
             note_stamp: 0,
+            link: None,
         }
     }
 
@@ -13000,6 +13065,7 @@ impl Workspace {
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
             note_stamp: 0,
+            link: None,
         }
     }
 
@@ -15685,6 +15751,7 @@ impl Workspace {
             Some("all-properties") => self.right_tab = RightTab::Properties,
             Some("file-properties") => self.right_tab = RightTab::FileProperties,
             Some("footnotes") => self.right_tab = RightTab::Footnotes,
+            Some("localgraph") => self.right_tab = RightTab::LocalGraph,
             _ => {}
         }
         self.file_properties_open = layout
@@ -15693,6 +15760,7 @@ impl Workspace {
         self.footnotes.open = layout
             .get("right")
             .is_some_and(|right| leaf_of_kind(right, "footnotes").is_some());
+        self.restore_local_graph(&layout, cx);
         self.layout = Some(layout);
     }
 
@@ -15864,6 +15932,7 @@ impl Workspace {
             } else {
                 file_properties_pane::remove_leaf(right, "footnotes");
             }
+            self.write_local_graph_leaf(right, cx);
         }
         // The Files leaf's own state, where the file has that leaf.
         {
@@ -16094,6 +16163,7 @@ impl Workspace {
         let Some(state) = self.state.clone() else {
             return;
         };
+        self.sync_local_graph_tabs(cx);
         let fresh = self.layout_json(cx);
         if self.layout.as_ref() == Some(&fresh) {
             return;
@@ -16354,6 +16424,7 @@ impl Workspace {
                 RightTab::Properties => "properties",
                 RightTab::FileProperties => "file-properties",
                 RightTab::Footnotes => "footnotes",
+                RightTab::LocalGraph => "localgraph",
             }),
         );
         right.insert(
@@ -16528,6 +16599,8 @@ impl Workspace {
                 "item": f.item_index(),
             })),
             "graph": graph,
+            "local_graph": self.describe_local_graph(cx),
+            "local_graph_tabs": self.describe_local_graph_tabs(cx),
             "slides": self.slides.as_ref().map(|p| p.view.read(cx).describe()),
             "canvas": self.canvas.read(cx).describe(cx),
             "bases": self.bases.read(cx).state_json(),
@@ -18507,7 +18580,8 @@ impl Workspace {
                 RightTab::Backlinks
                 | RightTab::Outgoing
                 | RightTab::FileProperties
-                | RightTab::Footnotes => false,
+                | RightTab::Footnotes
+                | RightTab::LocalGraph => false,
             }
     }
 
@@ -18629,7 +18703,8 @@ impl Workspace {
             RightTab::Backlinks
             | RightTab::Outgoing
             | RightTab::FileProperties
-            | RightTab::Footnotes => return,
+            | RightTab::Footnotes
+            | RightTab::LocalGraph => return,
         }
         cx.notify();
     }
@@ -18666,7 +18741,8 @@ impl Workspace {
             RightTab::Backlinks
             | RightTab::Outgoing
             | RightTab::FileProperties
-            | RightTab::Footnotes => {}
+            | RightTab::Footnotes
+            | RightTab::LocalGraph => {}
         }
     }
 
@@ -19489,12 +19565,16 @@ impl Workspace {
             RightTab::Properties | RightTab::FileProperties => "properties",
             RightTab::Footnotes => "footnotes",
             RightTab::Outline => "outline",
+            RightTab::LocalGraph => "graph",
         };
         // File properties has a tab only while it has a leaf.
         if tab == RightTab::FileProperties && !self.file_properties_open {
             return false;
         }
         if tab == RightTab::Footnotes && !self.footnotes.open {
+            return false;
+        }
+        if tab == RightTab::LocalGraph && !self.local_graph_open {
             return false;
         }
         self.state
@@ -19520,6 +19600,7 @@ impl Workspace {
                 RightTab::Outline,
                 RightTab::FileProperties,
                 RightTab::Footnotes,
+                RightTab::LocalGraph,
             ]
             .into_iter()
             .find(|t| self.pane_enabled(*t))
@@ -19536,6 +19617,7 @@ impl Workspace {
             RightTab::Properties => self.render_properties_pane(theme, cx),
             RightTab::FileProperties => self.render_file_properties_pane(theme, window, cx),
             RightTab::Footnotes => self.render_footnotes_pane(theme, window, cx),
+            RightTab::LocalGraph => self.render_local_graph_pane(cx),
         };
         // A pane whose core plugin is off is not offered: Obsidian takes
         // the view away with the plugin.
@@ -19565,6 +19647,7 @@ impl Workspace {
                 let kind = match which {
                     RightTab::FileProperties => Some("file-properties"),
                     RightTab::Footnotes => Some("footnotes"),
+                    RightTab::LocalGraph => Some("localgraph"),
                     _ => None,
                 };
                 div()
@@ -19650,6 +19733,15 @@ impl Workspace {
                         "Footnotes",
                         "file-pen-line",
                         RightTab::Footnotes,
+                        cx,
+                    ))
+                    // Last, where the dragged leaf landed after Outline;
+                    // its icon is the graph's `lucide-git-fork`.
+                    .children(tab_button(
+                        self,
+                        "Local graph",
+                        "git-fork",
+                        RightTab::LocalGraph,
                         cx,
                     ))
                     .child(window_handle(
@@ -20062,6 +20154,11 @@ fn tab_from_leaf(
         .and_then(Value::as_bool)
         .unwrap_or(false);
     let mut tab = match (view, file) {
+        // A local graph's leaf names its file but is not that file's tab.
+        (Some(scoria_formats::local_graph::VIEW_TYPE), _) => Tab {
+            leaf: Some(leaf.clone()),
+            ..Tab::empty(default_mode)
+        },
         (_, Some(file)) => {
             if !known(file) {
                 return None;
@@ -20089,6 +20186,7 @@ fn tab_from_leaf(
                 pinned: false,
                 doc_backlinks: DocBacklinks::read(inner),
                 note_stamp: 0,
+                link: None,
             }
         }
         (Some("empty"), None) => Tab {
@@ -20106,6 +20204,10 @@ fn tab_from_leaf(
         _ => return None,
     };
     tab.pinned = pinned;
+    tab.link = leaf
+        .get("group")
+        .and_then(Value::as_str)
+        .map(str::to_string);
     Some((id.to_string(), tab))
 }
 
@@ -20530,6 +20632,9 @@ fn leaf_json(tab: &Tab) -> Value {
                 (None, _) if release_notes::version_of(tab).is_some() => {
                     view == Some(release_notes::VIEW_TYPE)
                 }
+                (None, _) if local_graph_tab::is_local_graph(tab) => {
+                    view == Some(scoria_formats::local_graph::VIEW_TYPE)
+                }
                 (None, _) => view == Some("empty"),
             }
         })
@@ -20585,6 +20690,7 @@ fn leaf_json(tab: &Tab) -> Value {
         }
     }
     set_pinned(&mut leaf, tab.pinned);
+    local_graph_tab::set_group(&mut leaf, tab.link.as_deref());
     leaf
 }
 
@@ -20905,6 +21011,7 @@ impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.corners = WindowCorners::of(window);
         self.sync_stacks(cx);
+        self.sync_local_graph_tabs(cx);
         self.stamp_live_note();
         if let Some(value) = self.pending_title_rename.take() {
             cx.defer_in(window, move |this, window, cx| {
@@ -22265,6 +22372,7 @@ mod tests {
             pinned: true,
             doc_backlinks: DocBacklinks::default(),
             note_stamp: 0,
+            link: None,
         };
         assert_eq!(leaf_json(&tab), read);
     }
@@ -22282,6 +22390,7 @@ mod tests {
             pinned: true,
             doc_backlinks: DocBacklinks::default(),
             note_stamp: 0,
+            link: None,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["id"], read["id"]);
@@ -22312,6 +22421,7 @@ mod tests {
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
             note_stamp: 0,
+            link: None,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("canvas"));
@@ -22345,6 +22455,7 @@ mod tests {
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
             note_stamp: 0,
+            link: None,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("bases"));
@@ -22388,6 +22499,7 @@ mod tests {
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
             note_stamp: 0,
+            link: None,
         };
         let audio = leaf_json(&tab("tone.mp3"));
         assert_eq!(audio["state"]["type"], json!("audio"));
@@ -22420,6 +22532,7 @@ mod tests {
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
             note_stamp: 0,
+            link: None,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("pdf"));
@@ -22498,6 +22611,7 @@ mod tests {
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
             note_stamp: 0,
+            link: None,
         };
         let written = leaf_json(&tab);
         let id = written["id"].as_str().unwrap();

@@ -1199,6 +1199,12 @@ there is nowhere to persist them, and the control socket reports them instead. T
 it. OBSERVE: that range, and what Obsidian's interlinks rule does at depth 2 (only the depth-1 case
 was probed).
 
+**Landed 2026-11-22**: the options persist. Each local graph (the tab `graph:open-local` links to
+the note, or a right-dock pane) keeps them, with every other setting of its panel, in its
+`localgraph` leaf in `workspace.json`, in Obsidian's bytes; the
+Depth slider's range is observed as 1 to 5, step 1 (`local-graph-pane.mjs` `s08`). See
+[[Development#Local graph pane, 2026-11-22]].
+
 **Scoria.** The local graph of a note with two forward links, one of which also links the other,
 keeps the neighbour-to-neighbour edge and every one-hop neighbour in either direction. Depth is the
 literal `if depth >= 1 { continue; }`, and `grep` for `local_jumps`, `interlink`, `forelink` or

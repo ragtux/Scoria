@@ -345,6 +345,99 @@ The gate's run, its sheet and its log are in [[Parity gate run]].
 | Bases cell undo | done 2026-11-16: Ctrl+Z and Ctrl+Shift+Z over a paste, a Delete, a typed cell and a checkbox, one step per action, the selection put back, an open note's history taking the writes; see [[#Bases cell undo, 2026-11-16]] and [[Specification#Observed Bases cell undo, Obsidian 1.15.1]] |
 
 | New folder and the file pickers' order | done 2026-11-16: New folder makes `Untitled` and renames it on the Files row, a click away commits a row rename, and the template pickers list in `vault.getFiles()` order, see [[#New folder and the file pickers' order, 2026-11-16]] and [[Specification#Observed New folder and the file pickers' order, Obsidian 1.15.0]] |
+| The local graph pane | done 2026-11-22: `graph:open-local` splits the main area with a `localgraph` tab linked to the note's tab (the leaves' `group`), as Obsidian 1.15.1 does, following that tab's file; a right-dock `localgraph` leaf from `workspace.json` follows the active file; both keep their Depth, direction toggles and every other setting in the leaf in Obsidian's bytes, see [[#Local graph pane, 2026-11-22]] and [[Specification#Observed local graph pane, Obsidian 1.15.1]] |
+
+### Local graph pane, 2026-11-22
+
+The differences page's row "The local graph as a side pane" said the graph, global or local, was
+a view of the main area, and the 2026-10-30 entry had left the local graph's Depth and direction
+options to the session because Scoria wrote no `localgraph` leaf. The brief was a sidebar pane
+that follows the active note. Probed first, see
+[[Specification#Observed local graph pane, Obsidian 1.15.1]]. A first build made the command open
+the sidebar pane, since Scoria had no linked tabs; the choice was then to match Obsidian, and the
+second build below gave Scoria the links.
+
+**The probe.** `tools/obsidian-probe/local-graph-pane.mjs`, nine steps and a relaunch over CDP in a
+private headless sway (`USER_DATA_DIR`, `CDP_PORT=9481`, `--ozone-platform=x11` under that sway's
+XWayland, `XDG_RUNTIME_DIR` pointed at a folder of its own so the sockets could not meet another
+agent's). It contradicted the brief at once: `graph:open-local` does **not** open a sidebar leaf. It
+splits the main area with a new tab group holding a `localgraph` leaf **linked** (a shared `group`
+id) to the note's leaf, a new group on every run, and that leaf follows its note's leaf rather than
+the active file. The sidebar pane exists only as what that tab becomes when dragged into the dock,
+which the probe then did with a real HTML5 drag: unlinked, titled `Local graph`, sixth after
+Outline, following the active file (a note, a canvas, an image; with none the leaf's `file` key goes
+and the graph is blank), its options edited in place in the leaf and back after a relaunch,
+`graph.json` untouched. A node's click opened the note in the main area's active tab, Ctrl+click in
+a new tab; `Ctrl+G` put the global graph in the main area's active tab and the pane went blank.
+
+**What was built.**
+- `scoria_formats::local_graph`: the leaf's `options` block in Obsidian's 23 keys and order,
+  `LocalGraphOptions` (a `GraphConfig` and the four `local*` options) read from it, and `write_into`,
+  which rewrites only a key whose value changed (numbers compared at the `f32` the view keeps, so
+  `0.518713248970312` stays those digits), puts a missing key after the one Obsidian writes before
+  it, and leaves unknown keys alone; `write_state` (`file` dropped with no file) and `new_leaf`.
+  Seven tests, one of them the probe's edited block written back unchanged.
+- **Linked tabs** (`workspace/local_graph_tab.rs`): `Tab::link`, the leaf's `group`, read from and
+  written to every leaf (after its other keys, gone when unlinked), kept by a tab that moves on to
+  another file or to another group. Nothing but the local graph acts on a link yet; "Link with tab"
+  and "Open linked view" can be built on it.
+- **The local graph tab.** Like a release-notes tab, a tab with no file whose leaf is a
+  `localgraph` leaf; `tab_from_leaf` now takes such a leaf before its `file`, which it used to
+  restore as that file's tab. `graph:open-local` gives the active tab a link id if it has none and
+  splits the main area with a new group right of it holding a local graph in that link, active, the
+  keyboard left where it was; each run another group. Every frame (and before the layout is
+  written) `sync_local_graph_tabs` centres each one on the file of the other tab in its link, or,
+  with no such tab left, unlinks it and has it follow the active file; it titles it `Graph of
+  <name>` or `Local graph`, makes its `GraphView` the first time (one per leaf id) and writes the
+  file and the view's options into the leaf. A node's click opens the note in the linked tab (else
+  the last group whose tab is not a local graph), never over the graph; Mod+click opens a new tab in
+  the graph's own group.
+- `GraphView::new_pane`: the local graph's view, `pane: true`, always local and centred on the file
+  it is given, blank with none, its settings set from the leaf (`set_pane_options`) and read back
+  (`pane_options`), never loaded from or written to `graph.json`; no Local/Global chip and no node
+  count over its panel. It opens at scale 1 but zooms out until a graph wider than the view fits. A
+  node clicked with Mod raises `GraphEvent::OpenInNewTab`.
+- `workspace/local_graph_pane.rs`: the right dock's `localgraph` leaf, restored from `workspace.json`
+  only (Obsidian gets one by dragging the tab there, which Scoria cannot): `RightTab::LocalGraph`
+  last in the dock (`git-fork`, "Local graph"); it follows the active file, keeps its file while a
+  local graph's tab is the active one, and goes blank under the global graph; its leaf is rewritten
+  in place with every other key kept; the tab's menu closes it.
+- The state dump carries `local_graph` (the dock pane) and `local_graph_tabs` (each tab's leaf id,
+  group, link, file, title and node count), each with every node's drawn position under
+  `positions`, for a driver.
+
+**Driven.** The release build in a private headless sway (gles2, `XDG_RUNTIME_DIR` of its own) over
+the control socket, on the probe's notes. The first build's dock pane: Filters expanded, Neighbor
+links and Incoming links clicked and the Depth thumb dragged to 3 gave the five notes, as Obsidian's
+did; a node click and a Ctrl+click opened the note in the active tab and in a new one; `graph:open`
+blanked it; on quit the leaf was the probe's sidebar leaf byte for byte with those options, and two
+unknown keys added by hand survived a relaunch. The second build: `graph:open-local` on Alpha split
+the main area with `Graph of Alpha` (3 nodes) active, the keyboard still in the editor's context;
+run again from the note it put a second group directly right of the note, the first one pushed
+along, as Obsidian's did; Beta opened in the note's tab moved both to `Graph of Beta` (4 nodes),
+and Delta in a new tab of that group left them there. A click on Gamma's node in a graph opened
+Gamma in the note's tab and made it active; a Ctrl+click on Beta's opened Beta in a new tab in the
+graph's own group. On quit both graphs' leaves and the note's carried the same `group`, the leaves
+in Obsidian's key order (`id`, `type`, `state`, `group`); a relaunch restored them linked. Closing
+the note's tab unlinked both (`Local graph`, no `group`) and they followed the active file, Delta
+then Epsilon. Finally the vault Obsidian itself left after the probe (a linked graph beside Alpha,
+the sidebar pane at Depth 3) opened with the linked tab `Graph of Alpha` and the pane, and quitting
+wrote nothing: `workspace.json` stayed byte for byte as Obsidian wrote it.
+
+**What differs, on purpose.** The tab's menu has no Link with tab or Unlink tab, the note's More
+options no Open linked view, and the dock pane's tab menu is Close alone; a tab cannot be dragged
+into the dock, so the dock pane comes only from a file that has one. Linked tabs follow only in one
+direction, the local graph after its note: two note tabs sharing a link (which Obsidian keeps on the
+same file) are each left where they are. The tab's header title is `Graph of <name>` from the
+start, where Obsidian's read `Local graph` until its first change of file. Scoria's local graph has
+no canvas node for a canvas's cards (Obsidian's graph of Alpha also showed `Board.canvas`).
+
+**Traps.** A fresh `USER_DATA_DIR` updated itself to 1.15.1 at its first relaunch, so the first run
+was 1.15.0 before it and 1.15.1 after; the probe was run again whole. A node's position read before
+a click goes stale while the simulation is still moving: on 1.15.1 the probe's plain click and the
+first plain click here both missed for that reason, and reading the position right before clicking
+fixed it. The control socket's coordinates are window-local while grim's are the output's: under a
+sway title bar they differ by its height (25 px here).
 
 ### A full path in the template file pickers, 2026-11-22
 

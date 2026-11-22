@@ -1090,6 +1090,7 @@ mod tests {
             pinned: false,
             doc_backlinks: doc,
             note_stamp: 0,
+            link: None,
         };
         let mut leaf = leaf_json(&tab);
         tab.doc_backlinks.write(&mut leaf, false);
