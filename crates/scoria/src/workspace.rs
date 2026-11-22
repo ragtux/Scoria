@@ -17,7 +17,7 @@ use crate::canvas::{CanvasEvent, CanvasView};
 use crate::chooser::{Chooser, ChooserEvent, Row as ChooserRow};
 use crate::copy_results::{CopyResults, CopyResultsEvent};
 use crate::debug_info::{DebugInfo, DebugInfoEvent};
-use crate::editor::{Editor, EditorEvent, IncomingAttachments};
+use crate::editor::{Editor, EditorEvent, IncomingAttachments, PropertySurface};
 use crate::explorer::{
     self, display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder,
 };
@@ -243,7 +243,6 @@ pub const EDITOR_ONLY: &[&str] = &[
     "insert-current-time",
     "insert-template",
     "insert-unique-link",
-    "markdown:add-alias",
 ];
 
 /// The ids that need a base on screen, which is Obsidian's `checkCallback`
@@ -7193,12 +7192,16 @@ impl Workspace {
         // Both are check callbacks in Obsidian 1.15.0 (2026-11-09):
         // "Rename this heading..." is offered only with the caret on an ATX
         // heading line, in Live Preview or Source mode. "Add alias" is
-        // offered in reading view too, but there Obsidian edits the reading
-        // view's own block, which is read-only in Scoria, so it is left out.
+        // offered in all three modes, over a note with frontmatter or none
+        // (2026-11-22, `s00`), with the note holding the keys.
         if id == "editor:rename-heading" {
             return self.mode.is_editing()
                 && self.note_has_keys(window, cx)
                 && self.editor.read(cx).heading_to_rename().is_some();
+        }
+        if id == "markdown:add-alias" {
+            return self.note_has_keys(window, cx)
+                && (self.mode.is_editing() || self.reading_holds_note(cx));
         }
         // A check callback: it flips the active markdown leaf's block, so
         // it is offered only while one is active.
@@ -11331,10 +11334,42 @@ impl Workspace {
     /// the field in the File properties pane: the same key is written, the
     /// pane's leaf is made or revealed with the dock expanded, and the caret
     /// lands in the pane's aliases input (the 2026-11-15 probe, `s07`, with
-    /// the leaf open and with it closed). Reading view is not offered (see
-    /// `can_run`).
+    /// the leaf open and with it closed). In reading view the same key is
+    /// written; with `propertiesInDocument` at its default the caret goes
+    /// in the reading view's own block, the pane left as it is, and with
+    /// "hidden" or "source" in the pane, as in Source mode, although
+    /// reading view draws the table under "source" (2026-11-22,
+    /// `add-alias-reading.mjs`, `s01` to `s03`).
     fn add_alias(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        if !self.mode.is_editing() || !self.note_has_keys(window, cx) {
+        if !self.note_has_keys(window, cx) {
+            return;
+        }
+        if self.mode == ViewMode::Reading {
+            if !self.reading_holds_note(cx) {
+                return;
+            }
+            let table =
+                self.editor.read(cx).properties_in_document() == PropertiesInDocument::Visible;
+            let changed = if table {
+                let changed = self.editor.update(cx, |e, cx| {
+                    e.add_alias_on(PropertySurface::Reading, window, cx)
+                });
+                let editor = self.editor.clone();
+                self.reading
+                    .update(cx, |r, cx| r.edit_alias_with(editor, window, cx));
+                changed
+            } else {
+                self.open_file_properties(window, cx);
+                self.editor
+                    .update(cx, |e, cx| e.add_alias_in_pane(window, cx))
+            };
+            if changed {
+                self.flush_save(cx);
+            }
+            cx.notify();
+            return;
+        }
+        if !self.mode.is_editing() {
             return;
         }
         let in_table =
@@ -11353,6 +11388,16 @@ impl Workspace {
             self.flush_save(cx);
         }
         cx.notify();
+    }
+
+    /// Whether the reading view shows a note the editor behind it holds,
+    /// which is what an edit made from reading view writes through.
+    fn reading_holds_note(&self, cx: &App) -> bool {
+        self.mode == ViewMode::Reading
+            && self.current.as_deref().is_some_and(|path| {
+                FileKind::from_path(path) == FileKind::Markdown
+                    && self.editor.read(cx).name.as_ref() == path
+            })
     }
 
     /// Renames the open note to `new_name` (same folder, same extension)
@@ -16476,6 +16521,12 @@ impl Workspace {
             "modal": self.describe_modal(rows, cx),
             "editor": self.editor.read(cx).describe(text, cx),
             "reading": self.reading.read(cx).describe(cx),
+            // The field Add alias opened in the reading view's block.
+            "reading_property_field": self.reading.read(cx).property_field(cx).map(|f| json!({
+                "key": f.key(),
+                "text": f.text,
+                "item": f.item_index(),
+            })),
             "graph": graph,
             "slides": self.slides.as_ref().map(|p| p.view.read(cx).describe()),
             "canvas": self.canvas.read(cx).describe(cx),
@@ -16702,6 +16753,11 @@ impl Workspace {
             // The pane is on screen whatever the main area paints, and its
             // field is the editor's, in reading view too.
             "file-properties-field" => "editor",
+            // The reading view's block, with Add alias's field open in it.
+            "reading-field" => match painted {
+                MainView::Reading => "editor",
+                _ => "none",
+            },
             "workspace" | "reading" | "graph" | "canvas" | "bases" | "pdf" | "file-properties"
             | "none" => "none",
             _ => "input",
@@ -16765,7 +16821,13 @@ impl Workspace {
             };
         }
         if self.reading.focus_handle(cx).is_focused(window) {
-            return "reading";
+            // Add alias's field in the block, which takes typed text into
+            // the editor that holds the note.
+            return if self.reading.read(cx).property_field(cx).is_some() {
+                "reading-field"
+            } else {
+                "reading"
+            };
         }
         // The File properties pane, and a field of it, which takes typed
         // text into the editor that holds the note.
@@ -23467,16 +23529,19 @@ mod tests {
         );
     }
 
-    /// Both commands run, the way their siblings do: rename-heading and
-    /// add-alias are offered only with an editor holding the keys.
+    /// Both commands run, the way their siblings do: rename-heading is
+    /// offered only with an editor holding the keys, and add-alias in
+    /// reading view as well (its own rule in `can_run`, so not in the
+    /// editor-only list, which would refuse reading view first).
     #[test]
     fn rename_heading_and_add_alias_are_runnable_editor_commands() {
         let known = scoria_commands::known_ids();
         for id in ["editor:rename-heading", "markdown:add-alias"] {
             assert!(RUNNABLE.contains(&id), "{id} runnable");
-            assert!(EDITOR_ONLY.contains(&id), "{id} needs the note");
             assert!(known.contains(&id), "{id} is Obsidian's");
         }
+        assert!(EDITOR_ONLY.contains(&"editor:rename-heading"));
+        assert!(!EDITOR_ONLY.contains(&"markdown:add-alias"));
     }
 
     #[test]
@@ -23938,6 +24003,27 @@ mod tests {
                 "none"
             );
         }
+    }
+
+    /// Add alias's field in the reading view's block is the editor's, and
+    /// takes typed text while the reading view is painted; the reading view
+    /// with no field takes none.
+    #[test]
+    fn typing_reaches_the_reading_views_alias_field() {
+        assert_eq!(
+            Workspace::typed_text_target("reading-field", MainView::Reading),
+            "editor"
+        );
+        for painted in [MainView::Editor, MainView::Empty, MainView::Canvas] {
+            assert_eq!(
+                Workspace::typed_text_target("reading-field", painted),
+                "none"
+            );
+        }
+        assert_eq!(
+            Workspace::typed_text_target("reading", MainView::Reading),
+            "none"
+        );
     }
 
     /// The File properties leaf's state is only the file it shows: the

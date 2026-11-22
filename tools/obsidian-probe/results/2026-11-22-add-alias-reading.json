@@ -1,0 +1,4932 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-22T18:26:58.644Z",
+  "steps": {},
+  "order": [],
+  "elapsedMs": 3,
+  "files": [
+   ".obsidian",
+   "Alias.md",
+   "Listed.md"
+  ]
+ },
+ "run": {
+  "startedAt": "2026-11-22T18:27:00.489Z",
+  "steps": {
+   "s00-context": {
+    "ok": true,
+    "ms": 13099,
+    "versions": {
+     "title": "New tab - vault - Obsidian 1.15.0",
+     "apiVersion": "undefined",
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36"
+    },
+    "cmd": {
+     "name": "Add alias",
+     "icon": "lucide-forward",
+     "check": true,
+     "editor": false
+    },
+    "readingNone": {
+     "listed": true,
+     "palette": [
+      "Add alias"
+     ]
+    },
+    "readingList": {
+     "listed": true,
+     "palette": [
+      "Add alias"
+     ]
+    },
+    "reading-hidden": {
+     "listed": true,
+     "palette": [
+      "Add alias"
+     ],
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesAdd property",
+       "rows": [],
+       "pills": []
+      },
+      "yaml": null
+     }
+    },
+    "reading-source": {
+     "listed": true,
+     "palette": [
+      "Add alias"
+     ],
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesAdd property",
+       "rows": [],
+       "pills": []
+      },
+      "yaml": null
+     }
+    }
+   },
+   "s01-visible-closed-none": {
+    "ok": true,
+    "ms": 13019,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesAdd propertyBody only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesAdd property",
+       "rows": [],
+       "pills": []
+      },
+      "yaml": null
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskBefore": "Body only.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       764,
+       202,
+       42,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "NewAlias",
+     "inLeaf": "markdown",
+     "inRightSplit": false,
+     "inReading": true,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "NewAlias",
+     "rect": [
+      764,
+      202,
+      60,
+      21
+     ],
+     "visible": true,
+     "activeLeaf": "markdown"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       846,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "NewAlias",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       612,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "NewAlias",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       612,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskFinal": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+   },
+   "s01-visible-closed-list": {
+    "ok": true,
+    "ms": 14739,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesonetwoAdd propertyaliases:\n  - one\n  - twoBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskBefore": "---\naliases:\n  - one\n  - two\n---\nBody.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       858,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": false,
+     "waitedMs": 2000,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "NewAlias",
+     "inLeaf": "markdown",
+     "inRightSplit": false,
+     "inReading": true,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "NewAlias",
+     "rect": [
+      858,
+      202,
+      60,
+      21
+     ],
+     "visible": true,
+     "activeLeaf": "markdown"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       940,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "onetwoNewAlias",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       612,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "onetwoNewAlias",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       612,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskFinal": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+   },
+   "s01-visible-closed-otherKeys": {
+    "ok": true,
+    "ms": 13033,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesTxAdd propertytitle: T\ntags: xBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nT\nx\nAdd property",
+       "rows": [
+        "title",
+        "tags"
+       ],
+       "pills": [
+        "x"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskBefore": "---\ntitle: T\ntags: x\n---\nBody.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       764,
+       266,
+       42,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nT\nx\nAdd property",
+       "rows": [
+        "title",
+        "tags",
+        "aliases"
+       ],
+       "pills": [
+        "x"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\ntitle: T\ntags: x\naliases:\n---\nBody.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\ntitle: T\ntags: x\naliases:\n---\nBody.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "NewAlias",
+     "inLeaf": "markdown",
+     "inRightSplit": false,
+     "inReading": true,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "NewAlias",
+     "rect": [
+      764,
+      266,
+      60,
+      21
+     ],
+     "visible": true,
+     "activeLeaf": "markdown"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\ntitle: T\ntags: x\naliases:\n---\nBody.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       846,
+       266,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nT\nx\nNewAlias\nAdd property",
+       "rows": [
+        "title",
+        "tags",
+        "aliases"
+       ],
+       "pills": [
+        "x",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\ntitle: T\ntags: x\naliases:\n  - NewAlias\n---\nBody.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "NewAlias",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       612,
+       262,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nT\nx\nNewAlias\nAdd property",
+       "rows": [
+        "title",
+        "tags",
+        "aliases"
+       ],
+       "pills": [
+        "x",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\ntitle: T\ntags: x\naliases:\n  - NewAlias\n---\nBody.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "NewAlias",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       612,
+       262,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nT\nx\nNewAlias\nAdd property",
+       "rows": [
+        "title",
+        "tags",
+        "aliases"
+       ],
+       "pills": [
+        "x",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskFinal": "---\ntitle: T\ntags: x\naliases:\n  - NewAlias\n---\nBody.\n"
+   },
+   "s02-visible-open-none": {
+    "ok": true,
+    "ms": 13543,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesAdd propertyBody only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       956,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesAdd property",
+       "rows": [],
+       "pills": []
+      },
+      "yaml": null
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [],
+      "pills": [],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskBefore": "Body only.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       614,
+       202,
+       42,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "NewAlias",
+     "inLeaf": "markdown",
+     "inRightSplit": false,
+     "inReading": true,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "NewAlias",
+     "rect": [
+      614,
+      202,
+      60,
+      21
+     ],
+     "visible": true,
+     "activeLeaf": "markdown"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       696,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "NewAlias"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "NewAlias",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       462,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "NewAlias"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "NewAlias",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       462,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "NewAlias"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskFinal": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+   },
+   "s02-visible-open-list": {
+    "ok": true,
+    "ms": 15238,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesonetwoAdd propertyaliases:\n  - one\n  - twoBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       956,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskBefore": "---\naliases:\n  - one\n  - two\n---\nBody.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       708,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": false,
+     "waitedMs": 2000,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "NewAlias",
+     "inLeaf": "markdown",
+     "inRightSplit": false,
+     "inReading": true,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "NewAlias",
+     "rect": [
+      708,
+      202,
+      60,
+      21
+     ],
+     "visible": true,
+     "activeLeaf": "markdown"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       790,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two",
+       "NewAlias"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "onetwoNewAlias",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       462,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two",
+       "NewAlias"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "onetwoNewAlias",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       462,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two",
+       "NewAlias"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskFinal": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+   },
+   "s03-hidden-closed-none": {
+    "ok": true,
+    "ms": 13030,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide",
+      "text": "AliasPropertiesAdd propertyBody only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesAdd property",
+       "rows": [],
+       "pills": []
+      },
+      "yaml": null
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline"
+      ]
+     }
+    },
+    "diskBefore": "Body only.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       1455,
+       58,
+       39,
+       17
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "NewAlias",
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "inReading": false,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "NewAlias",
+     "rect": [
+      1455,
+      58,
+      56,
+      17
+     ],
+     "visible": true,
+     "activeLeaf": "file-properties"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       1533,
+       58,
+       7,
+       17
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesNewAliasAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "NewAlias"
+      ],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "NewAlias",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       1312,
+       52,
+       276,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesNewAliasAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "NewAlias"
+      ],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide",
+      "text": "AliasPropertiesNewAliasAdd propertyaliases:\n  - NewAliasBody only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       956,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesNewAliasAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "NewAlias"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskFinal": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+   },
+   "s03-hidden-open-list": {
+    "ok": true,
+    "ms": 15236,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide",
+      "text": "AliasPropertiesonetwoAdd propertyaliases:\n  - one\n  - twoBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       956,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesonetwoAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskBefore": "---\naliases:\n  - one\n  - two\n---\nBody.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       1545,
+       58,
+       7,
+       17
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesonetwoAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two"
+      ],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": false,
+     "waitedMs": 2000,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "NewAlias",
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "inReading": false,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "NewAlias",
+     "rect": [
+      1455,
+      79,
+      56,
+      17
+     ],
+     "visible": true,
+     "activeLeaf": "file-properties"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       1533,
+       79,
+       7,
+       17
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesonetwoNewAliasAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two",
+       "NewAlias"
+      ],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "onetwoNewAlias",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       1312,
+       52,
+       276,
+       49
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesonetwoNewAliasAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two",
+       "NewAlias"
+      ],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide",
+      "text": "AliasPropertiesonetwoNewAliasAdd propertyaliases:\n  - one\n  - two\n  - NewAliasBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       956,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesonetwoNewAliasAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two",
+       "NewAlias"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskFinal": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+   },
+   "s03-source-closed-none": {
+    "ok": true,
+    "ms": 13041,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesAdd propertyBody only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesAdd property",
+       "rows": [],
+       "pills": []
+      },
+      "yaml": null
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskBefore": "Body only.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       1455,
+       58,
+       39,
+       17
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "NewAlias",
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "inReading": false,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "NewAlias",
+     "rect": [
+      1455,
+      58,
+      56,
+      17
+     ],
+     "visible": true,
+     "activeLeaf": "file-properties"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       1533,
+       58,
+       7,
+       17
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "NewAlias"
+      ],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "NewAlias",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       1312,
+       52,
+       276,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "NewAlias"
+      ],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesNewAliasAdd propertyaliases:\n  - NewAliasBody only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       956,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "NewAlias"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskFinal": "---\naliases:\n  - NewAlias\n---\nBody only.\n"
+   },
+   "s03-source-open-list": {
+    "ok": true,
+    "ms": 15237,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesonetwoAdd propertyaliases:\n  - one\n  - twoBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       956,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": false,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "*backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "file-properties"
+      ]
+     }
+    },
+    "diskBefore": "---\naliases:\n  - one\n  - two\n---\nBody.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       1545,
+       58,
+       7,
+       17
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two"
+      ],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": false,
+     "waitedMs": 2000,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "NewAlias",
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "inReading": false,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "NewAlias",
+     "rect": [
+      1455,
+      79,
+      56,
+      17
+     ],
+     "visible": true,
+     "activeLeaf": "file-properties"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       1533,
+       79,
+       7,
+       17
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two",
+       "NewAlias"
+      ],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "onetwoNewAlias",
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "inReading": false,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       1312,
+       52,
+       276,
+       49
+      ],
+      "visible": true,
+      "activeLeaf": "file-properties"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two",
+       "NewAlias"
+      ],
+      "active": true
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesonetwoNewAliasAdd propertyaliases:\n  - one\n  - two\n  - NewAliasBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       956,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": {
+      "file": "Alias.md",
+      "shown": true,
+      "rows": [
+       "aliases"
+      ],
+      "pills": [
+       "one",
+       "two",
+       "NewAlias"
+      ],
+      "active": false
+     },
+     "dock": {
+      "collapsed": false,
+      "fpLeaves": 1,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "outline",
+       "*file-properties"
+      ]
+     }
+    },
+    "diskFinal": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+   },
+   "s04-collapsed-list": {
+    "ok": true,
+    "ms": 8617,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesonetwoAdd propertyaliases:\n  - one\n  - twoBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskBefore": "---\naliases:\n  - one\n  - two\n---\nBody.\n",
+    "headClick": {
+     "x": 612,
+     "y": 162.53125,
+     "w": 87.265625,
+     "h": 27.1875,
+     "cx": 655.6328125,
+     "cy": 176.125
+    },
+    "afterFold": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesonetwoAdd propertyaliases:\n  - one\n  - twoBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container is-collapsed",
+       "shown": true,
+       "collapsed": true,
+       "text": "Properties",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "wsFold": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       858,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       940,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nNewAlias\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "NewAlias"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+    }
+   },
+   "s04-collapsed-none": {
+    "ok": true,
+    "ms": 6442,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesTxAdd propertytitle: T\ntags: xBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nT\nx\nAdd property",
+       "rows": [
+        "title",
+        "tags"
+       ],
+       "pills": [
+        "x"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskBefore": "---\ntitle: T\ntags: x\n---\nBody.\n",
+    "headClick": {
+     "x": 612,
+     "y": 162.53125,
+     "w": 87.265625,
+     "h": 27.1875,
+     "cx": 655.6328125,
+     "cy": 176.125
+    },
+    "afterFold": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesTxAdd propertytitle: T\ntags: xBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container is-collapsed",
+       "shown": true,
+       "collapsed": true,
+       "text": "Properties",
+       "rows": [
+        "title",
+        "tags"
+       ],
+       "pills": [
+        "x"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       764,
+       266,
+       42,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nT\nx\nAdd property",
+       "rows": [
+        "title",
+        "tags",
+        "aliases"
+       ],
+       "pills": [
+        "x"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\ntitle: T\ntags: x\naliases:\n---\nBody.\n"
+    }
+   },
+   "s05-blur-visible-list": {
+    "ok": true,
+    "ms": 12374,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesonetwoAdd propertyaliases:\n  - one\n  - twoBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskBefore": "---\naliases:\n  - one\n  - two\n---\nBody.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       858,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": false,
+     "waitedMs": 2000,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "Blurred",
+     "inLeaf": "markdown",
+     "inRightSplit": false,
+     "inReading": true,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "Blurred",
+     "rect": [
+      858,
+      202,
+      49,
+      21
+     ],
+     "visible": true,
+     "activeLeaf": "markdown"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "blurAt": {
+     "x": 626,
+     "y": 314.71875
+    },
+    "afterBlur": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesonetwoBlurredAdd propertyaliases:\n  - one\n  - two\n  - BlurredBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nBlurred\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two",
+        "Blurred"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterBlur": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - one\n  - two\n  - Blurred\n---\nBody.\n"
+    }
+   },
+   "s05-blur-visible-none": {
+    "ok": true,
+    "ms": 10671,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesAdd propertyBody only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesAdd property",
+       "rows": [],
+       "pills": []
+      },
+      "yaml": null
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskBefore": "Body only.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       764,
+       202,
+       42,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "diskAfterFirstKey": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "Blurred",
+     "inLeaf": "markdown",
+     "inRightSplit": false,
+     "inReading": true,
+     "inSource": false,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "typed": "Blurred",
+     "rect": [
+      764,
+      202,
+      49,
+      21
+     ],
+     "visible": true,
+     "activeLeaf": "markdown"
+    },
+    "diskAfterTyping": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "blurAt": {
+     "x": 626,
+     "y": 314.71875
+    },
+    "afterBlur": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesBlurredAdd propertyaliases:\n  - BlurredBody only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nBlurred\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "Blurred"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterBlur": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - Blurred\n---\nBody only.\n"
+    }
+   },
+   "s06-empty-enter-list": {
+    "ok": true,
+    "ms": 12259,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesonetwoAdd propertyaliases:\n  - one\n  - twoBody.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskBefore": "---\naliases:\n  - one\n  - two\n---\nBody.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       858,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": false,
+     "waitedMs": 2000,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       858,
+       202,
+       8,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "onetwo",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       612,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "onetwo",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       612,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\none\ntwo\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": [
+        "one",
+        "two"
+       ]
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskFinal": "---\naliases:\n  - one\n  - two\n---\nBody.\n"
+   },
+   "s06-empty-enter-none": {
+    "ok": true,
+    "ms": 10556,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesAdd propertyBody only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesAdd property",
+       "rows": [],
+       "pills": []
+      },
+      "yaml": null
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskBefore": "Body only.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       764,
+       202,
+       42,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "afterEnter": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       764,
+       202,
+       42,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterEnter": {
+     "changed": false,
+     "waitedMs": 2500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "afterEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       612,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterEscape": {
+     "changed": false,
+     "waitedMs": 1500,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "afterSecondEscape": {
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-property",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "rect": [
+       612,
+       198,
+       700,
+       29
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskFinal": "---\naliases:\n---\nBody only.\n"
+   },
+   "s06-run-only-none-blur": {
+    "ok": true,
+    "ms": 8738,
+    "mode": {
+     "file": "Alias.md",
+     "mode": "preview",
+     "source": false
+    },
+    "listed": true,
+    "before": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesAdd propertyBody only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": false,
+       "collapsed": false,
+       "text": "PropertiesAdd property",
+       "rows": [],
+       "pills": []
+      },
+      "yaml": null
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskBefore": "Body only.\n",
+    "ran": true,
+    "afterRun": {
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "typed": "",
+      "rect": [
+       764,
+       202,
+       42,
+       21
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "blurAt": {
+     "x": 626,
+     "y": 314.71875
+    },
+    "afterBlur": {
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+      "text": "AliasPropertiesAdd propertyaliases:Body only.",
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "inReading": true,
+      "inSource": false,
+      "rowKey": null,
+      "rect": [
+       344,
+       78,
+       1256,
+       922
+      ],
+      "visible": true,
+      "activeLeaf": "markdown"
+     },
+     "reading": {
+      "mode": "preview",
+      "block": {
+       "cls": "metadata-container",
+       "shown": true,
+       "collapsed": false,
+       "text": "Properties\nAdd property",
+       "rows": [
+        "aliases"
+       ],
+       "pills": []
+      },
+      "yaml": {
+       "cls": "el-pre mod-frontmatter mod-ui",
+       "shown": true,
+       "text": ""
+      }
+     },
+     "pane": null,
+     "dock": {
+      "collapsed": true,
+      "fpLeaves": 0,
+      "tabs": [
+       "backlink",
+       "outgoing-link",
+       "tag",
+       "all-properties",
+       "*outline"
+      ]
+     }
+    },
+    "diskAfterBlur": {
+     "changed": false,
+     "waitedMs": 3000,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    }
+   }
+  },
+  "order": [
+   "s00-context",
+   "s01-visible-closed-none",
+   "s01-visible-closed-list",
+   "s01-visible-closed-otherKeys",
+   "s02-visible-open-none",
+   "s02-visible-open-list",
+   "s03-hidden-closed-none",
+   "s03-hidden-open-list",
+   "s03-source-closed-none",
+   "s03-source-open-list",
+   "s04-collapsed-list",
+   "s04-collapsed-none",
+   "s05-blur-visible-list",
+   "s05-blur-visible-none",
+   "s06-empty-enter-list",
+   "s06-empty-enter-none",
+   "s06-run-only-none-blur"
+  ],
+  "elapsedMs": 209547,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-alias/vault"
+ }
+}

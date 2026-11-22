@@ -10,6 +10,7 @@ use super::model::{
     Script, Segment, TaskMarker,
 };
 use crate::assets::{callout_icon, icon};
+use crate::editor::{pane_field_keys, CloseFind, Editor, PropertySurface, PANE_CONTEXT};
 use crate::fold::{self, FoldKey};
 use crate::math::{self, FormulaElement, Inline, Overlay, ScriptText, SpaceWidths};
 use crate::properties::{Field, Part, Target};
@@ -17,12 +18,12 @@ use crate::properties::{PROPERTIES_FOLD_ID, PROPERTY_ID_BASE};
 use crate::theme::Theme;
 use gpui::{
     actions, canvas, div, img, list, prelude::*, px, AnyElement, App, Bounds, ClipboardItem,
-    Context, CursorStyle, DispatchPhase, DragMoveEvent, Element, ElementId, Entity, EventEmitter,
-    FocusHandle, Focusable, Font, FontStyle, FontWeight, GlobalElementId, HighlightStyle, Hitbox,
-    HitboxBehavior, Hsla, InspectorElementId, InteractiveText, KeyBinding, LayoutId, ListAlignment,
-    ListOffset, ListState, MouseButton, MouseDownEvent, MouseMoveEvent, ObjectFit, Pixels, Point,
-    SharedString, SharedUri, StrikethroughStyle, StyledText, Task, TextLayout, TextRun,
-    UnderlineStyle, Window, WindowTextSystem,
+    Context, CursorStyle, DispatchPhase, DragMoveEvent, Element, ElementId, ElementInputHandler,
+    Entity, EventEmitter, FocusHandle, Focusable, Font, FontStyle, FontWeight, GlobalElementId,
+    HighlightStyle, Hitbox, HitboxBehavior, Hsla, InspectorElementId, InteractiveText, KeyBinding,
+    LayoutId, ListAlignment, ListOffset, ListState, MouseButton, MouseDownEvent, MouseMoveEvent,
+    ObjectFit, Pixels, Point, SharedString, SharedUri, StrikethroughStyle, StyledText,
+    Subscription, Task, TextLayout, TextRun, UnderlineStyle, Window, WindowTextSystem,
 };
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{PropertiesInDocument, Property, PropertyType};
@@ -593,7 +594,9 @@ pub enum PropertyAction {
 /// Lets the properties block be edited. The reading view passes `None` and
 /// draws the rows read-only, but for the pills' remove control, which
 /// [`ReadingHost::on_remove_item`] takes; Live Preview passes the open field
-/// and a sink for what the reader does.
+/// and a sink for what the reader does. While `markdown:add-alias` has a
+/// field open in the reading view's block, the reading view passes one with
+/// `edits_rows` off: the field is drawn and the rows stay read-only.
 pub(crate) struct PropertiesHost {
     /// The field being typed into, when it belongs to this block.
     pub field: Option<Field>,
@@ -608,6 +611,11 @@ pub(crate) struct PropertiesHost {
     /// Whether the foldable "Properties" heading is drawn. The File
     /// properties pane draws the rows without it, and never folds.
     pub heading: bool,
+    /// Whether the rows take clicks: a value or key opens a field, the
+    /// glyph opens the type menu, the `×` removes the row, a pill opens
+    /// itself, and "Add property" is drawn. Off, the host only draws its
+    /// field among read-only rows.
+    pub edits_rows: bool,
     pub on_action: PropertyHandler,
 }
 
@@ -867,6 +875,14 @@ pub struct ReadingView {
     /// The note the current `model` was built from, which is what a reload
     /// of the same note compares against to keep the reader's place.
     built_path: Option<String>,
+    /// The editor holding the note, once `markdown:add-alias` has put a
+    /// field in this view's properties block: the field, its keys and its
+    /// writer are that editor's ([`Editor::reading_properties_host`]), and
+    /// the block draws it while the editor says it is the reading view's.
+    property_editor: Option<Entity<Editor>>,
+    /// Redraws the view as the editor's field changes, and writes the field
+    /// when the view loses the keyboard.
+    property_subscriptions: Vec<Subscription>,
 }
 
 impl EventEmitter<ReadingEvent> for ReadingView {}
@@ -957,6 +973,83 @@ impl ReadingView {
             id: cx.entity_id(),
             pending: None,
             built_path: None,
+            property_editor: None,
+            property_subscriptions: Vec::new(),
+        }
+    }
+
+    /// `markdown:add-alias` in reading view with the properties table
+    /// shown: the field goes in this view's own block, as Obsidian 1.15.0
+    /// puts it there (`add-alias-reading.mjs`, `s01`). `editor` holds the
+    /// note and has already opened the field
+    /// ([`Editor::add_alias_on`] with [`PropertySurface::Reading`]); this
+    /// unfolds the block, as the command does a collapsed one (`s04`), and
+    /// takes the keyboard. The view follows the field from then on, and
+    /// writes it when it loses the keyboard, as a click away does (`s05`).
+    pub fn edit_alias_with(
+        &mut self,
+        editor: Entity<Editor>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.toggled.remove(&PROPERTIES_FOLD_ID);
+        let same = self
+            .property_editor
+            .as_ref()
+            .is_some_and(|e| e.entity_id() == editor.entity_id());
+        if !same {
+            self.property_subscriptions = vec![
+                cx.observe(&editor, |_, _, cx| cx.notify()),
+                cx.on_focus_out(&self.focus_handle, window, |this, _, window, cx| {
+                    this.leave_property_field(window, cx)
+                }),
+            ];
+            self.property_editor = Some(editor);
+        }
+        window.focus(&self.focus_handle, cx);
+        cx.notify();
+    }
+
+    /// The field this view's block has open, if any.
+    pub fn property_field(&self, cx: &App) -> Option<Field> {
+        let editor = self.property_editor.as_ref()?;
+        editor
+            .read(cx)
+            .surface_field(PropertySurface::Reading)
+            .cloned()
+    }
+
+    fn property_field_open(&self, cx: &App) -> bool {
+        self.property_editor
+            .as_ref()
+            .is_some_and(|e| e.read(cx).surface_field_open(PropertySurface::Reading))
+    }
+
+    /// The keyboard or a click left the block's field: what was typed is
+    /// written, as leaving a field anywhere else writes it.
+    fn leave_property_field(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if !self.property_field_open(cx) {
+            return;
+        }
+        if let Some(editor) = self.property_editor.clone() {
+            editor.update(cx, |e, cx| {
+                e.leave_surface_field(PropertySurface::Reading, window, cx)
+            });
+        }
+    }
+
+    /// Escape in the block's field: it is abandoned, and the keyboard stays
+    /// in the view (Obsidian's focus stays on the row, and a second Escape
+    /// leaves it there).
+    fn escape_property_field(&mut self, _: &CloseFind, _: &mut Window, cx: &mut Context<Self>) {
+        let Some(editor) = self.property_editor.clone() else {
+            cx.propagate();
+            return;
+        };
+        if !editor.update(cx, |e, cx| {
+            e.escape_surface_field(PropertySurface::Reading, cx)
+        }) {
+            cx.propagate();
         }
     }
 
@@ -1595,15 +1688,22 @@ impl ReadingView {
                 }
             }),
         };
+        // Read-only: the reading view edits neither properties nor table
+        // cells, but for the field Add alias opens in the properties block.
+        let properties_host = match block {
+            RBlock::Properties(_) => self
+                .property_editor
+                .as_ref()
+                .and_then(|e| Editor::reading_properties_host(e, cx)),
+            _ => None,
+        };
         let r = Renderer::new(
             &theme,
             window.text_system().clone(),
             available,
             &self.toggled,
             &self.property_types,
-            // Read-only: the reading view edits neither properties nor
-            // table cells.
-            None,
+            properties_host.as_ref(),
             None,
             on_link,
             on_toggle,
@@ -1709,6 +1809,39 @@ impl ReadingView {
 impl Render for ReadingView {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.ensure_built(cx);
+        // A field open in the properties block: the block grows and shrinks
+        // as it is typed into, which the list cannot see, so it is measured
+        // again each frame; the view wears the pane's key context, whose
+        // keys go to the editor's field, and typed text reaches the field
+        // through the editor's input handler, registered against this
+        // view's handle.
+        let field_editor = self
+            .property_editor
+            .clone()
+            .filter(|e| e.read(cx).surface_field_open(PropertySurface::Reading));
+        if field_editor.is_some() {
+            if let Some(ix) = self
+                .model
+                .blocks
+                .iter()
+                .position(|b| matches!(b, RBlock::Properties(_)))
+            {
+                if ix < self.list.item_count() {
+                    self.list.remeasure_items(ix..ix + 1);
+                }
+            }
+        }
+        let field_input = field_editor.clone().map(|editor| {
+            let focus = self.focus_handle.clone();
+            canvas(
+                |_, _, _| {},
+                move |bounds, _, window, cx| {
+                    window.handle_input(&focus, ElementInputHandler::new(bounds, editor), cx);
+                },
+            )
+            .absolute()
+            .size_full()
+        });
         let theme = cx.global::<Theme>().clone();
         let base = theme.base_font_size;
         let view = cx.entity().downgrade();
@@ -1742,9 +1875,21 @@ impl Render for ReadingView {
                             .child(title)
                     })),
             );
-        div()
-            .key_context("ReadingView")
+        let root = div()
+            .key_context(if field_editor.is_some() {
+                PANE_CONTEXT
+            } else {
+                "ReadingView"
+            })
             .track_focus(&self.focus_handle)
+            .on_action(cx.listener(Self::escape_property_field))
+            // A press anywhere in the view but the field itself (which stops
+            // it) writes the field, as Obsidian's blur does (`s05`).
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|this, _, window, cx| this.leave_property_field(window, cx)),
+            )
+            .children(field_input)
             .on_action(cx.listener(Self::scroll_page_down))
             .on_action(cx.listener(Self::scroll_page_up))
             .on_action(cx.listener(Self::scroll_line_down))
@@ -1818,7 +1963,11 @@ impl Render for ReadingView {
                 .absolute()
                 .inset_0(),
             )
-            .child(crate::theme::fonts::quick_size_layer())
+            .child(crate::theme::fonts::quick_size_layer());
+        match self.property_editor.as_ref() {
+            Some(editor) => pane_field_keys(root, editor, PropertySurface::Reading),
+            None => root,
+        }
     }
 }
 
@@ -3439,7 +3588,7 @@ impl<'a> Renderer<'a> {
             &mut next_id,
         );
         let on_toggle = self.on_toggle.clone();
-        let add = host.map(|h| h.on_action.clone());
+        let add = self.row_actions();
         // `.metadata-container`: `--text-muted` inside a
         // `--metadata-border-color` line; its "Properties" title is
         // `--text-normal` at `--font-medium` (probe of 2026-11-02).
@@ -3591,7 +3740,7 @@ impl<'a> Renderer<'a> {
                             .flex_shrink_0()
                             .text_color(t.tokens.text_faint)
                             .child(SharedString::from(crate::properties::type_glyph(row.ty)));
-                        match host.map(|h| h.on_action.clone()) {
+                        match self.row_actions() {
                             Some(on_action) => {
                                 let key = row.key.clone();
                                 glyph
@@ -3619,7 +3768,7 @@ impl<'a> Renderer<'a> {
                                 .text_ellipsis()
                                 .overflow_hidden()
                                 .child(SharedString::from(row.key.clone()));
-                            match host.map(|h| h.on_action.clone()) {
+                            match self.row_actions() {
                                 Some(on_action) => {
                                     let key = row.key.clone();
                                     cell.id(("property-key", row.id))
@@ -3666,7 +3815,7 @@ impl<'a> Renderer<'a> {
                                 .child(SharedString::from("\u{26a0}")),
                         )
                     })
-                    .when_some(host.map(|h| h.on_action.clone()), |d, on_action| {
+                    .when_some(self.row_actions(), |d, on_action| {
                         let key = row.key.clone();
                         d.child(
                             div()
@@ -3742,6 +3891,14 @@ impl<'a> Renderer<'a> {
             .into_any_element()
     }
 
+    /// What a click on a row's affordances goes to: the host's sink when
+    /// its rows are editable, else nothing, and the row is drawn read-only.
+    fn row_actions(&self) -> Option<PropertyHandler> {
+        self.properties_host
+            .filter(|h| h.edits_rows)
+            .map(|h| h.on_action.clone())
+    }
+
     /// The open field when it belongs to this row and part. A field holding
     /// one item of a list is not one of these: the value cell draws it among
     /// the pills, in the place of the item it stands for.
@@ -3769,7 +3926,7 @@ impl<'a> Renderer<'a> {
         row: &crate::properties::Row,
         host: Option<&PropertiesHost>,
     ) -> AnyElement {
-        let Some(on_action) = host.map(|h| h.on_action.clone()) else {
+        let Some(on_action) = host.filter(|h| h.edits_rows).map(|h| h.on_action.clone()) else {
             return self.property_value(row);
         };
         if let crate::properties::Display::Checkbox(checked) = row.value {
@@ -3891,7 +4048,7 @@ impl<'a> Renderer<'a> {
         open: Option<(usize, &Field)>,
     ) -> AnyElement {
         let t = self.theme;
-        let on_action = self.properties_host.map(|h| h.on_action.clone());
+        let on_action = self.row_actions();
         // The remove control is drawn for whichever host can take the item
         // away: Live Preview's sink, or the reading view's narrower one.
         let remove = on_action

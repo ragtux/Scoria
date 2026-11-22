@@ -1731,4 +1731,63 @@ mod tests {
         assert_eq!(run, "---\naliases:\n---\nBody only.\n");
         assert_eq!(enter, "---\naliases:\n  - Al2\n---\nBody only.\n");
     }
+
+    // ------------------------------------------- Add alias in reading view
+    //
+    // Reading view's block edits through the same field, so these are the
+    // steps above against what Obsidian 1.15.0 wrote from reading view
+    // (`add-alias-reading.mjs`, 2026-11-22): the key at once, nothing on
+    // the keystrokes, the alias on Enter or when the field is left.
+
+    /// `s01`: over no frontmatter, a list and other keys, Live Preview's
+    /// bytes, with the pane open or not (`s02`) and the block folded (`s04`).
+    #[test]
+    fn reading_add_alias_writes_what_live_preview_writes() {
+        for (seed, run_bytes, enter_bytes) in [
+            (
+                "Body only.\n",
+                "---\naliases:\n---\nBody only.\n",
+                "---\naliases:\n  - NewAlias\n---\nBody only.\n",
+            ),
+            (
+                "---\naliases:\n  - one\n  - two\n---\nBody.\n",
+                "---\naliases:\n  - one\n  - two\n---\nBody.\n",
+                "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n",
+            ),
+            (
+                "---\ntitle: T\ntags: x\n---\nBody.\n",
+                "---\ntitle: T\ntags: x\naliases:\n---\nBody.\n",
+                "---\ntitle: T\ntags: x\naliases:\n  - NewAlias\n---\nBody.\n",
+            ),
+        ] {
+            let (run, enter) = add_alias(seed, "NewAlias");
+            assert_eq!(run, run_bytes, "{seed:?} after the command");
+            assert_eq!(enter, enter_bytes, "{seed:?} after Enter");
+        }
+    }
+
+    /// `s05`: an alias typed and left by a click in the note's body is
+    /// written as Enter writes it.
+    #[test]
+    fn reading_alias_left_by_a_click_is_written() {
+        let (_, left) = add_alias("---\naliases:\n  - one\n  - two\n---\nBody.\n", "Blurred");
+        assert_eq!(
+            left,
+            "---\naliases:\n  - one\n  - two\n  - Blurred\n---\nBody.\n"
+        );
+        let (_, left) = add_alias("Body only.\n", "Blurred");
+        assert_eq!(left, "---\naliases:\n  - Blurred\n---\nBody only.\n");
+    }
+
+    /// `s06`: Enter, or a click away, with nothing typed writes nothing
+    /// more: a list stays as it was, and a note that had no key keeps the
+    /// bare one the command wrote.
+    #[test]
+    fn reading_alias_enter_with_nothing_typed_writes_nothing() {
+        let seed = "---\naliases:\n  - one\n  - two\n---\nBody.\n";
+        let field = alias_field(&note_rows(seed)).expect("the aliases row");
+        assert_eq!(commit(&field, PropertyType::Aliases), None);
+        let (run, enter) = add_alias("Body only.\n", "");
+        assert_eq!(enter, run);
+    }
 }
