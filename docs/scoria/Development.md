@@ -346,6 +346,9 @@ The gate's run, its sheet and its log are in [[Parity gate run]].
 
 | New folder and the file pickers' order | done 2026-11-16: New folder makes `Untitled` and renames it on the Files row, a click away commits a row rename, and the template pickers list in `vault.getFiles()` order, see [[#New folder and the file pickers' order, 2026-11-16]] and [[Specification#Observed New folder and the file pickers' order, Obsidian 1.15.0]] |
 | The local graph pane | done 2026-11-22: `graph:open-local` splits the main area with a `localgraph` tab linked to the note's tab (the leaves' `group`), as Obsidian 1.15.1 does, following that tab's file; a right-dock `localgraph` leaf from `workspace.json` follows the active file; both keep their Depth, direction toggles and every other setting in the leaf in Obsidian's bytes, see [[#Local graph pane, 2026-11-22]] and [[Specification#Observed local graph pane, Obsidian 1.15.1]] |
+| A full path in the template pickers | done 2026-11-22: a query is fuzzy-matched against the whole path, `.md` included and case ignored, and only the shown part is highlighted, as Obsidian 1.15.0's template pickers do; Merge file and the quick switcher keep their own matchers, see [[#A full path in the template file pickers, 2026-11-22]] and [[Specification#Observed a full path typed into the file pickers, Obsidian 1.15.0]] |
+| Add alias in reading view | done 2026-11-22: `markdown:add-alias` runs in reading view, typing into the reading view's own properties block when properties are visible and into the File properties pane otherwise, written on Enter or blur, see [[#Add alias in reading view, 2026-11-22]] and [[Specification#Observed Add alias in reading view, Obsidian 1.15.0 (installer build 1.13.7)]] |
+| Copy path's submenu | done 2026-11-22: as Obsidian URL, from vault folder and from system root, with their notices, on Search results, the Files view (two rows on a folder), the tab and view headers, a wikilink's editor menu, Backlinks rows and reading-view links; a Bases row keeps the flat row, see [[#Copy path's submenu on every file menu, 2026-11-22]] |
 
 ### Local graph pane, 2026-11-22
 
@@ -475,7 +478,6 @@ files found." and Enter did nothing.
 path's start) where Obsidian puts `Folder/Note`: the fuzzy scorer's, not the `.md`'s, and the
 same without it. Scoria's quick switcher still lists `Folder/Note` for `Folder/Note.md` (a path
 match at a penalty) where Obsidian lists only its create row; both open the same file.
-
 
 ### Add alias in reading view, 2026-11-22
 
