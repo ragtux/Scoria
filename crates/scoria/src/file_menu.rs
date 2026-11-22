@@ -206,6 +206,10 @@ pub enum Pick {
     CloseAll,
     /// "Pin" / "Unpin": `workspace:toggle-pin` on the tab.
     TogglePin,
+    /// "Link with tab...": the pick of the tab to link with begins.
+    LinkWithTab,
+    /// "Unlink tab": the tab taken out of its link.
+    UnlinkTab,
     /// "Move to new window": `workspace:move-to-new-window` on the tab.
     MoveToNewWindow,
     /// "Backlinks in document": `backlink:toggle-backlinks-in-document` on
@@ -395,7 +399,9 @@ pub enum Target {
     /// and Close all are drawn only beside another tab, and Close tabs
     /// after only with one to its right; `pinned` names the Pin row.
     /// `backlinks` is whether the active markdown tab shows its backlinks
-    /// block, `None` for any other tab, which has no such row.
+    /// block, `None` for any other tab, which has no such row. `linked`
+    /// names the row after Pin: "Unlink tab" on a tab with a link, "Link
+    /// with tab..." on one without.
     Tab {
         group: u64,
         ix: usize,
@@ -404,6 +410,7 @@ pub enum Target {
         pinned: bool,
         active: bool,
         backlinks: Option<bool>,
+        linked: bool,
     },
     /// A right click on a sidebar tab whose leaf can be closed and opened
     /// again by its command (`file-properties`, `footnotes`; `kind` is the
@@ -881,8 +888,9 @@ pub fn items(target: &Target) -> Vec<Item> {
             pinned,
             active,
             backlinks,
+            linked,
             ..
-        } => tab_items(path, *ix, *tabs, *pinned, *active, *backlinks),
+        } => tab_items(path, *ix, *tabs, *pinned, *active, *backlinks, *linked),
         Target::SideTab { .. } => vec![item("Close", "x", S::Close, P::CloseTab)],
         Target::Note { path, backlinks } => {
             let mut out = vec![backlinks_row(*backlinks)];
@@ -944,9 +952,10 @@ fn merge_row(path: &str) -> Option<Item> {
     })
 }
 
-/// The tab header's menu, as the 2026-11-09 probe drew it. Left out for
-/// want of anything behind them: **Link with tab...** (no linked panes,
-/// and the probe saw no trace of what it starts), a markdown tab's two
+/// The tab header's menu, as the 2026-11-09 probe drew it, with **Link
+/// with tab...** or **Unlink tab** after Pin (`lucide-link` either way,
+/// 2026-11-22, `link-with-tab.mjs`). Left out for want of anything behind
+/// them: a markdown tab's two
 /// view-mode rows (their labels in the other modes were not captured),
 /// **Export to PDF...**, a canvas's **Export as image**, **Open version
 /// history** and the **Open linked view** submenu. Copy path opens its
@@ -958,6 +967,7 @@ fn tab_items(
     pinned: bool,
     active: bool,
     backlinks: Option<bool>,
+    linked: bool,
 ) -> Vec<Item> {
     use Pick as P;
     use Section as S;
@@ -975,7 +985,12 @@ fn tab_items(
         S::Pane,
         P::TogglePin,
     ));
-    // After Pin (and Obsidian's "Link with tab..."), on the active markdown
+    out.push(if linked {
+        item("Unlink tab", "link", S::Pane, P::UnlinkTab)
+    } else {
+        item("Link with tab...", "link", S::Pane, P::LinkWithTab)
+    });
+    // After Pin and Link with tab..., on the active markdown
     // tab only: the inactive tab's menu in the probe had no such row.
     if let Some(on) = backlinks.filter(|_| active) {
         out.push(backlinks_row(on));
@@ -2115,6 +2130,7 @@ mod tests {
             pinned: false,
             active: true,
             backlinks: Some(false),
+            linked: false,
         };
         let link = Target::Editor(EditorClick {
             checks: MenuChecks::default(),
@@ -2233,7 +2249,52 @@ mod tests {
             pinned,
             active,
             backlinks: None,
+            linked: false,
         }
+    }
+
+    /// "Link with tab..." follows Pin on every tab's menu, the inactive
+    /// tab's short one too, and reads "Unlink tab" on a linked tab; both
+    /// carry `lucide-link` in the `pane` section (2026-11-22,
+    /// `link-with-tab.mjs` `s01`, `s04`).
+    #[test]
+    fn the_tab_menu_links_and_unlinks_after_pin() {
+        for active in [true, false] {
+            let rows = items(&tab("Alpha.md", 0, 2, false, active));
+            let at = rows.iter().position(|i| i.label == "Pin").unwrap();
+            let row = &rows[at + 1];
+            assert_eq!(row.label, "Link with tab...");
+            assert_eq!(row.icon, "link");
+            assert_eq!(row.section, Section::Pane);
+            assert_eq!(row.pick, Pick::LinkWithTab);
+        }
+        let linked = match tab("Alpha.md", 0, 1, false, true) {
+            Target::Tab {
+                group,
+                ix,
+                path,
+                tabs,
+                pinned,
+                active,
+                backlinks,
+                ..
+            } => Target::Tab {
+                group,
+                ix,
+                path,
+                tabs,
+                pinned,
+                active,
+                backlinks,
+                linked: true,
+            },
+            _ => unreachable!(),
+        };
+        let rows = items(&linked);
+        assert_eq!(rows[2].label, "Unlink tab");
+        assert_eq!(rows[2].icon, "link");
+        assert_eq!(rows[2].pick, Pick::UnlinkTab);
+        assert!(!rows.iter().any(|i| i.label == "Link with tab..."));
     }
 
     /// "Backlinks in document" on an active markdown tab sits after Pin in
@@ -2249,24 +2310,26 @@ mod tests {
             pinned: false,
             active,
             backlinks,
+            linked: false,
         };
         let rows = items(&on(Some(true), true));
-        let labels: Vec<&str> = rows.iter().take(4).map(|i| i.label.as_ref()).collect();
+        let labels: Vec<&str> = rows.iter().take(5).map(|i| i.label.as_ref()).collect();
         assert_eq!(
             labels,
             [
                 "Close",
                 "Pin",
+                "Link with tab...",
                 "Backlinks in document",
                 "Move to new window"
             ]
         );
-        let row = &rows[2];
+        let row = &rows[3];
         assert!(row.checked);
         assert_eq!(row.icon, "links-coming-in");
         assert_eq!(row.section, Section::Pane);
         assert_eq!(row.pick, Pick::ToggleBacklinksInDocument);
-        assert!(!items(&on(Some(false), true))[2].checked);
+        assert!(!items(&on(Some(false), true))[3].checked);
         assert!(!drawn(&on(Some(true), false)).contains(&"Backlinks in document".to_string()));
     }
 
@@ -2308,6 +2371,7 @@ mod tests {
                 "Close all",
                 "---",
                 "Pin",
+                "Link with tab...",
                 "---",
                 "Move to new window",
                 "Split right",
@@ -2348,6 +2412,7 @@ mod tests {
                 "Close all",
                 "---",
                 "Unpin",
+                "Link with tab...",
                 "---",
                 "Move to new window",
                 "Split right",
@@ -2383,6 +2448,7 @@ mod tests {
                 "Close all",
                 "---",
                 "Pin",
+                "Link with tab...",
                 "---",
                 "Move to new window",
             ]
@@ -2393,6 +2459,7 @@ mod tests {
                 "Close",
                 "---",
                 "Pin",
+                "Link with tab...",
                 "---",
                 "Move to new window",
                 "Split right",

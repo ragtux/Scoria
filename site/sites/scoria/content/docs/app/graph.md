@@ -62,7 +62,9 @@ note's tab: open another note, a canvas or an image there and it re-centres on t
 other tabs leave it alone. Run the command again and you get another linked pane. Close the
 note's tab and the graph is unlinked — its tab reads **Local graph** — and from then on
 follows whatever file is open. Click a node to open that note in the linked tab; `Ctrl` +
-click opens it in a new tab beside the graph.
+click opens it in a new tab beside the graph. The graph's tab menu has [Link with
+tab... and Unlink tab](/docs/app/window/#linked-tabs): link an unlinked graph with a note's tab
+and it re-centres on that note at once.
 
 A vault Obsidian has laid out may also have a **Local graph** tab in the right sidebar (in
 Obsidian you drag the graph's tab there). Scoria shows it, at the end of the sidebar's tabs,
@@ -92,7 +94,7 @@ a large graph stays smooth.
 
 ## Not yet
 
-- **Link with tab** and **Open linked view** in the tab menus.
+- **Open linked view** in the tab menus.
 - Screenshot export.
 
 ## Next

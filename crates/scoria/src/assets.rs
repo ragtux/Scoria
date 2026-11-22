@@ -165,6 +165,7 @@ icons!(
     "triangle-alert",
     "type",
     "undo-2",
+    "unlink",
     "volume-2",
     "volume-x",
     "x",

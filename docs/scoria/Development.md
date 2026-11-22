@@ -349,6 +349,116 @@ The gate's run, its sheet and its log are in [[Parity gate run]].
 | A full path in the template pickers | done 2026-11-22: a query is fuzzy-matched against the whole path, `.md` included and case ignored, and only the shown part is highlighted, as Obsidian 1.15.0's template pickers do; Merge file and the quick switcher keep their own matchers, see [[#A full path in the template file pickers, 2026-11-22]] and [[Specification#Observed a full path typed into the file pickers, Obsidian 1.15.0]] |
 | Add alias in reading view | done 2026-11-22: `markdown:add-alias` runs in reading view, typing into the reading view's own properties block when properties are visible and into the File properties pane otherwise, written on Enter or blur, see [[#Add alias in reading view, 2026-11-22]] and [[Specification#Observed Add alias in reading view, Obsidian 1.15.0 (installer build 1.13.7)]] |
 | Copy path's submenu | done 2026-11-22: as Obsidian URL, from vault folder and from system root, with their notices, on Search results, the Files view (two rows on a folder), the tab and view headers, a wikilink's editor menu, Backlinks rows and reading-view links; a Bases row keeps the flat row, see [[#Copy path's submenu on every file menu, 2026-11-22]] |
+| Link with tab | done 2026-11-22: **Link with tab...** and **Unlink tab** after Pin on every tab menu, the pick of the tab to link with (the target group washed in the accent, a press of any button links, the source or outside ends it), the link icon in the tab header, and linked tabs following each other's files both ways on the leaves' `group`, as Obsidian 1.15.1 does; Pin pins the whole link and a restored link settles on its last tab, see [[#Link with tab, 2026-11-22]] and [[Specification#Observed Link with tab, Obsidian 1.15.1]] |
+
+### Link with tab, 2026-11-22
+
+The local graph's record left two gaps: the tab menus had no Link with tab or Unlink tab, and
+links were one-way, the local graph following its note while two note tabs in one link stayed
+where they were. The 2026-11-09 tab-menu probe had clicked "Link with tab..." and found no
+trace of it. Probed first, see [[Specification#Observed Link with tab, Obsidian 1.15.1]].
+
+**The probe.** `tools/obsidian-probe/link-with-tab.mjs`, twelve steps and a relaunch over CDP
+with real mouse events, in a private headless sway (`USER_DATA_DIR`, `CDP_PORT=9491`,
+`--ozone-platform=x11`), after a hand-driven pass through the same build to find the mode. Why
+the earlier probe saw nothing: the row starts a mode that draws nothing until the pointer
+moves; then the group under it gets the drop overlay a dragged tab shows, below its strip, and
+a press of any button there links. The source joins the target's `group`, or both take a new
+id; linking opens nothing; from then on whichever linked tab opens a file, the others open it
+too, on their own histories and in their own modes. What surprised: Escape does not end the
+mode (a press on the source or outside the groups does); Pin on a linked tab pins the whole
+link; an empty tab in a link does not follow; the Files, Search and Tags panes are not targets
+while Bookmarks, Backlinks, Outgoing links, All properties and Outline are; after a relaunch a
+linked pair saved on two files settles on the later one in the layout, whichever was active;
+and the tab header's icon (`mod-linked`, `lucide-link` in the accent) turns into `unlink` under
+the pointer and tints every leaf of the link. The first run was on 1.15.0 until its relaunch
+updated the data folder, so it ran again whole on 1.15.1; a third run settled two rows the
+second had left unsure (the header icon's click, which unlinks and closes nothing, and the
+scroll).
+
+**What was built.**
+- `workspace/linked_tabs.rs`, on the link id the local graph gave every tab (`Tab::link`, the
+  leaf's `group`), no second mechanism. The pure rules, each with a test: `joined_link` (the
+  target's id or a new one), `lone_links` (a link with one tab is dissolved), `followers` (who
+  follows a tab that moved: every other member showing a file, not one already on it, never an
+  empty tab) and `settled_leader` (a restored link's last member showing a file wins).
+- **Following.** `open_file` and back/forward mark the active tab as moved
+  (`linked_tab_moved`); `sync_linked_tabs`, run each frame before the local graphs sync and
+  before the layout is written, dissolves lone links, settles a restored layout's links once
+  (`apply_layout` asks for it) and brings the moved tab's link to its file. `follow_in` opens
+  the file in a follower: the live tab directly, a tab not on screen in its slot, a tab on
+  screen in another group by making that group live for the open and the active one live
+  again. A follower pushes the file onto its own history, keeps its mode, and follows even when
+  pinned; the keyboard stays put. The global graph, an empty tab and a local graph do not
+  follow this way (the local graph keeps its own sync).
+- **The menus.** `file_menu::Target::Tab` carries `linked`; `tab_items` puts **Link with
+  tab...** or **Unlink tab** (`link`, `pane`) after Pin on every tab's menu, the inactive
+  tab's short one and a local graph's included (`Pick::LinkWithTab`, `Pick::UnlinkTab`). The
+  menu tests now expect the row.
+- **The pick.** `start_link_pick` holds the source; while it lasts each group records its box
+  and a deferred layer over the window takes every move and press (`render_link_pick`, in the
+  vault window and each popout). The group under the pointer is washed below its strip in the
+  accent at half strength, rounded 8 px (`render_link_marks`); a press of any button on a group
+  makes it active and links the source with the tab it shows; a press on the source or outside
+  the groups ends the mode with nothing linked.
+- **Unlink and Pin.** `unlink_tab` takes one tab out; the next sync dissolves a link left with
+  one. Pin and Unpin, from the menu, the command or the header's pin, give the pin to every tab
+  of the link (`pin_link_of`).
+- **The header.** A linked tab draws `link` (14 px, `--text-accent`, an 18 px box rounded 8 px)
+  between its title and its close button; under the pointer it becomes `unlink` on a tenth of
+  the accent and every group showing a tab of that link is washed in a quarter of it; a click
+  unlinks the tab. Lucide's `unlink` joins the bundled icons.
+- **The link core**, changed in three places only: `sync_local_graph_tabs` now takes its
+  source file from the first tab of the link that shows one (an empty tab used to blank the
+  graph when it came first); `Workspace` gained one field, `linking`; and `render`,
+  `save_layout`, `open_file`, `navigate_history`, `apply_layout`, `render_group`, the tab strip
+  and the two window roots each gained one call into `linked_tabs`. `Tab`, `tab_from_leaf`,
+  `leaf_json`, `set_group` and `graph:open-local` are unchanged.
+- The state dump: every tab's `link` under `groups.items[].tabs` and `tabs.items`, and
+  `linking` (the pick's source, the hovered group, the hovered icon).
+
+**Driven.** The release build in the private sway over the control socket, with grim, on the
+probe's notes. Alpha's menu read Pin, Link with tab..., Backlinks in document; the row clicked,
+a move over Gamma's group washed it in the accent below its strip, Escape left the mode on, and
+a click on Gamma linked the two (both headers drew the link, a new id, neither file moved,
+Gamma's group active). A real click on Gamma's `[[Beta]]` took Alpha's tab to Beta, and a click
+on Alpha's `[[Delta]]` took Gamma's; Gamma in Reading view stayed in it while Alpha opened the
+canvas and Alpha.md, and `app:go-back` moved both. Beta, an inactive tab, joined from its short
+menu by a click on Gamma's tab strip, and the next open moved all three, Beta's hidden tab
+included. Pin on Gamma pinned all three, `workspace:toggle-pin` unpinned all three. Hovering
+Alpha's link icon showed `unlink` and tinted both groups; its click unlinked Alpha alone, and
+Unlink tab on Beta then left Gamma alone, which lost its link. A press on the ribbon and one on
+the source ended the mode with nothing linked; a right click on Gamma linked. `graph:open-local`
+from the linked Alpha put the graph in the same link (three members), and Gamma opened in the
+right-hand note moved the note and the graph; closing that note kept the other pair, unlinking
+the note dissolved the graph's link (`Local graph`, following the active file), and Link with
+tab... on the graph's own tab, then a click on Beta's note, linked it and it read `Graph of
+Beta` at once. On quit the three leaves carried the id after `state`, in Obsidian's key order.
+A layout edited by hand to a link on Alpha and Delta (Delta later, an unknown key on its leaf)
+opened with both on Delta and the graph on Delta, and the key survived the quit. The vault
+Obsidian left after the probe (a linked pair on Gamma) opened linked, and quitting wrote its
+linked leaves back byte for byte; the one line that changed was the collapsed right dock's
+Outline leaf, which Obsidian had left on Alpha and Scoria wrote on the active file, as it
+already did before this work.
+
+**What differs, on purpose.** Only the main area's tabs can be linked: the docks' panes are not
+tabs in Scoria, so they are not targets, have no tab menu row, and a linked Backlinks or Outline
+leaf in a `workspace.json` is not followed (its `group` is kept). Scroll does not follow:
+Obsidian scrolls two linked tabs on one note together, and an open at a line moves both. A click
+on a target's tab strip links the tab it shows without also bringing the clicked tab forward,
+and a right click that links opens no menu after. No command carries the rows, in Scoria as
+in Obsidian. Popouts were not driven: the pick's layer is drawn in each window over that
+window's groups, untried there.
+
+**Traps.**
+- An inline `PRE` of host-side clicks given to two probe calls in one shell helper ran twice:
+  the second click landed on the close button that had slid under the vanished link icon and
+  closed a tab, which first looked like Obsidian's icon closing tabs. One action, one call.
+- The linked Backlinks pane twice took the active file of an unlinked tab and passed it on to
+  its note when that note moved in the background; a hand check with the note active did not.
+  Recorded as observed, not built.
+- A fresh data folder updates itself at its first relaunch (1.15.0 to 1.15.1): read
+  `document.title` every run.
 
 ### Local graph pane, 2026-11-22
 
@@ -427,11 +537,12 @@ then Epsilon. Finally the vault Obsidian itself left after the probe (a linked g
 the sidebar pane at Depth 3) opened with the linked tab `Graph of Alpha` and the pane, and quitting
 wrote nothing: `workspace.json` stayed byte for byte as Obsidian wrote it.
 
-**What differs, on purpose.** The tab's menu has no Link with tab or Unlink tab, the note's More
-options no Open linked view, and the dock pane's tab menu is Close alone; a tab cannot be dragged
-into the dock, so the dock pane comes only from a file that has one. Linked tabs follow only in one
-direction, the local graph after its note: two note tabs sharing a link (which Obsidian keeps on the
-same file) are each left where they are. The tab's header title is `Graph of <name>` from the
+**What differs, on purpose.** ~~The tab's menu has no Link with tab or Unlink tab~~ (closed in
+[[#Link with tab, 2026-11-22]]), the note's More options no Open linked view, and the dock pane's
+tab menu is Close alone; a tab cannot be dragged into the dock, so the dock pane comes only from a
+file that has one. ~~Linked tabs follow only in one direction, the local graph after its note: two
+note tabs sharing a link (which Obsidian keeps on the same file) are each left where they are.~~
+(closed there too: linked note tabs follow each other, the graph still follows its note). The tab's header title is `Graph of <name>` from the
 start, where Obsidian's read `Local graph` until its first change of file. Scoria's local graph has
 no canvas node for a canvas's cards (Obsidian's graph of Alpha also showed `Board.canvas`).
 
