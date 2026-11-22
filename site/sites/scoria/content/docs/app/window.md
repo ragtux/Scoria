@@ -59,8 +59,8 @@ on it again.
 
 Right-click a tab's header for its menu: **Close**, **Close others**, **Close tabs after**
 and **Close all** (the others only when the group has more than one tab, and Close tabs
-after only when there is a tab to its right), **Pin** or **Unpin**, and **Move to new
-window**. On the tab in front the menu goes on with **Split right**, **Split down** and
+after only when there is a tab to its right), **Pin** or **Unpin**, **Link with tab...** or
+**Unlink tab**, and **Move to new window**. On the tab in front the menu goes on with **Split right**, **Split down** and
 **Open in new window**, then the tab's file rows — Rename, Move, Bookmark, Copy path,
 Delete and the rest of the [file menu](/docs/app/files/#the-right-click-menu), plus **Add
 file property**, **Find...** and **Replace...** on a note. The right click does not bring
@@ -71,6 +71,26 @@ A pinned tab shows a pin where its close button was; click the pin to unpin it. 
 opened from a pinned tab — a link followed, a file picked in the quick switcher — opens in
 a new tab, `Ctrl + W` unpins it rather than closing it, and Close others and Close all
 leave it open. **Toggle pin** in the command palette pins and unpins the tab in front.
+
+### Linked tabs
+
+**Link with tab...** links a tab with another, as Obsidian does. Choose it and move the pointer:
+the tab group under it lights up in the accent, and a click there links your tab with the tab
+that group shows — a click on its tab strip counts too, with any mouse button. A click on your
+own tab, or anywhere outside the tab groups, ends it with nothing linked; `Escape` does not.
+Linking a tab with one that is already linked puts all of them in one link.
+
+From then on the linked tabs show the same file: open a note, a canvas or an image in any of
+them — a link followed, back or forward, a pick in the switcher — and the others open it too,
+each on its own history and in its own mode, so one can stay in Reading view while you edit in
+the other. A pinned tab follows as well, and pinning one linked tab pins them all. An empty tab
+in a link waits until you open something in it. Linking opens nothing by itself.
+
+A linked tab shows a link icon beside its close button. Point at it and every tab in its link
+is tinted; click it, or choose **Unlink tab** on the tab's menu, to take that tab out. A link
+with one tab left is gone. The link is the leaf's `group` in `workspace.json`, so Obsidian and
+Scoria open the same tabs linked. The [local graph](/docs/app/graph/#the-local-graph) uses the
+same links.
 
 ## Popout windows
 

@@ -163,9 +163,12 @@ impl Workspace {
                 if is_local_graph(tab) {
                     any = true;
                 } else if let Some(link) = &tab.link {
-                    sources
-                        .entry(link.clone())
-                        .or_insert_with(|| tab.path.clone());
+                    // The first tab of the link showing a file: linked note
+                    // tabs share one, and an empty tab has none to give.
+                    let source = sources.entry(link.clone()).or_insert(None);
+                    if source.is_none() {
+                        source.clone_from(&tab.path);
+                    }
                 }
             }
         }

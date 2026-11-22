@@ -91,6 +91,7 @@ mod doc_backlinks;
 mod file_properties_pane;
 mod footnotes_pane;
 mod layouts;
+mod linked_tabs;
 mod local_graph_pane;
 mod local_graph_tab;
 mod stacked;
@@ -3646,6 +3647,9 @@ pub struct Workspace {
     /// The views of the local-graph tabs, by leaf id, with their event
     /// subscriptions ([`local_graph_tab`]).
     local_graph_tabs: HashMap<String, (Entity<GraphView>, Subscription)>,
+    /// Link with tab's pick, the link icon's hover and what the next sync
+    /// settles ([`linked_tabs`]).
+    linking: linked_tabs::Linking,
     /// The mode to return to when the graph closes.
     mode_before_graph: ViewMode,
     mode: ViewMode,
@@ -4643,6 +4647,7 @@ impl Workspace {
             local_graph,
             local_graph_open: false,
             local_graph_tabs: HashMap::new(),
+            linking: Default::default(),
             mode_before_graph: ViewMode::Reading,
             mode: ViewMode::Reading,
             current: None,
@@ -7795,6 +7800,7 @@ impl Workspace {
             self.forget_history(&path);
             return;
         }
+        self.linked_tab_moved();
         self.snapshot_on_open(&path);
         if let Some(sub) = subpath {
             self.scroll_to_subpath(&path, &sub, &state, cx);
@@ -9321,6 +9327,7 @@ impl Workspace {
         if entry.offset > 0 {
             self.reveal_offset(entry.offset, cx);
         }
+        self.linked_tab_moved();
         self.request_focus_main(cx);
     }
 
@@ -11715,8 +11722,10 @@ impl Workspace {
         // splits run, top right needs the tree's shape.
         let first = order.first() == Some(&id);
         let last = tree.top_right() == Some(id);
+        let link_marks = self.render_link_marks(id, view.tabs.get(view.active_tab), theme);
         div()
             .id(("group", id))
+            .relative()
             .flex()
             .flex_col()
             .size_full()
@@ -11751,6 +11760,7 @@ impl Workspace {
                         }),
                 )
             })
+            .children(link_marks)
             .into_any_element()
     }
 
@@ -12086,6 +12096,7 @@ impl Workspace {
                 pinned: tab.pinned,
                 active,
                 backlinks,
+                linked: tab.link.is_some(),
             },
         });
         cx.notify();
@@ -12115,8 +12126,10 @@ impl Workspace {
                 self.stash_active_tab();
                 self.tabs[ix].pinned = !self.tabs[ix].pinned;
                 self.stash_active_group();
+                self.pin_link_of(group, ix);
                 cx.notify();
             }
+
             Pick::MoveToNewWindow => {
                 self.activate_tab(ix, cx);
                 self.move_to_new_window(window, cx);
@@ -12131,6 +12144,7 @@ impl Workspace {
         if let Some(tab) = self.tabs.get_mut(self.active_tab) {
             tab.pinned = !tab.pinned;
             self.stash_active_group();
+            self.pin_link_of(self.active_group_id(), self.active_tab);
             cx.notify();
         }
     }
@@ -13399,6 +13413,7 @@ impl Workspace {
                 .children(controls)
                 .children(overlay)
                 .children(file_menu)
+                .children(self.render_link_pick(Some(id), cx))
                 .children(notices)
                 .children(preview)
                 .children(self.presentation_in(Some(id)))
@@ -15329,6 +15344,12 @@ impl Workspace {
                                     .text_ellipsis()
                                     .child(title),
                             )
+                            // A linked tab's link, before the close button.
+                            .children(
+                                tab.link
+                                    .clone()
+                                    .map(|link| self.render_link_icon(group, ix, link, theme, cx)),
+                            )
                             // The close button: no wash of its own, its cross
                             // brightens from muted to normal under the pointer.
                             .child(
@@ -15734,6 +15755,7 @@ impl Workspace {
                 .chain(order.into_iter().filter(|g| *g != group))
                 .collect();
             self.refocus_main = true;
+            self.reconcile_links();
             self.open_restored_popouts(cx);
         }
         let collapsed = |dock: &str| {
@@ -16187,6 +16209,7 @@ impl Workspace {
         let Some(state) = self.state.clone() else {
             return;
         };
+        self.sync_linked_tabs(cx);
         self.sync_local_graph_tabs(cx);
         let fresh = self.layout_json(cx);
         if self.layout.as_ref() == Some(&fresh) {
@@ -16363,7 +16386,7 @@ impl Workspace {
             self.backlinks_in_document_json(),
         );
 
-        let tab_json = |t: &Tab| json!({"path": t.path, "mode": t.mode.as_str(), "title": t.title(), "pinned": t.pinned});
+        let tab_json = |t: &Tab| json!({"path": t.path, "mode": t.mode.as_str(), "title": t.title(), "pinned": t.pinned, "link": t.link});
         let tabs = json!({
             "active": self.active_tab,
             "items": self.tab_snapshots().iter().map(tab_json).collect::<Vec<Value>>(),
@@ -16625,6 +16648,7 @@ impl Workspace {
             "graph": graph,
             "local_graph": self.describe_local_graph(cx),
             "local_graph_tabs": self.describe_local_graph_tabs(cx),
+            "linking": self.describe_linking(),
             "slides": self.slides.as_ref().map(|p| p.view.read(cx).describe()),
             "canvas": self.canvas.read(cx).describe(cx),
             "bases": self.bases.read(cx).state_json(),
@@ -17545,6 +17569,18 @@ impl Workspace {
             | Pick::MoveToNewWindow => {
                 if let file_menu::Target::Tab { group, ix, .. } = target {
                     self.tab_menu_pick(pick, *group, *ix, window, cx);
+                }
+            }
+            // Neither row makes the tab's group active: the pick's target
+            // does that, and an unlinked tab stays where it was.
+            Pick::LinkWithTab => {
+                if let file_menu::Target::Tab { group, ix, .. } = target {
+                    self.start_link_pick(*group, *ix, cx);
+                }
+            }
+            Pick::UnlinkTab => {
+                if let file_menu::Target::Tab { group, ix, .. } = target {
+                    self.unlink_tab(*group, *ix, cx);
                 }
             }
             Pick::AddFileProperty => self.run_command("markdown:add-metadata-property", window, cx),
@@ -21036,6 +21072,7 @@ impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.corners = WindowCorners::of(window);
         self.sync_stacks(cx);
+        self.sync_linked_tabs(cx);
         self.sync_local_graph_tabs(cx);
         self.stamp_live_note();
         if let Some(value) = self.pending_title_rename.take() {
@@ -21379,6 +21416,7 @@ impl Render for Workspace {
             // reading view -- positioned at the click and drawn over
             // everything else, so no dock's clipping can cut it off.
             .children(self.render_file_menu(None, &theme, window, cx))
+            .children(self.render_link_pick(None, cx))
             .children(notices)
             .children(preview)
             // The presentation covers the window whole, the title bar and

@@ -671,6 +671,8 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         | Pick::Find
         | Pick::Replace
         | Pick::TogglePin
+        | Pick::LinkWithTab
+        | Pick::UnlinkTab
         | Pick::MoveToNewWindow
         | Pick::ToggleBacklinksInDocument
         | Pick::SplitRight
