@@ -91,6 +91,7 @@ mod doc_backlinks;
 mod file_properties_pane;
 mod footnotes_pane;
 mod layouts;
+mod local_graph_pane;
 mod stacked;
 
 use doc_backlinks::{listen, DocBacklinks, SectionsOwner};
@@ -1615,6 +1616,9 @@ enum RightTab {
     /// view core plugin's pane. Like File properties it has a tab only
     /// once `footnotes:open` made its leaf or the file has one.
     Footnotes,
+    /// Local graph (`localgraph`): a local graph of the active file. A
+    /// tab only once `graph:open-local` made its leaf or the file has one.
+    LocalGraph,
 }
 
 /// The Outline pane's headings for one note's metadata, whether that
@@ -3626,6 +3630,11 @@ pub struct Workspace {
     /// when that is a `.pdf`.
     pdf: Entity<PdfView>,
     graph: Entity<GraphView>,
+    /// The right dock's Local graph pane, a graph view of its own.
+    local_graph: Entity<GraphView>,
+    /// Whether the right dock has a `localgraph` leaf: `workspace.json`
+    /// had one, or `graph:open-local` added it this session.
+    local_graph_open: bool,
     /// The mode to return to when the graph closes.
     mode_before_graph: ViewMode,
     mode: ViewMode,
@@ -4036,6 +4045,7 @@ impl Workspace {
         let bases = cx.new(BasesView::new);
         let pdf = cx.new(PdfView::new);
         let graph = cx.new(GraphView::new);
+        let local_graph = cx.new(GraphView::new_pane);
         // The registry of embedded bases' views. A view is made while a
         // host is being updated, so the workspace's own subscription to it
         // waits for the next turn of the app.
@@ -4098,10 +4108,38 @@ impl Workspace {
             cx.observe(&editor, |this, _, cx| this.follow_heading(cx)),
             cx.observe(&reading, |this, _, cx| this.follow_heading(cx)),
             cx.subscribe_in(
+                &local_graph,
+                window,
+                |this, _, event: &GraphEvent, window, cx| match event {
+                    GraphEvent::Open(path) => this.open_from_local_graph(path.clone(), window, cx),
+                    GraphEvent::OpenInNewTab(path) => {
+                        this.open_link_in_new_tab(path.clone(), None, cx)
+                    }
+                    GraphEvent::Hover(Some(hover)) => {
+                        let where_ = this.window_of_group(this.groups[this.active_group].id);
+                        this.row_hover(
+                            crate::hover_preview::Source::Graph,
+                            where_,
+                            crate::hover_preview::exact(&hover.path),
+                            hover.path.clone(),
+                            true,
+                            hover.anchor,
+                            hover.modifiers,
+                            cx,
+                        )
+                    }
+                    GraphEvent::Hover(None) => {
+                        this.source_left(crate::hover_preview::Source::Graph, cx)
+                    }
+                },
+            ),
+            cx.subscribe_in(
                 &graph,
                 window,
                 |this, _, event: &GraphEvent, window, cx| match event {
-                    GraphEvent::Open(path) => {
+                    // The main area's graph opens a node in its own tab,
+                    // Mod or not: only the pane's Mod+click was observed.
+                    GraphEvent::Open(path) | GraphEvent::OpenInNewTab(path) => {
                         let back = this.mode_before_graph;
                         this.set_mode(back, window, cx);
                         this.open_file(path.clone(), None, cx);
@@ -4591,6 +4629,8 @@ impl Workspace {
             bases,
             pdf,
             graph,
+            local_graph,
+            local_graph_open: false,
             mode_before_graph: ViewMode::Reading,
             mode: ViewMode::Reading,
             current: None,
@@ -5610,6 +5650,8 @@ impl Workspace {
             .update(cx, |s, cx| s.set_state(state.clone(), cx));
         self.graph
             .update(cx, |g, cx| g.set_state(state.clone(), cx));
+        self.local_graph
+            .update(cx, |g, cx| g.set_state(state.clone(), cx));
         self.settings
             .update(cx, |s, cx| s.set_state(state.clone(), cx));
         self.name_finder = None;
@@ -6213,7 +6255,7 @@ impl Workspace {
             // Obsidian's `checkCallback` does rather than falling back to the
             // global graph.
             "graph:open-local" if self.current.is_none() => {}
-            "graph:open-local" => self.show_graph(true, window, cx),
+            "graph:open-local" => self.open_local_graph_pane(cx),
             // Both check callbacks: asked for by id where the palette would
             // not offer them, they do nothing.
             "graph:animate" if !self.global_graph_active(cx) => {}
@@ -15640,6 +15682,7 @@ impl Workspace {
             Some("all-properties") => self.right_tab = RightTab::Properties,
             Some("file-properties") => self.right_tab = RightTab::FileProperties,
             Some("footnotes") => self.right_tab = RightTab::Footnotes,
+            Some("localgraph") => self.right_tab = RightTab::LocalGraph,
             _ => {}
         }
         self.file_properties_open = layout
@@ -15648,6 +15691,7 @@ impl Workspace {
         self.footnotes.open = layout
             .get("right")
             .is_some_and(|right| leaf_of_kind(right, "footnotes").is_some());
+        self.restore_local_graph(&layout, cx);
         self.layout = Some(layout);
     }
 
@@ -15819,6 +15863,7 @@ impl Workspace {
             } else {
                 file_properties_pane::remove_leaf(right, "footnotes");
             }
+            self.write_local_graph_leaf(right, cx);
         }
         // The Files leaf's own state, where the file has that leaf.
         {
@@ -16309,6 +16354,7 @@ impl Workspace {
                 RightTab::Properties => "properties",
                 RightTab::FileProperties => "file-properties",
                 RightTab::Footnotes => "footnotes",
+                RightTab::LocalGraph => "localgraph",
             }),
         );
         right.insert(
@@ -16477,6 +16523,7 @@ impl Workspace {
             "editor": self.editor.read(cx).describe(text, cx),
             "reading": self.reading.read(cx).describe(cx),
             "graph": graph,
+            "local_graph": self.describe_local_graph(cx),
             "slides": self.slides.as_ref().map(|p| p.view.read(cx).describe()),
             "canvas": self.canvas.read(cx).describe(cx),
             "bases": self.bases.read(cx).state_json(),
@@ -18445,7 +18492,8 @@ impl Workspace {
                 RightTab::Backlinks
                 | RightTab::Outgoing
                 | RightTab::FileProperties
-                | RightTab::Footnotes => false,
+                | RightTab::Footnotes
+                | RightTab::LocalGraph => false,
             }
     }
 
@@ -18567,7 +18615,8 @@ impl Workspace {
             RightTab::Backlinks
             | RightTab::Outgoing
             | RightTab::FileProperties
-            | RightTab::Footnotes => return,
+            | RightTab::Footnotes
+            | RightTab::LocalGraph => return,
         }
         cx.notify();
     }
@@ -18604,7 +18653,8 @@ impl Workspace {
             RightTab::Backlinks
             | RightTab::Outgoing
             | RightTab::FileProperties
-            | RightTab::Footnotes => {}
+            | RightTab::Footnotes
+            | RightTab::LocalGraph => {}
         }
     }
 
@@ -19427,12 +19477,16 @@ impl Workspace {
             RightTab::Properties | RightTab::FileProperties => "properties",
             RightTab::Footnotes => "footnotes",
             RightTab::Outline => "outline",
+            RightTab::LocalGraph => "graph",
         };
         // File properties has a tab only while it has a leaf.
         if tab == RightTab::FileProperties && !self.file_properties_open {
             return false;
         }
         if tab == RightTab::Footnotes && !self.footnotes.open {
+            return false;
+        }
+        if tab == RightTab::LocalGraph && !self.local_graph_open {
             return false;
         }
         self.state
@@ -19458,6 +19512,7 @@ impl Workspace {
                 RightTab::Outline,
                 RightTab::FileProperties,
                 RightTab::Footnotes,
+                RightTab::LocalGraph,
             ]
             .into_iter()
             .find(|t| self.pane_enabled(*t))
@@ -19474,6 +19529,7 @@ impl Workspace {
             RightTab::Properties => self.render_properties_pane(theme, cx),
             RightTab::FileProperties => self.render_file_properties_pane(theme, window, cx),
             RightTab::Footnotes => self.render_footnotes_pane(theme, window, cx),
+            RightTab::LocalGraph => self.render_local_graph_pane(cx),
         };
         // A pane whose core plugin is off is not offered: Obsidian takes
         // the view away with the plugin.
@@ -19503,6 +19559,7 @@ impl Workspace {
                 let kind = match which {
                     RightTab::FileProperties => Some("file-properties"),
                     RightTab::Footnotes => Some("footnotes"),
+                    RightTab::LocalGraph => Some("localgraph"),
                     _ => None,
                 };
                 div()
@@ -19588,6 +19645,15 @@ impl Workspace {
                         "Footnotes",
                         "file-pen-line",
                         RightTab::Footnotes,
+                        cx,
+                    ))
+                    // Last, where the dragged leaf landed after Outline;
+                    // its icon is the graph's `lucide-git-fork`.
+                    .children(tab_button(
+                        self,
+                        "Local graph",
+                        "git-fork",
+                        RightTab::LocalGraph,
                         cx,
                     ))
                     .child(window_handle(

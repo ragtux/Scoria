@@ -330,7 +330,9 @@ pub struct Node {
 /// The options a `localgraph` leaf keeps in its own state and never in
 /// `graph.json`: the Depth slider and the three direction toggles at the top
 /// of its Filters section, with the values Obsidian opens a local graph at.
-/// Scoria writes no `localgraph` leaf, so these last the session.
+/// The right dock's Local graph pane reads them from its leaf and writes
+/// them back there ([`scoria_formats::local_graph`]); a local graph in the
+/// main area keeps them for the session.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LocalOptions {
     /// `localJumps`: how many hops out from the centre the walk goes.
@@ -377,6 +379,9 @@ struct Built {
 
 pub enum GraphEvent {
     Open(String),
+    /// A node clicked with Mod held: its file in a new tab, as Obsidian's
+    /// local graph pane opened it (`s07`).
+    OpenInNewTab(String),
     /// The pointer came onto a note's or an attachment's node (`Some`) or
     /// off the one it was on, for page preview: the node's path, the box it
     /// anchors to, and the modifiers held.
@@ -451,6 +456,10 @@ pub struct GraphView {
     global_camera: Option<(f32, Option<f32>, bool)>,
     /// The timelapse that is running, if one is.
     timelapse: Option<Timelapse>,
+    /// The right dock's Local graph pane rather than the main area's graph:
+    /// always local, centred on the file it is given and on nothing without
+    /// one, its settings its leaf's own `options` rather than `graph.json`.
+    pane: bool,
     /// Counts timelapse runs, so a run started over stops the old one's
     /// clock.
     timelapse_run: u64,
@@ -534,12 +543,61 @@ impl GraphView {
             global_camera: None,
             timelapse: None,
             timelapse_run: 0,
+            pane: false,
+        }
+    }
+
+    /// The Local graph pane's view: local from the start, at its own
+    /// scale 1, on the leaf's default options until [`Self::set_pane_options`]
+    /// gives it the leaf's.
+    pub fn new_pane(cx: &mut Context<Self>) -> GraphView {
+        let mut view = GraphView::new(cx);
+        view.pane = true;
+        view.pinned_scale = Some(1.0);
+        view.set_pane_options(
+            &scoria_formats::local_graph::LocalGraphOptions::default(),
+            cx,
+        );
+        view
+    }
+
+    /// The pane's settings, from its leaf.
+    pub fn set_pane_options(
+        &mut self,
+        options: &scoria_formats::local_graph::LocalGraphOptions,
+        cx: &mut Context<Self>,
+    ) {
+        self.config = options.config.clone();
+        self.local_options = LocalOptions {
+            jumps: options.jumps,
+            backlinks: options.backlinks,
+            forelinks: options.forelinks,
+            interlinks: options.interlinks,
+        };
+        let text = self.config.search.clone().unwrap_or_default();
+        self.search.update(cx, |input, cx| {
+            if input.text() != text {
+                input.set_text(text, cx);
+            }
+        });
+        self.rebuild(cx);
+    }
+
+    /// The pane's settings as its leaf keeps them.
+    pub fn pane_options(&self) -> scoria_formats::local_graph::LocalGraphOptions {
+        scoria_formats::local_graph::LocalGraphOptions {
+            config: self.config.clone(),
+            jumps: self.local_options.jumps,
+            backlinks: self.local_options.backlinks,
+            forelinks: self.local_options.forelinks,
+            interlinks: self.local_options.interlinks,
         }
     }
 
     pub fn set_state(&mut self, state: Arc<VaultState>, cx: &mut Context<Self>) {
-        // A change the panel has not written yet outranks the file.
-        if !self.config_dirty {
+        // A change the panel has not written yet outranks the file. The
+        // pane's settings are its leaf's, never the file's.
+        if !self.config_dirty && !self.pane {
             self.config = state.vault().graph_config().unwrap_or_default();
             let text = self.config.search.clone().unwrap_or_default();
             self.search.update(cx, |input, cx| {
@@ -568,7 +626,7 @@ impl GraphView {
     pub fn set_current(&mut self, path: Option<String>, cx: &mut Context<Self>) {
         let changed = self.current != path;
         self.current = path.clone();
-        if self.local.is_some() && changed {
+        if (self.pane || self.local.is_some()) && changed {
             self.local = path;
             // A local graph around another note is a new view: frame it.
             self.user_adjusted = false;
@@ -579,6 +637,9 @@ impl GraphView {
     }
 
     pub fn set_local(&mut self, local: bool, cx: &mut Context<Self>) {
+        if self.pane {
+            return;
+        }
         let want = if local { self.current.clone() } else { None };
         let was_local = self.is_local();
         // The camera as the outgoing graph leaves it, read before the switch
@@ -607,7 +668,7 @@ impl GraphView {
     }
 
     pub fn is_local(&self) -> bool {
-        self.local.is_some()
+        self.pane || self.local.is_some()
     }
 
     /// What the graph is showing, for the control socket's state dump. The
@@ -617,6 +678,8 @@ impl GraphView {
     pub fn describe(&self) -> Value {
         json!({
             "local": self.is_local(),
+            "pane": self.pane,
+            "centre": self.local,
             "local_options": self.local_options.describe(),
             "nodes": self.nodes.len(),
             "timelapse": self.timelapse.as_ref().map(|t| json!({
@@ -626,6 +689,19 @@ impl GraphView {
             })),
             "scale": self.scale,
             "offset": [self.offset.x, self.offset.y],
+            // Where each node is drawn, in window-local logical pixels, for
+            // a driver that clicks one; left out of a large graph.
+            "positions": (self.nodes.len() <= 300).then(|| {
+                let layout = self.layout.lock().unwrap_or_else(|e| e.into_inner());
+                self.nodes
+                    .iter()
+                    .zip(layout.bodies.iter())
+                    .map(|(node, body)| {
+                        let at = self.to_screen(body.x, body.y);
+                        (node.id.clone(), json!([f32::from(at.x), f32::from(at.y)]))
+                    })
+                    .collect::<serde_json::Map<String, Value>>()
+            }),
             "hovered": self
                 .hovered
                 .and_then(|ix| self.nodes.get(ix))
@@ -666,6 +742,21 @@ impl GraphView {
         let config = self.config.clone();
         let local = self.local.clone();
         let local_options = self.local_options;
+        // The pane with no file shows nothing, as Obsidian's did over an
+        // empty tab (`s04`).
+        if self.pane && local.is_none() {
+            self.building = false;
+            self.timelapse = None;
+            self.apply(
+                Built {
+                    nodes: Vec::new(),
+                    edges: Vec::new(),
+                    neighbors: Vec::new(),
+                },
+                cx,
+            );
+            return;
+        }
         self.building = true;
         cx.spawn(async move |this, cx| {
             let built = cx
@@ -993,7 +1084,12 @@ impl GraphView {
             if !drag.moved && event.button == MouseButton::Left {
                 if let Some(node) = self.nodes.get(ix) {
                     if matches!(node.kind, NodeKind::Note | NodeKind::Attachment) {
-                        cx.emit(GraphEvent::Open(node.id.clone()));
+                        let path = node.id.clone();
+                        cx.emit(if event.modifiers.secondary() {
+                            GraphEvent::OpenInNewTab(path)
+                        } else {
+                            GraphEvent::Open(path)
+                        });
                     }
                 }
             }
@@ -1285,6 +1381,12 @@ impl GraphView {
     /// Writes `graph.json` a beat after the last change, so a slider drag
     /// is one write rather than one per pixel.
     fn schedule_save(&mut self, cx: &mut Context<Self>) {
+        // The pane's settings go out with its leaf, when the layout is
+        // written; `graph.json` is not touched (`s08`).
+        if self.pane {
+            cx.notify();
+            return;
+        }
         self.config_dirty = true;
         self.save_task = Some(cx.spawn(async move |this, cx| {
             cx.background_executor().timer(SAVE_DELAY).await;
@@ -2567,26 +2669,32 @@ impl Render for GraphView {
                             .text_color(theme.tokens.text_normal)
                             .child(l)
                     }))
-                    .child(
-                        div()
-                            .text_size(px(11.))
-                            .text_color(theme.tokens.text_muted)
-                            .child(status),
-                    )
-                    .child(
-                        div()
-                            .id("graph-local")
-                            .on_click(cx.listener(|this, _, _, cx| this.toggle_local(cx)))
-                            .child(chip(
-                                if local {
-                                    "Local".into()
-                                } else {
-                                    "Global".into()
-                                },
-                                local,
-                                &theme,
-                            )),
-                    ),
+                    // The pane is too narrow for the count beside the
+                    // controls, and Obsidian's shows none.
+                    .when(!self.pane, |d| {
+                        d.child(
+                            div()
+                                .text_size(px(11.))
+                                .text_color(theme.tokens.text_muted)
+                                .child(status),
+                        )
+                    })
+                    .when(!self.pane, |d| {
+                        d.child(
+                            div()
+                                .id("graph-local")
+                                .on_click(cx.listener(|this, _, _, cx| this.toggle_local(cx)))
+                                .child(chip(
+                                    if local {
+                                        "Local".into()
+                                    } else {
+                                        "Global".into()
+                                    },
+                                    local,
+                                    &theme,
+                                )),
+                        )
+                    }),
             )
     }
 }

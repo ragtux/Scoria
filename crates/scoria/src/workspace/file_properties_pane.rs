@@ -30,7 +30,7 @@ use crate::reading::view::{HoverHost, ReadingHost};
 pub(super) const EMPTY: &str = "No properties found.";
 
 /// The right dock's tabs in the order they are drawn.
-pub(super) const DOCK_ORDER: [RightTab; 7] = [
+pub(super) const DOCK_ORDER: [RightTab; 8] = [
     RightTab::Backlinks,
     RightTab::Outgoing,
     RightTab::Tags,
@@ -38,6 +38,7 @@ pub(super) const DOCK_ORDER: [RightTab; 7] = [
     RightTab::Outline,
     RightTab::FileProperties,
     RightTab::Footnotes,
+    RightTab::LocalGraph,
 ];
 
 /// The tab the dock shows once `closed`, the tab on screen, is gone: the
@@ -198,6 +199,18 @@ impl Workspace {
             "footnotes" => {
                 self.footnotes.open = false;
                 RightTab::Footnotes
+            }
+            "localgraph" => {
+                // The leaf goes with its options: the next one starts from
+                // the defaults, as every new local graph did (`s08`).
+                self.local_graph_open = false;
+                self.local_graph.update(cx, |g, cx| {
+                    g.set_pane_options(
+                        &scoria_formats::local_graph::LocalGraphOptions::default(),
+                        cx,
+                    )
+                });
+                RightTab::LocalGraph
             }
             _ => return,
         };
