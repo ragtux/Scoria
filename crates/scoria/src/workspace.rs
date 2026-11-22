@@ -92,6 +92,7 @@ mod file_properties_pane;
 mod footnotes_pane;
 mod layouts;
 mod linked_tabs;
+mod linked_view;
 mod local_graph_pane;
 mod local_graph_tab;
 mod stacked;
@@ -2065,6 +2066,9 @@ impl Tab {
         if local_graph_tab::is_local_graph(self) {
             return local_graph_tab::title(self).into();
         }
+        if linked_view::kind_of(self).is_some() {
+            return linked_view::title(self).into();
+        }
         match release_notes::version_of(self) {
             Some(version) => release_notes::title(&version).into(),
             None => leaf_title(self.path.as_deref(), self.mode),
@@ -3650,6 +3654,9 @@ pub struct Workspace {
     /// Link with tab's pick, the link icon's hover and what the next sync
     /// settles ([`linked_tabs`]).
     linking: linked_tabs::Linking,
+    /// The Backlinks, Outgoing links, File properties and Outline leaves
+    /// of the main area: what they keep for the session ([`linked_view`]).
+    linked_views: linked_view::LinkedViews,
     /// The mode to return to when the graph closes.
     mode_before_graph: ViewMode,
     mode: ViewMode,
@@ -3982,6 +3989,13 @@ fn view_subscriptions(
                     cx,
                 ),
                 EditorEvent::Edited => {
+                    // A linked File properties view edits its note through
+                    // the editor of the group showing it, which need not be
+                    // the active one: that buffer is written at once.
+                    if editor.entity_id() != this.editor.entity_id() {
+                        this.write_linked_edit(&editor, cx);
+                        return;
+                    }
                     this.schedule_save(cx);
                     this.refresh_outline_from_buffer(cx);
                     // In reading view the File properties pane is what
@@ -4648,6 +4662,7 @@ impl Workspace {
             local_graph_open: false,
             local_graph_tabs: HashMap::new(),
             linking: Default::default(),
+            linked_views: Default::default(),
             mode_before_graph: ViewMode::Reading,
             mode: ViewMode::Reading,
             current: None,
@@ -6812,17 +6827,28 @@ impl Workspace {
                     self.show_in_system_explorer(&current, cx);
                 }
             }
-            "backlink:open" | "backlink:open-backlinks" => {
+            "backlink:open" => {
                 self.right_visible = true;
                 self.show_right_tab("backlinks", cx);
             }
-            "outgoing-links:open" | "outgoing-links:open-for-current" => {
+            "outgoing-links:open" => {
                 self.right_visible = true;
                 self.show_right_tab("outgoing", cx);
             }
-            "outline:open" | "outline:open-for-current" => {
+            "outline:open" => {
                 self.right_visible = true;
                 self.show_right_tab("outline", cx);
+            }
+            // "... for the current note": the view, unlinked, in a new
+            // group right of the active one ([`linked_view`], `s05`).
+            "backlink:open-backlinks" => {
+                self.open_linked_view(linked_view::LinkedKind::Backlinks, false, window, cx)
+            }
+            "outgoing-links:open-for-current" => {
+                self.open_linked_view(linked_view::LinkedKind::Outgoing, false, window, cx)
+            }
+            "outline:open-for-current" => {
+                self.open_linked_view(linked_view::LinkedKind::Outline, false, window, cx)
             }
             "bookmarks:open" => {
                 self.left_visible = true;
@@ -8208,6 +8234,7 @@ impl Workspace {
     }
 
     fn refresh_panes(&mut self, state: &Arc<VaultState>, cx: &mut Context<Self>) {
+        self.linked_views.forget_mentions(&mut self.doc_mentions);
         let Some(path) = self.current.clone() else {
             self.clear_panes(cx);
             return;
@@ -12409,6 +12436,9 @@ impl Workspace {
         {
             return element;
         }
+        if let Some(element) = self.linked_view_element(view, theme, cx) {
+            return element;
+        }
         match Self::main_view_for(view.mode, has_note, image, has_buffer, canvas, bases, pdf) {
             MainView::Canvas => view.canvas.clone().into_any_element(),
             MainView::Bases => view.bases.clone().into_any_element(),
@@ -16038,20 +16068,26 @@ impl Workspace {
                 ],
             );
             // `file` is the open note; Obsidian leaves the key out for an
-            // empty tab, and a `null` here removes it.
+            // empty tab, and a `null` here removes it. While a local graph
+            // or a linked view is the active tab the leaves keep the file
+            // they had, as Obsidian's did ([`linked_view`]).
+            let keep_file = self.follower_is_active();
             let o = &self.outline_state;
-            set_leaf_state(
-                right,
-                "outline",
-                &[
-                    ("file", json!(self.current)),
+            let file = (!keep_file).then(|| ("file", json!(self.current)));
+            let outline: Vec<(&str, Value)> = file
+                .clone()
+                .into_iter()
+                .chain([
                     ("followCursor", json!(o.follow_cursor)),
                     ("showSearch", json!(o.show_search)),
                     ("searchQuery", json!(self.outline_filter.read(cx).text())),
-                ],
-            );
+                ])
+                .collect();
+            set_leaf_state(right, "outline", &outline);
             // File properties keeps only the note it shows.
-            set_leaf_state(right, "file-properties", &[("file", json!(self.current))]);
+            if let Some(file) = file {
+                set_leaf_state(right, "file-properties", &[file]);
+            }
         }
         let mut active_id = Value::Null;
         let main = self.layout_node_json(&self.layout_tree, &mut active_id);
@@ -16211,6 +16247,7 @@ impl Workspace {
         };
         self.sync_linked_tabs(cx);
         self.sync_local_graph_tabs(cx);
+        self.sync_linked_views(cx);
         let fresh = self.layout_json(cx);
         if self.layout.as_ref() == Some(&fresh) {
             return;
@@ -16649,6 +16686,9 @@ impl Workspace {
             "local_graph": self.describe_local_graph(cx),
             "local_graph_tabs": self.describe_local_graph_tabs(cx),
             "linking": self.describe_linking(),
+            // The Backlinks, Outgoing links, File properties and Outline
+            // leaves of the main area ([`linked_view`]).
+            "linked_views": self.describe_linked_views(cx),
             "slides": self.slides.as_ref().map(|p| p.view.read(cx).describe()),
             "canvas": self.canvas.read(cx).describe(cx),
             "bases": self.bases.read(cx).state_json(),
@@ -17616,6 +17656,10 @@ impl Workspace {
             Pick::ExtractSelection => self.run_command("note-composer:split-file", window, cx),
             Pick::CopyPath => self.copy_path(&path, cx),
             Pick::CopyPathAs(how) => self.copy_path_as(&path, how, cx),
+            // "Open linked view" only opens its submenu; a row of it opens
+            // the view beside the active tab, linked to it.
+            Pick::OpenLinkedView => {}
+            Pick::LinkedView(row) => self.open_linked_row(row, window, cx),
             Pick::OpenInDefaultApp => self.open_in_default_app(&path, cx),
             Pick::ShowInSystemExplorer => self.show_in_system_explorer(&path, cx),
             Pick::RevealInNavigation => self.reveal_in_navigation(&path, window, cx),
@@ -18163,7 +18207,7 @@ impl Workspace {
                 for group in &shown.groups {
                     for m in &group.matches {
                         card = card.child(self.render_match(
-                            which,
+                            owner,
                             next(),
                             current,
                             group,
@@ -18267,6 +18311,8 @@ impl Workspace {
                         .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
                         .when(unresolved, |d| d.tooltip(tooltip("Not created yet")))
                         .on_click(listen(this, move |this, _, _, cx| {
+                            // A linked view's row opens in its note's tab.
+                            this.linked_view_row_target(owner, cx);
                             // A Links row follows the link the way the note
                             // would, subpath included, and creates the note
                             // nothing stands behind; a mentions row opens
@@ -18344,7 +18390,7 @@ impl Workspace {
                 let mut card = Self::match_card(theme);
                 for m in &group.matches {
                     card = card.child(self.render_match(
-                        which,
+                        owner,
                         next(),
                         current,
                         group,
@@ -18383,7 +18429,7 @@ impl Workspace {
     #[allow(clippy::too_many_arguments)]
     fn render_match(
         &self,
-        which: RightTab,
+        owner: SectionsOwner,
         ix: usize,
         current: &str,
         group: &Group,
@@ -18391,6 +18437,7 @@ impl Workspace {
         theme: &Theme,
         this: &gpui::WeakEntity<Self>,
     ) -> gpui::Stateful<gpui::Div> {
+        let which = owner.kind();
         let path = group.path.clone();
         let menu_path = path.clone();
         let offset = m.offset;
@@ -18500,6 +18547,7 @@ impl Workspace {
             .hover(move |s| s.bg(hover))
             .on_click(listen(this, move |this, _, _, cx| {
                 if let Some(path) = path.clone() {
+                    this.linked_view_row_target(owner, cx);
                     this.open_file(path, None, cx);
                     if let Some(offset) = offset {
                         this.reveal_offset(offset, cx);
@@ -20220,6 +20268,11 @@ fn tab_from_leaf(
             leaf: Some(leaf.clone()),
             ..Tab::empty(default_mode)
         },
+        // So does a Backlinks, Outgoing links, File properties or Outline
+        // leaf of the main area: a view of that file, not its tab.
+        (Some(view), _) if linked_view::LinkedKind::from_view_type(view).is_some() => {
+            linked_view::restore(leaf, default_mode)
+        }
         (_, Some(file)) => {
             if !known(file) {
                 return None;
@@ -20696,6 +20749,7 @@ fn leaf_json(tab: &Tab) -> Value {
                 (None, _) if local_graph_tab::is_local_graph(tab) => {
                     view == Some(scoria_formats::local_graph::VIEW_TYPE)
                 }
+                (None, _) if linked_view::kind_of(tab).is_some() => true,
                 (None, _) => view == Some("empty"),
             }
         })
@@ -21074,6 +21128,7 @@ impl Render for Workspace {
         self.sync_stacks(cx);
         self.sync_linked_tabs(cx);
         self.sync_local_graph_tabs(cx);
+        self.sync_linked_views(cx);
         self.stamp_live_note();
         if let Some(value) = self.pending_title_rename.take() {
             cx.defer_in(window, move |this, window, cx| {

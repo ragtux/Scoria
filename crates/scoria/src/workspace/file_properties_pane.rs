@@ -256,8 +256,13 @@ impl Workspace {
 
     /// Escape in the pane: the open menu or field goes first; a second
     /// press hands the keyboard back to the note (`s07`).
-    fn file_properties_escape(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        if self.editor.update(cx, |e, cx| e.escape_pane_field(cx)) {
+    fn file_properties_escape(
+        &mut self,
+        editor: &Entity<Editor>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if editor.update(cx, |e, cx| e.escape_pane_field(cx)) {
             return;
         }
         self.focus_main(window, cx);
@@ -303,20 +308,55 @@ impl Workspace {
     ) -> gpui::AnyElement {
         let focus = self.file_properties_focus.clone();
         let note = self.file_properties_note(cx);
+        let editable = self.file_properties_editable(cx);
+        let editor = self.editor.clone();
+        let available = (self.right_width as f32 - 24.).max(100.);
+        self.properties_element(
+            "file-properties".into(),
+            focus,
+            note,
+            editor,
+            editable,
+            available,
+            theme,
+            window,
+            cx,
+        )
+    }
+
+    /// The pane's rows for `note` (its path and text), editable through
+    /// `editor` when `editable`, the keyboard tracked by `focus`, laid out
+    /// `available` wide: the dock pane's, or a File properties leaf's of
+    /// the main area ([`super::linked_view`]).
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn properties_element(
+        &mut self,
+        id: SharedString,
+        focus: FocusHandle,
+        note: Option<(String, Arc<String>)>,
+        editor: Entity<Editor>,
+        editable: bool,
+        available: f32,
+        theme: &Theme,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> gpui::AnyElement {
+        let escape_editor = editor.clone();
+        let click_focus = focus.clone();
         let root = div()
-            .id("file-properties")
+            .id(id)
             .key_context(PANE_CONTEXT)
             .track_focus(&focus)
             .flex()
             .flex_col()
             .size_full()
-            .on_action(cx.listener(|this, _: &CloseFind, window, cx| {
-                this.file_properties_escape(window, cx)
+            .on_action(cx.listener(move |this, _: &CloseFind, window, cx| {
+                this.file_properties_escape(&escape_editor, window, cx)
             }))
             .on_mouse_down(
                 MouseButton::Left,
-                cx.listener(|this, _, window, cx| {
-                    window.focus(&this.file_properties_focus, cx);
+                cx.listener(move |_, _, window, cx| {
+                    window.focus(&click_focus, cx);
                 }),
             );
         let Some((path, text)) = note else {
@@ -343,8 +383,6 @@ impl Workspace {
             .as_ref()
             .map(|s| s.property_types().clone())
             .unwrap_or_default();
-        let editable = self.file_properties_editable(cx);
-        let editor = self.editor.clone();
         // A click that opens a field takes the keyboard into the pane first,
         // so the keys that follow are the pane's.
         let host = editable.then(|| {
@@ -391,7 +429,6 @@ impl Workspace {
             }),
         };
         let no_folds = HashSet::new();
-        let available = (self.right_width as f32 - 24.).max(100.);
         let renderer = reading::view::Renderer::new(
             theme,
             window.text_system().clone(),

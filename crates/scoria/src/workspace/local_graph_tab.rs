@@ -123,31 +123,16 @@ pub(super) enum Follow {
 }
 
 impl Workspace {
-    /// The active file as a local graph sees it.
+    /// The active file as a local graph sees it: what every unlinked
+    /// follower sees ([`Workspace::follower_follow`]).
     pub(super) fn local_graph_follow(&self) -> Follow {
-        if self.tabs.get(self.active_tab).is_some_and(is_local_graph) && self.current.is_none() {
-            return Follow::Keep;
-        }
-        if self.mode == ViewMode::Graph {
-            return Follow::File(None);
-        }
-        Follow::File(self.current.clone())
+        self.follower_follow()
     }
 
     /// Every tab of every group, with its group's index, the active group's
     /// from the live fields.
     fn all_tab_snapshots(&self) -> Vec<(usize, Vec<Tab>)> {
-        self.groups
-            .iter()
-            .enumerate()
-            .map(|(ix, g)| {
-                if ix == self.active_group {
-                    (ix, self.tab_snapshots())
-                } else {
-                    (ix, g.tabs.clone())
-                }
-            })
-            .collect()
+        self.every_tab()
     }
 
     /// Brings every local-graph tab up to date: the file it centres on (its
@@ -155,26 +140,16 @@ impl Workspace {
     /// (made the first time) and the options its view holds, written into
     /// its leaf; views of tabs that are gone are dropped.
     pub(super) fn sync_local_graph_tabs(&mut self, cx: &mut Context<Self>) {
-        let snapshots = self.all_tab_snapshots();
-        let mut sources: HashMap<String, Option<String>> = HashMap::new();
-        let mut any = false;
-        for (_, tabs) in &snapshots {
-            for tab in tabs {
-                if is_local_graph(tab) {
-                    any = true;
-                } else if let Some(link) = &tab.link {
-                    // The first tab of the link showing a file: linked note
-                    // tabs share one, and an empty tab has none to give.
-                    let source = sources.entry(link.clone()).or_insert(None);
-                    if source.is_none() {
-                        source.clone_from(&tab.path);
-                    }
-                }
-            }
-        }
+        let any = self
+            .all_tab_snapshots()
+            .iter()
+            .any(|(_, tabs)| tabs.iter().any(is_local_graph));
         if !any && self.local_graph_tabs.is_empty() {
             return;
         }
+        // A link's note is its tab that follows nothing: a linked view in
+        // the same link is not it ([`super::linked_view`]).
+        let sources = self.link_sources();
         let follow = self.local_graph_follow();
         let mut seen: Vec<String> = Vec::new();
         let active_group = self.active_group;
@@ -312,28 +287,9 @@ impl Workspace {
                 .find(|t| view_key(t).as_deref() == Some(key))
                 .and_then(|t| t.link.clone())
         });
-        let linked = link.and_then(|link| {
-            snapshots.iter().find_map(|(gi, tabs)| {
-                tabs.iter()
-                    .position(|t| !is_local_graph(t) && t.link.as_deref() == Some(link.as_str()))
-                    .map(|ti| (*gi, ti))
-            })
-        });
-        let target = linked.or_else(|| {
-            // The group used last whose shown tab is not a local graph.
-            self.group_mru.iter().find_map(|id| {
-                let gi = self.group_ix(*id)?;
-                let (_, tabs) = snapshots.iter().find(|(g, _)| *g == gi)?;
-                let active = if gi == self.active_group {
-                    self.active_tab
-                } else {
-                    self.groups[gi].active_tab
-                };
-                tabs.get(active)
-                    .filter(|t| !is_local_graph(t))
-                    .map(|_| (gi, active))
-            })
-        });
+        // The linked note's tab, else the group used last whose shown tab
+        // follows nothing ([`Workspace::follower_target`]).
+        let target = self.follower_target(link.as_deref());
         let Some((gi, ti)) = target else {
             self.open_link_in_new_tab(path, None, cx);
             return;

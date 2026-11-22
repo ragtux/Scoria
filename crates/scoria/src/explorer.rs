@@ -695,6 +695,8 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         | Pick::ExtractSelection
         | Pick::Correction(_)
         | Pick::AddToDictionary
+        | Pick::OpenLinkedView
+        | Pick::LinkedView(_)
         | Pick::Command(_) => return None,
     })
 }

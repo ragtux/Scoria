@@ -181,6 +181,9 @@ pub enum Section {
     Action,
     /// Obsidian leaves "Copy path" with no section at all.
     Unsectioned,
+    /// `view`: the view header's "Open linked view" (Obsidian's "Open
+    /// version history" and "Start presentation" share it).
+    View,
     System,
     Danger,
     /// The All properties row's "Delete property": one separator before it,
@@ -248,6 +251,12 @@ pub enum Pick {
     CopyPath,
     /// A row of **Copy path**'s submenu ([`copy_path_row`]).
     CopyPathAs(CopyAs),
+    /// "Open linked view": the parent of its submenu
+    /// ([`linked_view_row`]), which never picks.
+    OpenLinkedView,
+    /// A row of **Open linked view**'s submenu: that view, linked to the
+    /// menu's leaf, in a split of the main area.
+    LinkedView(LinkedRow),
     OpenInDefaultApp,
     ShowInSystemExplorer,
     /// "Reveal file in navigation": the Files view scrolled to the row.
@@ -542,8 +551,8 @@ pub fn right_click_caret(selection: &Range<usize>, at: usize) -> Option<usize> {
 /// that cannot run is what the command palette refuses to do, and the menu
 /// refuses it too; the gaps are entries in `docs/scoria/UI parity
 /// backlog.md`. Dropping the only item of a section drops its separator
-/// with it, so the `view` section's separator is absent here where the
-/// capture has it. **Open in new window** was a third until the popout
+/// with it; the `view` section keeps its own with **Open linked view**
+/// ([`linked_view_row`], since 2026-11-22). **Open in new window** was a third until the popout
 /// windows landed (2026-11-09); it wears `lucide-picture-in-picture-2`
 /// in every capture.
 ///
@@ -914,6 +923,7 @@ pub fn items(target: &Target) -> Vec<Item> {
         .chain(merge_row(target.path()))
         .chain([
             copy_path_row(false),
+            linked_view_row(target.path()),
             item(
                 "Open in default app",
                 "arrow-up-right",
@@ -957,9 +967,9 @@ fn merge_row(path: &str) -> Option<Item> {
 /// 2026-11-22, `link-with-tab.mjs`). Left out for want of anything behind
 /// them: a markdown tab's two
 /// view-mode rows (their labels in the other modes were not captured),
-/// **Export to PDF...**, a canvas's **Export as image**, **Open version
-/// history** and the **Open linked view** submenu. Copy path opens its
-/// submenu of three, the view header's row ([`copy_path_row`]).
+/// **Export to PDF...**, a canvas's **Export as image** and **Open version
+/// history**. Copy path opens its submenu of three and Open linked view its
+/// own, the view header's rows ([`copy_path_row`], [`linked_view_row`]).
 fn tab_items(
     path: &str,
     ix: usize,
@@ -1057,6 +1067,70 @@ fn backlinks_row(on: bool) -> Item {
             Pick::ToggleBacklinksInDocument,
         )
     }
+}
+
+/// A row of **Open linked view**'s submenu, in the order Obsidian 1.15.1
+/// draws them (`open-linked-view.mjs` `s01`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LinkedRow {
+    /// "Open local graph" (`lucide-git-fork`): `graph:open-local`.
+    LocalGraph,
+    /// "Open backlinks" (`links-coming-in`): `backlink:open-backlinks`.
+    Backlinks,
+    /// "Open outgoing links" (`links-going-out`):
+    /// `outgoing-links:open-for-current`.
+    OutgoingLinks,
+    /// "Open file properties" (`lucide-info`). Obsidian's
+    /// `properties:open-local` reveals the dock's leaf instead, so the row
+    /// has no command of its own.
+    FileProperties,
+    /// "Open outline" (`lucide-list`): `outline:open-for-current`.
+    Outline,
+}
+
+impl LinkedRow {
+    pub const ALL: [LinkedRow; 5] = [
+        LinkedRow::LocalGraph,
+        LinkedRow::Backlinks,
+        LinkedRow::OutgoingLinks,
+        LinkedRow::FileProperties,
+        LinkedRow::Outline,
+    ];
+
+    /// The row's label and its Lucide icon.
+    pub fn label_icon(self) -> (&'static str, &'static str) {
+        match self {
+            LinkedRow::LocalGraph => ("Open local graph", "git-fork"),
+            LinkedRow::Backlinks => ("Open backlinks", "links-coming-in"),
+            LinkedRow::OutgoingLinks => ("Open outgoing links", "links-going-out"),
+            LinkedRow::FileProperties => ("Open file properties", "info"),
+            LinkedRow::Outline => ("Open outline", "list"),
+        }
+    }
+}
+
+/// **Open linked view** with its submenu: `lucide-link` in the `view`
+/// section, its rows in one `linked` group. A note has all five rows; a
+/// canvas, a PDF, an image or a base has Open backlinks alone (observed
+/// on each, from the view header's More options and from the tab's menu
+/// alike, `s01`).
+pub fn linked_view_row(path: &str) -> Item {
+    let markdown = path.to_ascii_lowercase().ends_with(".md");
+    let mut row = item(
+        "Open linked view",
+        "link",
+        Section::View,
+        Pick::OpenLinkedView,
+    );
+    row.submenu = LinkedRow::ALL
+        .into_iter()
+        .filter(|r| markdown || *r == LinkedRow::Backlinks)
+        .map(|r| {
+            let (label, icon) = r.label_icon();
+            item(label, icon, Section::Group(0), Pick::LinkedView(r))
+        })
+        .collect();
+    row
 }
 
 /// What a row of Copy path's submenu puts on the clipboard.
@@ -2207,10 +2281,9 @@ mod tests {
     }
 
     /// The view header's More options over a base leaf (`s02` `moreOptions`,
-    /// 2026-11-01), minus the two `view` rows and their separator: the
-    /// splits and the window row, Rename with Move and Bookmark, Copy
-    /// path, the three system rows, and "Delete file" after the danger
-    /// pair.
+    /// 2026-11-01), minus Open version history: the splits and the window
+    /// row, Rename with Move and Bookmark, Copy path, Open linked view, the
+    /// three system rows, and "Delete file" after the danger pair.
     #[test]
     fn a_base_leafs_more_options_is_the_probes_list_without_the_rows_it_cannot_run() {
         assert_eq!(
@@ -2225,6 +2298,8 @@ mod tests {
                 "Bookmark...",
                 "---",
                 "Copy path",
+                "---",
+                "Open linked view",
                 "---",
                 "Open in default app",
                 "Show in system explorer",
@@ -2357,8 +2432,7 @@ mod tests {
 
     /// The tab header's menu over the middle of three markdown tabs, the
     /// active one (`2026-11-09-tab-header-menu.json`, cases 1 and 2), minus
-    /// the rows `tab_items` names as left out — which takes the `view`
-    /// section's separator with them.
+    /// the rows `tab_items` names as left out.
     #[test]
     fn a_markdown_tabs_menu_is_the_probes_list_without_the_rows_it_cannot_run() {
         let target = tab("Notes/Alpha.md", 1, 3, false, true);
@@ -2389,6 +2463,8 @@ mod tests {
                 "---",
                 "Copy path",
                 "---",
+                "Open linked view",
+                "---",
                 "Open in default app",
                 "Show in system explorer",
                 "Reveal file in navigation",
@@ -2398,6 +2474,36 @@ mod tests {
             ]
         );
         assert_eq!(target.path(), "Notes/Alpha.md");
+    }
+
+    /// Open linked view's submenu: five rows on a note, Open backlinks alone
+    /// on a canvas, a PDF, an image and a base (`open-linked-view.mjs`
+    /// `s01`), in the `view` section under `lucide-link`.
+    #[test]
+    fn open_linked_view_holds_five_rows_on_a_note_and_backlinks_elsewhere() {
+        let row = linked_view_row("Notes/Alpha.md");
+        assert_eq!((row.icon, row.section), ("link", Section::View));
+        let shown: Vec<(&str, &str)> = row
+            .submenu
+            .iter()
+            .map(|i| (i.label.as_ref(), i.icon))
+            .collect();
+        assert_eq!(
+            shown,
+            [
+                ("Open local graph", "git-fork"),
+                ("Open backlinks", "links-coming-in"),
+                ("Open outgoing links", "links-going-out"),
+                ("Open file properties", "info"),
+                ("Open outline", "list"),
+            ]
+        );
+        for path in ["Board.canvas", "doc.pdf", "pic.png", "Table.base"] {
+            let row = linked_view_row(path);
+            let labels: Vec<&str> = row.submenu.iter().map(|i| i.label.as_ref()).collect();
+            assert_eq!(labels, ["Open backlinks"], "{path}");
+            assert_eq!(row.submenu[0].pick, Pick::LinkedView(LinkedRow::Backlinks));
+        }
     }
 
     /// The last of two tabs has no Close tabs after; a canvas has no
@@ -2424,6 +2530,8 @@ mod tests {
                 "Bookmark...",
                 "---",
                 "Copy path",
+                "---",
+                "Open linked view",
                 "---",
                 "Open in default app",
                 "Show in system explorer",

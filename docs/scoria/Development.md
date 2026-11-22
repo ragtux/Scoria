@@ -350,6 +350,104 @@ The gate's run, its sheet and its log are in [[Parity gate run]].
 | Add alias in reading view | done 2026-11-22: `markdown:add-alias` runs in reading view, typing into the reading view's own properties block when properties are visible and into the File properties pane otherwise, written on Enter or blur, see [[#Add alias in reading view, 2026-11-22]] and [[Specification#Observed Add alias in reading view, Obsidian 1.15.0 (installer build 1.13.7)]] |
 | Copy path's submenu | done 2026-11-22: as Obsidian URL, from vault folder and from system root, with their notices, on Search results, the Files view (two rows on a folder), the tab and view headers, a wikilink's editor menu, Backlinks rows and reading-view links; a Bases row keeps the flat row, see [[#Copy path's submenu on every file menu, 2026-11-22]] |
 | Link with tab | done 2026-11-22: **Link with tab...** and **Unlink tab** after Pin on every tab menu, the pick of the tab to link with (the target group washed in the accent, a press of any button links, the source or outside ends it), the link icon in the tab header, and linked tabs following each other's files both ways on the leaves' `group`, as Obsidian 1.15.1 does; Pin pins the whole link and a restored link settles on its last tab, see [[#Link with tab, 2026-11-22]] and [[Specification#Observed Link with tab, Obsidian 1.15.1]] |
+| Open linked view | done 2026-11-22: the tab menu's (and a base's More options') Open linked view, five rows on a note and Open backlinks elsewhere; each opens a Backlinks, Outgoing links, File properties or Outline leaf of the main area linked to the note's tab, below or right of it as Obsidian 1.15.1 does, following that tab and keeping its own state in the leaf in Obsidian's bytes; `backlink:open-backlinks`, `outgoing-links:open-for-current` and `outline:open-for-current` open the same view unlinked, see [[#Open linked view, 2026-11-22]] and [[Specification#Observed Open linked view, Obsidian 1.15.1]] |
+
+### Open linked view, 2026-11-22
+
+The view header's More options and the tab's menu carry "Open linked view" in Obsidian, and the
+differences page said Scoria had no linked panes. The local graph's work had given every tab a link
+id ([[#Local graph pane, 2026-11-22]]); this builds the other views of the submenu on it. Probed
+first, see [[Specification#Observed Open linked view, Obsidian 1.15.1]].
+
+**The probe.** `tools/obsidian-probe/open-linked-view.mjs`, eight steps and a relaunch over CDP in
+a private headless sway (`USER_DATA_DIR` and `XDG_RUNTIME_DIR` under `/run/user/1000/olv`,
+`CDP_PORT=9492`, `--ozone-platform=x11` on that sway's XWayland, `LD_LIBRARY_PATH` unset, sway's
+store binary run directly). It corrected the brief twice. The submenu has **five** rows on a note —
+Open local graph, Open backlinks, Open outgoing links, **Open file properties**, Open outline — and
+Open backlinks alone on a canvas, a PDF, an image and a base, on the view header and the tab menu
+alike. And the commands are **not** the rows: `backlink:open-backlinks`,
+`outgoing-links:open-for-current` and `outline:open-for-current` open the view **unlinked** in a new
+group to the right, and `properties:open-local` is the dock's leaf. What else it found: Backlinks,
+Outgoing links and File properties split **below** the note, Outline and the local graph to its
+right; every run a new group; a linked leaf follows its note's leaf over every file kind and, with
+that leaf closed, loses its `group`, takes its plain title and follows the active file (dropping
+`file` over an empty tab); the linked Backlinks leaf keeps collapse, context, sort, search and folds
+of its own, away from the dock's, and takes them along; a row clicked in a view opens in the note's
+leaf.
+
+**What was built.**
+- `file_menu`: `Section::View`, `linked_view_row` and `Pick::LinkedView(LinkedRow)` — the row after
+  Copy path in the view menu and so in the active tab's menu, its submenu by file kind.
+- `workspace/linked_view.rs`: a view tab is a tab with no file whose leaf is `backlink`,
+  `outgoing-link`, `file-properties` or `outline`. Its leaf's whole `state` object is held as the
+  tab's `DocBacklinks` options (`DocBacklinks::for_view`), so the Backlinks view runs on the
+  Backlinks-in-document block's own handlers (`SectionsOwner::Doc` of its group, the group's filter
+  field) and the leaf is written back key for key, unknown keys kept. A row (`open_linked_row`)
+  links the active tab and splits beside it; the commands make the view unlinked to the right.
+  `sync_linked_views`, every frame and before the layout is written, sets each view's file, link,
+  title and leaf, asks for its file's unlinked mentions on the background executor, and keeps a
+  Backlinks or Outline view's search text in its group's field. The Outgoing links view draws the
+  dock's sections over `SectionsOwner::Outgoing` (the leaf's `linksCollapsed`, `unlinkedCollapsed`);
+  the Outline view the dock's rows with folds of its own; the File properties view the dock pane's
+  rows (`properties_element`, split out of the dock's render) through a small entity, editable
+  through the editor of the group showing the note, whose buffer is written at once when that group
+  is not the active one.
+- One follow path for every follower: `link_sources` (a link's file is its first tab that is not a
+  local graph or a view and shows a file, the one file [[#Link with tab, 2026-11-22]] keeps its
+  note tabs on), `follower_follow` (what an unlinked one follows) and `follower_target` (where a
+  click in one opens). The local graph's sync and node clicks now go through them, so a view in the
+  same link is never taken for the note. A row clicked in a Backlinks or Outgoing links view, or an
+  Outline heading, makes the note's tab active first; the open then marks that tab moved, so
+  `sync_linked_tabs` carries it to the link's other note tabs.
+- **Beside Link with tab.** A view never leads: the probe saw one made active stay on its file and
+  its clicks open in the note's leaf, so it is no member `linked_tabs::followers` moves (its
+  `linked_file` is none, having no path) and it follows only through `sync_linked_views`, after
+  `sync_linked_tabs` has settled the note tabs. A view's tab menu offers **Unlink tab** (its
+  `Target::Tab` is `linked`), after which it follows the active file, and Link with tab... on an
+  unlinked view joins it to the target's link. A link left with a view alone is dissolved by
+  `lone_links`, as closing its note does in Obsidian.
+- While a follower is the active tab, the dock's Outline and File properties leaves keep the file
+  they had, as Obsidian's did.
+- The state dump carries `linked_views` (leaf id, group, link, type, file, title, the leaf's state,
+  and what it lists).
+
+**Driven.** The release build in the same private sway over the control socket, with grim, on the
+probe's notes. A right click on Alpha's tab, a hover on Open linked view and a click on Open
+backlinks put `Backlinks for Alpha` below the note, linked; its four buttons, File name (Z to A),
+`Gam` typed in its filter and its two sections folded wrote the probe's values into its leaf, the
+dock's untouched. A click on its Gamma row opened Gamma in the note's tab, and the view followed
+to Gamma keeping all of it. The other four rows from the tab menu nested their groups as
+Obsidian's did (the Outline wrapping the note's group in a vertical split); Alpha opened in the
+note's tab moved all five; an Outline click on Two put the note's caret on line 10, as Obsidian's;
+`backlink:open-backlinks` made an unlinked `Backlinks` to the right that followed Delta. Closing
+the note's tab unlinked every view, which then followed Delta and Epsilon. On a canvas the views
+read "No headings found.", "No properties found." and "No backlinks found.", and the submenu held
+Open backlinks alone. The vault Obsidian left after its relaunch (five views linked to Alpha)
+opened linked, and quitting untouched left `workspace.json` byte for byte as Obsidian wrote it; a
+value typed in the linked File properties was on disk at once, that line alone changed. Rebased
+onto Link with tab and driven again: the note's tab and both views drew the link icon, Beta opened
+in the note moved both views, the Backlinks view's tab menu read Close, Pin, Unlink tab, Move to
+new window, Split right, Split down as Obsidian's does, and its Unlink tab left it following the
+active file (Delta in a new tab) while the Outline stayed on its note, Gamma; on quit the note and
+the Outline carried the `group`, the unlinked Backlinks none.
+
+**What differs, on purpose.** A note's view header has no More options in Scoria, so the submenu
+is reached from the tab's menu (and from a base's More options). A view's header draws the graph
+button rather than Bookmark and More options, and its title is the leaf's from the start where
+Obsidian's header read the plain name until the first change of file. The quirk the Link with tab
+probe recorded, a linked Backlinks leaf passing an unlinked tab's active file on to its note, is
+not built. The rows are offered whether or not their core plugin is on. A view's Outline marks no
+current heading and `followCursor` is kept but does nothing. The keyboard stays where it was after
+a row, where Obsidian's left it nowhere (File properties takes it in both).
+
+**Traps.** A fresh data directory updated itself from 1.15.0 to 1.15.1 on its first relaunch; the
+probe was run again whole and `document.title` is read every run. `app.workspace.iterateAllLeaves`
+missed the leaf a submenu row had just made; the probe walks the split tree itself. The menu's rows
+are nested below `.menu`, not its direct children, and a submenu row must be reached by moving the
+pointer straight across from its parent. In Scoria the dock writer used to drop the dock Outline's
+`file` (and move a key) whenever a non-file tab was active — a view made that common, so it is
+kept now. A linked File properties edit in a group that is not the active one was never saved
+until it wrote its editor itself.
 
 ### Link with tab, 2026-11-22
 
