@@ -12064,3 +12064,114 @@ were loaded, which at launch is `core-plugins.json`'s.
   caret run of Format had no rows to click); the selection run and the commands agree.
 - Strikethrough's check, and the checks in Live Preview (read in Source mode).
 - The highlight swatch's size and colour.
+
+## Observed local graph pane, Obsidian 1.15.1
+
+`tools/obsidian-probe/local-graph-pane.mjs`, 2026-11-22, in a private headless sway with a data
+directory of its own (`document.title` "… - Obsidian 1.15.1"; a first run the same day was on
+1.15.0 until its relaunch, results `results/2026-11-22-local-graph-pane-1.15.0.json`, and agreed
+on every row both runs reached). Vault: `Alpha → Beta, Gamma`, `Beta → Delta`, `Gamma → Beta`,
+`Delta → Epsilon`, `Lonely`, a canvas with a card for Alpha, a PNG. Results in
+`results/2026-11-22-local-graph-pane.json`.
+
+### `graph:open-local` makes a linked tab beside the note, not a sidebar leaf
+
+"Graph view: Open local graph" has no default hotkey and is offered on a note, a canvas and an
+image alike (only with no file is it withheld, [[#`graph:open-local` is not offered with no file
+open]]). Run from a note it **splits the main area**: a new `tabs` group to the right of the
+note's group (`main/split[1]/tabs[0]`), holding one `localgraph` leaf, active, the keyboard not in
+it, the right sidebar left as it was (collapsed stayed collapsed). The note's leaf and the new
+leaf share a `group` id: a **linked** pair. Run again, from the note or with the sidebar
+collapsed, it makes **another** group each time (`split[2]`, `split[3]`), all linked to the same
+note; nothing is reused or revealed. Each linked leaf follows *its note's leaf*: that leaf opening
+Beta made every one of them `Graph of Beta`; a different tab becoming active (Delta in a new tab)
+left them on Beta. With the linked note leaf closed (it was on the image), the graph lost its
+`group` key, its title became `Local graph`, and it moved to Delta, the file that became active:
+unlinked, it follows the active file as the sidebar leaf below does.
+
+The leaf, as `workspace.json` writes it (key order exact; the options block is the one
+[[#The local graph opens at its own scale 1]] lists):
+
+```
+{"id": "…", "type": "leaf",
+ "state": {"type": "localgraph",
+           "state": {"file": "Alpha.md",
+                     "options": {"collapse-filter": true, "search": "", "localJumps": 1,
+                                 "localBacklinks": true, "localForelinks": true,
+                                 "localInterlinks": false, "showTags": false,
+                                 "showAttachments": false, "hideUnresolved": false,
+                                 "collapse-color-groups": true, "colorGroups": [],
+                                 "collapse-display": true, "showArrow": false,
+                                 "textFadeMultiplier": 0, "nodeSizeMultiplier": 1,
+                                 "lineSizeMultiplier": 1, "collapse-forces": true,
+                                 "centerStrength": 0.518713248970312, "repelStrength": 10,
+                                 "linkStrength": 1, "linkDistance": 250, "scale": 1,
+                                 "close": false}},
+           "icon": "lucide-git-fork", "title": "Graph of Alpha"},
+ "group": "e071386aa5650ab0"}
+```
+
+Its tab reads `Graph of Alpha` with the `lucide-git-fork` icon; its view header shows the
+`Local graph` title until the first file change, then `Graph of <basename>`. A canvas gives
+`Graph of Board` around the canvas's node, an image `Graph of pic` with the image alone.
+
+### A `localgraph` leaf in the right sidebar follows the active file
+
+The linked tab's header dragged (a real HTML5 drag) onto the right sidebar's tab strip became the
+sidebar's **sixth tab**, after Outline (`right/split[0]/tabs[5]`), active, with **no `group`**
+and the title **`Local graph`** — the sidebar leaf is unlinked. Its tab is icon-only
+(`lucide-git-fork`, 28 × 25 px, `aria-label` "Local graph") like the other dock tabs, and its
+view header is `display: none`. In the sidebar it follows the **active file** of the main area,
+as Backlinks does:
+
+| Active in the main area | `state.file` | Shown |
+| --- | --- | --- |
+| Beta | `Beta.md` | Alpha, Beta, Delta, Gamma |
+| the canvas | `Board.canvas` | the canvas and Alpha |
+| the image | `pic.png` | the image alone |
+| an empty tab, or no leaf at all | the key is **absent** (`state` is `{"options": …}`) | nothing: no nodes, the controls still drawn |
+| the sidebar pane itself | unchanged | the last file's graph |
+
+`workspace.json` follows each change. `graph:open-local` with the sidebar pane open still makes a
+new linked split in the main area and leaves the sidebar pane alone.
+
+### Menus and controls
+
+The sidebar tab's right-click menu: **Close**, ---, **Pin**, **Link with tab...**, ---, **Move to
+new window**, **Split right** (disabled), **Split down**, ---, **Copy screenshot**. The linked
+tab's: the same with **Unlink tab** for Link with tab and Split right enabled. The linked tab's
+"More options" menu is Split right, Split down, ---, Copy screenshot; its header actions are
+Bookmark and More options. The graph controls carry Close, "Open graph settings" (shown only
+while closed) and "Restore default settings" — no "Start timelapse animation" in either place. A
+note's More options has "Open linked view", whose submenu is Open local graph, Open backlinks,
+Open outgoing links, Open file properties, Open outline.
+
+### `Ctrl+G` and clicks
+
+`Ctrl+G` (`graph:open`) opens the global graph **in the active main tab**, replacing the note (a
+second press leaves it there); with the sidebar pane active it still goes to the main area's tab.
+The sidebar pane then has no file and empties. A linked pane whose note leaf became the global
+graph stayed on its last note.
+
+A click on a node in either pane opens that note **in the main area's active tab**, replacing
+what it showed (Alpha → Gamma, one tab still); the sidebar pane and the linked pane then centre
+on the new note. **Ctrl+click** opens it in a **new tab** after the active one, active. (On
+1.15.1 the sidebar's plain click missed its node, which had drifted to the pane's edge; the 1.15.0
+run hovered and opened it.)
+
+### The pane's own options persist
+
+The sidebar pane's Filters section is Depth (slider 1–5, step 1), Incoming links, Outgoing links,
+Neighbor links, then the global three (Tags, Attachments, Existing files only); no Orphans row.
+Clicking Neighbor links and Incoming links and dragging Depth to 3 changed the leaf's `options`
+in place — `collapse-filter: false`, `localJumps: 3`, `localBacklinks: false`,
+`localInterlinks: true`, every other key and its digits as they were — and left `graph.json`
+untouched. The options **travel with the pane** when it follows another file (Beta kept Depth 3),
+and a linked pane opened afterwards started from the defaults, not from the sidebar's. After a
+quit and relaunch the sidebar leaf came back with `file` and its edited options, and drew Depth 3
+around Alpha (all five notes); the linked tab came back linked, with its defaults.
+
+### Not settled: the local graph pane
+- Whether an unlinked local graph in the main area goes on following the active file after the
+  one move the probe saw (its linked leaf closing).
+- Pin and Link with tab on the sidebar pane, and the Copy screenshot row's output.

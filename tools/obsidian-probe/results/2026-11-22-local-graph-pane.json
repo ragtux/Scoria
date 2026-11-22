@@ -1,0 +1,6276 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-22T18:35:38.976Z",
+  "env": {
+   "ONLY": null,
+   "vault": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-localgraph/vault"
+  },
+  "steps": {},
+  "order": []
+ },
+ "run": {
+  "startedAt": "2026-11-22T18:35:40.142Z",
+  "env": {
+   "ONLY": null,
+   "vault": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-localgraph/vault"
+  },
+  "steps": {
+   "s00-meta": {
+    "ok": true,
+    "title": "New tab - vault - Obsidian 1.15.1",
+    "apiVersion": null,
+    "appVersion": "1.15.1",
+    "commands": [
+     {
+      "id": "editor:delete-paragraph",
+      "name": "Delete paragraph",
+      "hotkeys": [
+       "Mod+D"
+      ]
+     },
+     {
+      "id": "graph:open",
+      "name": "Graph view: Open graph view",
+      "hotkeys": [
+       "Mod+G"
+      ]
+     },
+     {
+      "id": "graph:open-local",
+      "name": "Graph view: Open local graph",
+      "hotkeys": []
+     }
+    ],
+    "offeredOn": {
+     "Board.canvas": true,
+     "pic.png": true,
+     "Alpha.md": true
+    },
+    "wsBefore": "{\n  \"main\": {\n    \"id\": \"835b4be078b5ab2b\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"5d12b4517515ccac\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"4fcd951ff309e4eb\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Alpha\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"e151fc5089d3f3a0\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"0b8e4cdae41e3607\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"1909742442a97104\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"cb70a4b653ceb976\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"4a4696b1e7ff8d24\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"26a777ce418cc65b\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"5b3cc3381d9296b3\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"871a3ccf39df172f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"20a9bffb73bafe88\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"6868030b5431f03c\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"046805d19119d915\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"f1ee7d78e8ab9fe8\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"4fcd951ff309e4eb\",\n  \"lastOpenFiles\": [\n    \"pic.png\",\n    \"Board.canvas\",\n    \"Alpha.md\"\n  ]\n}",
+    "rightHeadersBefore": [
+     {
+      "aria": "Backlinks",
+      "dataType": "backlink",
+      "active": true
+     },
+     {
+      "aria": "Outgoing links",
+      "dataType": "outgoing-link",
+      "active": false
+     },
+     {
+      "aria": "Tags",
+      "dataType": "tag",
+      "active": false
+     },
+     {
+      "aria": "All properties",
+      "dataType": "all-properties",
+      "active": false
+     },
+     {
+      "aria": "Outline",
+      "dataType": "outline",
+      "active": false
+     }
+    ]
+   },
+   "s01-open-local": {
+    "ok": true,
+    "ran": {
+     "ran": true,
+     "err": null
+    },
+    "leaves": [
+     {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "display": "Graph of Alpha",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": "d043834cc82c21ec",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "localgraph"
+       ],
+       "groupIndexInSplit": 1
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Alpha.md",
+        "options": {
+         "collapse-filter": true,
+         "search": "",
+         "localJumps": 1,
+         "localBacklinks": true,
+         "localForelinks": true,
+         "localInterlinks": false,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Graph of Alpha"
+      },
+      "isActive": true
+     }
+    ],
+    "view": {
+     "headerTitle": "Local graph",
+     "empty": null,
+     "text": "Local graph\nFilters\nGroups\nDisplay\nForces",
+     "nodes": [
+      "Alpha.md",
+      "Beta.md",
+      "Board.canvas",
+      "Gamma.md"
+     ],
+     "links": [
+      "Alpha.md->Beta.md",
+      "Alpha.md->Gamma.md",
+      "Board.canvas->Alpha.md"
+     ],
+     "visible": true
+    },
+    "sideView": null,
+    "active": {
+     "type": "localgraph",
+     "file": "Alpha.md",
+     "display": "Graph of Alpha",
+     "icon": "lucide-git-fork",
+     "pinned": false,
+     "group": "d043834cc82c21ec",
+     "where": {
+      "split": "main",
+      "indexInGroup": 0,
+      "groupSize": 1,
+      "groupType": "tabs",
+      "groupCurrentTab": 0,
+      "groupTypes": [
+       "localgraph"
+      ],
+      "groupIndexInSplit": 1
+     },
+     "state": {
+      "type": "localgraph",
+      "state": {
+       "file": "Alpha.md",
+       "options": {
+        "collapse-filter": true,
+        "search": "",
+        "localJumps": 1,
+        "localBacklinks": true,
+        "localForelinks": true,
+        "localInterlinks": false,
+        "showTags": false,
+        "showAttachments": false,
+        "hideUnresolved": false,
+        "collapse-color-groups": true,
+        "colorGroups": [],
+        "collapse-display": true,
+        "showArrow": false,
+        "textFadeMultiplier": 0,
+        "nodeSizeMultiplier": 1,
+        "lineSizeMultiplier": 1,
+        "collapse-forces": true,
+        "centerStrength": 0.518713248970312,
+        "repelStrength": 10,
+        "linkStrength": 1,
+        "linkDistance": 250,
+        "scale": 1,
+        "close": false
+       }
+      },
+      "icon": "lucide-git-fork",
+      "title": "Graph of Alpha"
+     },
+     "isActive": true
+    },
+    "main": [
+     {
+      "type": "markdown",
+      "file": "Alpha.md",
+      "active": false,
+      "group": 0
+     },
+     {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "active": true,
+      "group": 1
+     }
+    ],
+    "rightCollapsed": true,
+    "dockTab": {
+     "aria": "Graph of Alpha",
+     "dataType": "localgraph",
+     "cls": "workspace-tab-header tappable mod-active is-active",
+     "innerTitle": "Graph of Alpha",
+     "icon": "svg-icon lucide-git-fork",
+     "rect": {
+      "x": 978,
+      "y": 6,
+      "w": 200,
+      "h": 34,
+      "cx": 1078,
+      "cy": 23
+     },
+     "isActiveHeader": true
+    },
+    "rightHeaders": [
+     {
+      "aria": "Backlinks",
+      "dataType": "backlink",
+      "active": true
+     },
+     {
+      "aria": "Outgoing links",
+      "dataType": "outgoing-link",
+      "active": false
+     },
+     {
+      "aria": "Tags",
+      "dataType": "tag",
+      "active": false
+     },
+     {
+      "aria": "All properties",
+      "dataType": "all-properties",
+      "active": false
+     },
+     {
+      "aria": "Outline",
+      "dataType": "outline",
+      "active": false
+     }
+    ],
+    "focusInPane": false,
+    "ws": {
+     "found": [
+      {
+       "where": "main/split[1]/tabs[0]",
+       "leaf": {
+        "id": "cc77a033eb316c9e",
+        "type": "leaf",
+        "state": {
+         "type": "localgraph",
+         "state": {
+          "file": "Alpha.md",
+          "options": {
+           "collapse-filter": true,
+           "search": "",
+           "localJumps": 1,
+           "localBacklinks": true,
+           "localForelinks": true,
+           "localInterlinks": false,
+           "showTags": false,
+           "showAttachments": false,
+           "hideUnresolved": false,
+           "collapse-color-groups": true,
+           "colorGroups": [],
+           "collapse-display": true,
+           "showArrow": false,
+           "textFadeMultiplier": 0,
+           "nodeSizeMultiplier": 1,
+           "lineSizeMultiplier": 1,
+           "collapse-forces": true,
+           "centerStrength": 0.518713248970312,
+           "repelStrength": 10,
+           "linkStrength": 1,
+           "linkDistance": 250,
+           "scale": 1,
+           "close": false
+          }
+         },
+         "icon": "lucide-git-fork",
+         "title": "Graph of Alpha"
+        },
+        "group": "d043834cc82c21ec"
+       }
+      }
+     ],
+     "active": "cc77a033eb316c9e",
+     "lastOpenFiles": [
+      "pic.png",
+      "Board.canvas",
+      "Alpha.md"
+     ]
+    },
+    "wsRawLeaf": "{\n            \"id\": \"cc77a033eb316c9e\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"localgraph\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"options\": {\n                  \"collapse-filter\": true,\n                  \"search\": \"\",\n                  \"localJumps\": 1,\n                  \"localBacklinks\": true,\n                  \"localForelinks\": true,\n                  \"localInterlinks\": false,\n                  \"showTags\": false,\n                  \"showAttachments\": false,\n                  \"hideUnresolved\": false,\n                  \"collapse-color-groups\": true,\n                  \"colorGroups\": [],\n                  \"collapse-display\": true,\n                  \"showArrow\": false,\n                  \"textFadeMultiplier\": 0,\n                  \"nodeSizeMultiplier\": 1,\n                  \"lineSizeMultiplier\": 1,\n                  \"collapse-forces\": true,\n                  \"centerStrength\": 0.518713248970312,\n                  \"repelStrength\": 10,\n                  \"linkStrength\": 1,\n                  \"linkDistance\": 250,\n                  \"scale\": 1,\n                  \"close\": false\n                }\n              },\n              \"icon\": \"lucide-git-fork\",\n              \"title\": \"Graph of Alpha\"\n            },\n            \"group\": \"d043834cc82c21ec\"\n          }",
+    "wsRight": {
+     "id": "26a777ce418cc65b",
+     "type": "split",
+     "children": [
+      {
+       "id": "5b3cc3381d9296b3",
+       "type": "tabs",
+       "children": [
+        {
+         "id": "871a3ccf39df172f",
+         "type": "leaf",
+         "state": {
+          "type": "backlink",
+          "state": {
+           "file": "Alpha.md",
+           "collapseAll": false,
+           "extraContext": false,
+           "sortOrder": "alphabetical",
+           "showSearch": false,
+           "searchQuery": "",
+           "backlinkCollapsed": false,
+           "unlinkedCollapsed": true
+          },
+          "icon": "links-coming-in",
+          "title": "Backlinks"
+         }
+        },
+        {
+         "id": "20a9bffb73bafe88",
+         "type": "leaf",
+         "state": {
+          "type": "outgoing-link",
+          "state": {
+           "file": "Alpha.md",
+           "linksCollapsed": false,
+           "unlinkedCollapsed": true
+          },
+          "icon": "links-going-out",
+          "title": "Outgoing links"
+         }
+        },
+        {
+         "id": "6868030b5431f03c",
+         "type": "leaf",
+         "state": {
+          "type": "tag",
+          "state": {
+           "sortOrder": "frequency",
+           "useHierarchy": true,
+           "showSearch": false,
+           "searchQuery": ""
+          },
+          "icon": "lucide-tags",
+          "title": "Tags"
+         }
+        },
+        {
+         "id": "046805d19119d915",
+         "type": "leaf",
+         "state": {
+          "type": "all-properties",
+          "state": {
+           "sortOrder": "frequency",
+           "showSearch": false,
+           "searchQuery": ""
+          },
+          "icon": "lucide-archive",
+          "title": "All properties"
+         }
+        },
+        {
+         "id": "f1ee7d78e8ab9fe8",
+         "type": "leaf",
+         "state": {
+          "type": "outline",
+          "state": {
+           "file": "Alpha.md",
+           "followCursor": false,
+           "showSearch": false,
+           "searchQuery": ""
+          },
+          "icon": "lucide-list",
+          "title": "Outline"
+         }
+        }
+       ]
+      }
+     ],
+     "direction": "horizontal",
+     "width": 300,
+     "collapsed": true
+    }
+   },
+   "s02-open-again": {
+    "ok": true,
+    "again": {
+     "ran": true,
+     "err": null
+    },
+    "afterAgain": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Graph of Alpha",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "d043834cc82c21ec",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Alpha"
+       },
+       "isActive": true
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Graph of Alpha",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "d043834cc82c21ec",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 2
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Alpha"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Local graph\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "sideView": null,
+     "active": {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "display": "Graph of Alpha",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": "d043834cc82c21ec",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "localgraph"
+       ],
+       "groupIndexInSplit": 1
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Alpha.md",
+        "options": {
+         "collapse-filter": true,
+         "search": "",
+         "localJumps": 1,
+         "localBacklinks": true,
+         "localForelinks": true,
+         "localInterlinks": false,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Graph of Alpha"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "active": true,
+       "group": 1
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 2
+      }
+     ],
+     "rightCollapsed": true
+    },
+    "collapsedRun": {
+     "ran": true,
+     "err": null
+    },
+    "afterCollapsed": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Graph of Alpha",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "d043834cc82c21ec",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Alpha"
+       },
+       "isActive": true
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Graph of Alpha",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "d043834cc82c21ec",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 2
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Alpha"
+       },
+       "isActive": false
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Graph of Alpha",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "d043834cc82c21ec",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 3
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Alpha"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Local graph\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "sideView": null,
+     "active": {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "display": "Graph of Alpha",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": "d043834cc82c21ec",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "localgraph"
+       ],
+       "groupIndexInSplit": 1
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Alpha.md",
+        "options": {
+         "collapse-filter": true,
+         "search": "",
+         "localJumps": 1,
+         "localBacklinks": true,
+         "localForelinks": true,
+         "localInterlinks": false,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Graph of Alpha"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "active": true,
+       "group": 1
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 2
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 3
+      }
+     ],
+     "rightCollapsed": true
+    },
+    "wsMain": {
+     "id": "835b4be078b5ab2b",
+     "type": "split",
+     "children": [
+      {
+       "id": "5d12b4517515ccac",
+       "type": "tabs",
+       "children": [
+        {
+         "id": "4fcd951ff309e4eb",
+         "type": "leaf",
+         "state": {
+          "type": "markdown",
+          "state": {
+           "file": "Alpha.md",
+           "mode": "source",
+           "source": false
+          },
+          "icon": "lucide-file",
+          "title": "Alpha"
+         },
+         "group": "d043834cc82c21ec"
+        }
+       ]
+      },
+      {
+       "id": "3c59ba8d102ffca8",
+       "type": "tabs",
+       "children": [
+        {
+         "id": "03882363b8d2eb8e",
+         "type": "leaf",
+         "state": {
+          "type": "localgraph",
+          "state": {
+           "file": "Alpha.md",
+           "options": {
+            "collapse-filter": true,
+            "search": "",
+            "localJumps": 1,
+            "localBacklinks": true,
+            "localForelinks": true,
+            "localInterlinks": false,
+            "showTags": false,
+            "showAttachments": false,
+            "hideUnresolved": false,
+            "collapse-color-groups": true,
+            "colorGroups": [],
+            "collapse-display": true,
+            "showArrow": false,
+            "textFadeMultiplier": 0,
+            "nodeSizeMultiplier": 1,
+            "lineSizeMultiplier": 1,
+            "collapse-forces": true,
+            "centerStrength": 0.518713248970312,
+            "repelStrength": 10,
+            "linkStrength": 1,
+            "linkDistance": 250,
+            "scale": 1,
+            "close": false
+           }
+          },
+          "icon": "lucide-git-fork",
+          "title": "Graph of Alpha"
+         },
+         "group": "d043834cc82c21ec"
+        }
+       ]
+      },
+      {
+       "id": "470ec721e6287827",
+       "type": "tabs",
+       "children": [
+        {
+         "id": "964318adfa969661",
+         "type": "leaf",
+         "state": {
+          "type": "localgraph",
+          "state": {
+           "file": "Alpha.md",
+           "options": {
+            "collapse-filter": true,
+            "search": "",
+            "localJumps": 1,
+            "localBacklinks": true,
+            "localForelinks": true,
+            "localInterlinks": false,
+            "showTags": false,
+            "showAttachments": false,
+            "hideUnresolved": false,
+            "collapse-color-groups": true,
+            "colorGroups": [],
+            "collapse-display": true,
+            "showArrow": false,
+            "textFadeMultiplier": 0,
+            "nodeSizeMultiplier": 1,
+            "lineSizeMultiplier": 1,
+            "collapse-forces": true,
+            "centerStrength": 0.518713248970312,
+            "repelStrength": 10,
+            "linkStrength": 1,
+            "linkDistance": 250,
+            "scale": 1,
+            "close": false
+           }
+          },
+          "icon": "lucide-git-fork",
+          "title": "Graph of Alpha"
+         },
+         "group": "d043834cc82c21ec"
+        }
+       ]
+      },
+      {
+       "id": "ee755f9fb14d59ee",
+       "type": "tabs",
+       "children": [
+        {
+         "id": "cc77a033eb316c9e",
+         "type": "leaf",
+         "state": {
+          "type": "localgraph",
+          "state": {
+           "file": "Alpha.md",
+           "options": {
+            "collapse-filter": true,
+            "search": "",
+            "localJumps": 1,
+            "localBacklinks": true,
+            "localForelinks": true,
+            "localInterlinks": false,
+            "showTags": false,
+            "showAttachments": false,
+            "hideUnresolved": false,
+            "collapse-color-groups": true,
+            "colorGroups": [],
+            "collapse-display": true,
+            "showArrow": false,
+            "textFadeMultiplier": 0,
+            "nodeSizeMultiplier": 1,
+            "lineSizeMultiplier": 1,
+            "collapse-forces": true,
+            "centerStrength": 0.518713248970312,
+            "repelStrength": 10,
+            "linkStrength": 1,
+            "linkDistance": 250,
+            "scale": 1,
+            "close": false
+           }
+          },
+          "icon": "lucide-git-fork",
+          "title": "Graph of Alpha"
+         },
+         "group": "d043834cc82c21ec"
+        }
+       ]
+      }
+     ],
+     "direction": "vertical"
+    },
+    "kept": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Graph of Alpha",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "d043834cc82c21ec",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Alpha"
+       },
+       "isActive": true
+      }
+     ],
+     "view": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Local graph\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "sideView": null,
+     "active": {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "display": "Graph of Alpha",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": "d043834cc82c21ec",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "localgraph"
+       ],
+       "groupIndexInSplit": 1
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Alpha.md",
+        "options": {
+         "collapse-filter": true,
+         "search": "",
+         "localJumps": 1,
+         "localBacklinks": true,
+         "localForelinks": true,
+         "localInterlinks": false,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Graph of Alpha"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "active": true,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": true
+    }
+   },
+   "s03-follow-linked": {
+    "ok": true,
+    "linkedLeafToBeta": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Beta.md",
+       "display": "Graph of Beta",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "d043834cc82c21ec",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Beta.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Beta"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Graph of Beta",
+      "empty": null,
+      "text": "Graph of Beta\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Beta.md->Delta.md",
+       "Gamma.md->Beta.md"
+      ],
+      "visible": true
+     },
+     "sideView": null,
+     "active": {
+      "type": "markdown",
+      "file": "Beta.md",
+      "display": "Beta",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": "d043834cc82c21ec",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Beta.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Beta"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Beta.md",
+       "active": true,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Beta.md",
+       "active": false,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": true
+    },
+    "unlinkedTabDelta": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Beta.md",
+       "display": "Graph of Beta",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "d043834cc82c21ec",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Beta.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Beta"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Graph of Beta",
+      "empty": null,
+      "text": "Graph of Beta\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Beta.md->Delta.md",
+       "Gamma.md->Beta.md"
+      ],
+      "visible": true
+     },
+     "sideView": null,
+     "active": {
+      "type": "markdown",
+      "file": "Delta.md",
+      "display": "Delta",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 1,
+       "groupSize": 2,
+       "groupType": "tabs",
+       "groupCurrentTab": 1,
+       "groupTypes": [
+        "markdown",
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Delta.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Delta"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Beta.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "markdown",
+       "file": "Delta.md",
+       "active": true,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Beta.md",
+       "active": false,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": true
+    },
+    "linkedCanvas": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Delta.md",
+       "display": "Graph of Delta",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "d043834cc82c21ec",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Delta.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Delta"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Graph of Delta",
+      "empty": null,
+      "text": "Graph of Delta\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Beta.md",
+       "Delta.md",
+       "Epsilon.md"
+      ],
+      "links": [
+       "Beta.md->Delta.md",
+       "Delta.md->Epsilon.md"
+      ],
+      "visible": true
+     },
+     "sideView": null,
+     "active": {
+      "type": "markdown",
+      "file": "Delta.md",
+      "display": "Delta",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": "d043834cc82c21ec",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 2,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "markdown",
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Delta.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Delta"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Delta.md",
+       "active": true,
+       "group": 0
+      },
+      {
+       "type": "markdown",
+       "file": "Delta.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Delta.md",
+       "active": false,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": true
+    },
+    "wsCanvas": {
+     "found": [
+      {
+       "where": "main/split[1]/tabs[0]",
+       "leaf": {
+        "id": "03882363b8d2eb8e",
+        "type": "leaf",
+        "state": {
+         "type": "localgraph",
+         "state": {
+          "file": "Delta.md",
+          "options": {
+           "collapse-filter": true,
+           "search": "",
+           "localJumps": 1,
+           "localBacklinks": true,
+           "localForelinks": true,
+           "localInterlinks": false,
+           "showTags": false,
+           "showAttachments": false,
+           "hideUnresolved": false,
+           "collapse-color-groups": true,
+           "colorGroups": [],
+           "collapse-display": true,
+           "showArrow": false,
+           "textFadeMultiplier": 0,
+           "nodeSizeMultiplier": 1,
+           "lineSizeMultiplier": 1,
+           "collapse-forces": true,
+           "centerStrength": 0.518713248970312,
+           "repelStrength": 10,
+           "linkStrength": 1,
+           "linkDistance": 250,
+           "scale": 1,
+           "close": false
+          }
+         },
+         "icon": "lucide-git-fork",
+         "title": "Graph of Delta"
+        },
+        "group": "d043834cc82c21ec"
+       }
+      }
+     ],
+     "active": "4fcd951ff309e4eb",
+     "lastOpenFiles": [
+      "Beta.md",
+      "Alpha.md",
+      "pic.png",
+      "Board.canvas"
+     ]
+    },
+    "linkedImage": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "pic.png",
+       "display": "Graph of pic",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "d043834cc82c21ec",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "pic.png",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of pic"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Graph of pic",
+      "empty": null,
+      "text": "Graph of pic\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "pic.png"
+      ],
+      "links": [],
+      "visible": true
+     },
+     "sideView": null,
+     "active": {
+      "type": "image",
+      "file": "pic.png",
+      "display": "pic",
+      "icon": "lucide-image",
+      "pinned": false,
+      "group": "d043834cc82c21ec",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 2,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "image",
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "image",
+       "state": {
+        "file": "pic.png"
+       },
+       "icon": "lucide-image",
+       "title": "pic"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "image",
+       "file": "pic.png",
+       "active": true,
+       "group": 0
+      },
+      {
+       "type": "markdown",
+       "file": "Delta.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "pic.png",
+       "active": false,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": true
+    },
+    "linkedClosed": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Delta.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Delta.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Local graph\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Beta.md",
+       "Delta.md",
+       "Epsilon.md"
+      ],
+      "links": [
+       "Beta.md->Delta.md",
+       "Delta.md->Epsilon.md"
+      ],
+      "visible": true
+     },
+     "sideView": null,
+     "active": {
+      "type": "markdown",
+      "file": "Delta.md",
+      "display": "Delta",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Delta.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Delta"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Delta.md",
+       "active": true,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Delta.md",
+       "active": false,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": true
+    },
+    "wsLinkedClosed": {
+     "found": [
+      {
+       "where": "main/split[1]/tabs[0]",
+       "leaf": {
+        "id": "03882363b8d2eb8e",
+        "type": "leaf",
+        "state": {
+         "type": "localgraph",
+         "state": {
+          "file": "Delta.md",
+          "options": {
+           "collapse-filter": true,
+           "search": "",
+           "localJumps": 1,
+           "localBacklinks": true,
+           "localForelinks": true,
+           "localInterlinks": false,
+           "showTags": false,
+           "showAttachments": false,
+           "hideUnresolved": false,
+           "collapse-color-groups": true,
+           "colorGroups": [],
+           "collapse-display": true,
+           "showArrow": false,
+           "textFadeMultiplier": 0,
+           "nodeSizeMultiplier": 1,
+           "lineSizeMultiplier": 1,
+           "collapse-forces": true,
+           "centerStrength": 0.518713248970312,
+           "repelStrength": 10,
+           "linkStrength": 1,
+           "linkDistance": 250,
+           "scale": 1,
+           "close": false
+          }
+         },
+         "icon": "lucide-git-fork",
+         "title": "Local graph"
+        }
+       }
+      }
+     ],
+     "active": "5ab8eb77215f5083",
+     "lastOpenFiles": [
+      "pic.png",
+      "Delta.md",
+      "Beta.md",
+      "Alpha.md",
+      "Board.canvas"
+     ]
+    }
+   },
+   "s04-sidebar-leaf": {
+    "ok": true,
+    "dragFrom": {
+     "aria": "Graph of Alpha",
+     "dataType": "localgraph",
+     "cls": "workspace-tab-header tappable mod-active is-active",
+     "innerTitle": "Graph of Alpha",
+     "icon": "svg-icon lucide-git-fork",
+     "rect": {
+      "x": 828,
+      "y": 6,
+      "w": 200,
+      "h": 34,
+      "cx": 928,
+      "cy": 23
+     },
+     "isActiveHeader": true
+    },
+    "dragTo": {
+     "x": 1576,
+     "y": 20
+    },
+    "drag": {
+     "started": true,
+     "data": {
+      "items": [
+       {
+        "mimeType": "text/plain",
+        "data": ""
+       }
+      ],
+      "dragOperationsMask": -1
+     }
+    },
+    "afterDrag": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": true
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "display": "Local graph",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "right",
+       "indexInGroup": 5,
+       "groupSize": 6,
+       "groupType": "tabs",
+       "groupCurrentTab": 5,
+       "groupTypes": [
+        "backlink",
+        "outgoing-link",
+        "tag",
+        "all-properties",
+        "outline",
+        "localgraph"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Alpha.md",
+        "options": {
+         "collapse-filter": true,
+         "search": "",
+         "localJumps": 1,
+         "localBacklinks": true,
+         "localForelinks": true,
+         "localInterlinks": false,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Local graph"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "droppedInRight": true,
+    "wsAfterDrag": {
+     "found": [
+      {
+       "where": "right/split[0]/tabs[5]",
+       "leaf": {
+        "id": "25481b98a5d6964d",
+        "type": "leaf",
+        "state": {
+         "type": "localgraph",
+         "state": {
+          "file": "Alpha.md",
+          "options": {
+           "collapse-filter": true,
+           "search": "",
+           "localJumps": 1,
+           "localBacklinks": true,
+           "localForelinks": true,
+           "localInterlinks": false,
+           "showTags": false,
+           "showAttachments": false,
+           "hideUnresolved": false,
+           "collapse-color-groups": true,
+           "colorGroups": [],
+           "collapse-display": true,
+           "showArrow": false,
+           "textFadeMultiplier": 0,
+           "nodeSizeMultiplier": 1,
+           "lineSizeMultiplier": 1,
+           "collapse-forces": true,
+           "centerStrength": 0.518713248970312,
+           "repelStrength": 10,
+           "linkStrength": 1,
+           "linkDistance": 250,
+           "scale": 1,
+           "close": false
+          }
+         },
+         "icon": "lucide-git-fork",
+         "title": "Local graph"
+        }
+       }
+      }
+     ],
+     "active": "25481b98a5d6964d",
+     "lastOpenFiles": [
+      "Delta.md",
+      "pic.png",
+      "Beta.md",
+      "Alpha.md",
+      "Board.canvas"
+     ]
+    },
+    "wsAfterDragRaw": "{\n            \"id\": \"25481b98a5d6964d\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"localgraph\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"options\": {\n                  \"collapse-filter\": true,\n                  \"search\": \"\",\n                  \"localJumps\": 1,\n                  \"localBacklinks\": true,\n                  \"localForelinks\": true,\n                  \"localInterlinks\": false,\n                  \"showTags\": false,\n                  \"showAttachments\": false,\n                  \"hideUnresolved\": false,\n                  \"collapse-color-groups\": true,\n                  \"colorGroups\": [],\n                  \"collapse-display\": true,\n                  \"showArrow\": false,\n                  \"textFadeMultiplier\": 0,\n                  \"nodeSizeMultiplier\": 1,\n                  \"lineSizeMultiplier\": 1,\n                  \"collapse-forces\": true,\n                  \"centerStrength\": 0.518713248970312,\n                  \"repelStrength\": 10,\n                  \"linkStrength\": 1,\n                  \"linkDistance\": 250,\n                  \"scale\": 1,\n                  \"close\": false\n                }\n              },\n              \"icon\": \"lucide-git-fork\",\n              \"title\": \"Local graph\"\n            }\n          }",
+    "made": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "outline",
+      "file": "Alpha.md",
+      "display": "Outline",
+      "icon": "lucide-list",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "right",
+       "indexInGroup": 4,
+       "groupSize": 6,
+       "groupType": "tabs",
+       "groupCurrentTab": 5,
+       "groupTypes": [
+        "backlink",
+        "outgoing-link",
+        "tag",
+        "all-properties",
+        "outline",
+        "localgraph"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "outline",
+       "state": {
+        "file": "Alpha.md",
+        "followCursor": false,
+        "showSearch": false,
+        "searchQuery": ""
+       },
+       "icon": "lucide-list",
+       "title": "Outline"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "sideTab": {
+     "aria": "Local graph",
+     "dataType": "localgraph",
+     "cls": "workspace-tab-header tappable is-active",
+     "innerTitle": "Local graph",
+     "icon": "svg-icon lucide-git-fork",
+     "rect": {
+      "x": 1434,
+      "y": 7,
+      "w": 28,
+      "h": 25,
+      "cx": 1448,
+      "cy": 19.5
+     },
+     "isActiveHeader": true
+    },
+    "rightHeaders": [
+     {
+      "aria": "Backlinks",
+      "dataType": "backlink",
+      "active": false
+     },
+     {
+      "aria": "Outgoing links",
+      "dataType": "outgoing-link",
+      "active": false
+     },
+     {
+      "aria": "Tags",
+      "dataType": "tag",
+      "active": false
+     },
+     {
+      "aria": "All properties",
+      "dataType": "all-properties",
+      "active": false
+     },
+     {
+      "aria": "Outline",
+      "dataType": "outline",
+      "active": false
+     },
+     {
+      "aria": "Local graph",
+      "dataType": "localgraph",
+      "active": true
+     }
+    ],
+    "ws": {
+     "found": [
+      {
+       "where": "right/split[0]/tabs[5]",
+       "leaf": {
+        "id": "2b15ca60dbba9ab1",
+        "type": "leaf",
+        "state": {
+         "type": "localgraph",
+         "state": {
+          "file": "Alpha.md",
+          "options": {
+           "collapse-filter": true,
+           "search": "",
+           "localJumps": 1,
+           "localBacklinks": true,
+           "localForelinks": true,
+           "localInterlinks": false,
+           "showTags": false,
+           "showAttachments": false,
+           "hideUnresolved": false,
+           "collapse-color-groups": true,
+           "colorGroups": [],
+           "collapse-display": true,
+           "showArrow": false,
+           "textFadeMultiplier": 0,
+           "nodeSizeMultiplier": 1,
+           "lineSizeMultiplier": 1,
+           "collapse-forces": true,
+           "centerStrength": 0.518713248970312,
+           "repelStrength": 10,
+           "linkStrength": 1,
+           "linkDistance": 250,
+           "scale": 1,
+           "close": false
+          }
+         },
+         "icon": "lucide-git-fork",
+         "title": "Local graph"
+        }
+       }
+      }
+     ],
+     "active": "f1ee7d78e8ab9fe8",
+     "lastOpenFiles": [
+      "Delta.md",
+      "pic.png",
+      "Beta.md",
+      "Alpha.md",
+      "Board.canvas"
+     ]
+    },
+    "wsRawLeaf": "{\n            \"id\": \"2b15ca60dbba9ab1\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"localgraph\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"options\": {\n                  \"collapse-filter\": true,\n                  \"search\": \"\",\n                  \"localJumps\": 1,\n                  \"localBacklinks\": true,\n                  \"localForelinks\": true,\n                  \"localInterlinks\": false,\n                  \"showTags\": false,\n                  \"showAttachments\": false,\n                  \"hideUnresolved\": false,\n                  \"collapse-color-groups\": true,\n                  \"colorGroups\": [],\n                  \"collapse-display\": true,\n                  \"showArrow\": false,\n                  \"textFadeMultiplier\": 0,\n                  \"nodeSizeMultiplier\": 1,\n                  \"lineSizeMultiplier\": 1,\n                  \"collapse-forces\": true,\n                  \"centerStrength\": 0.518713248970312,\n                  \"repelStrength\": 10,\n                  \"linkStrength\": 1,\n                  \"linkDistance\": 250,\n                  \"scale\": 1,\n                  \"close\": false\n                }\n              },\n              \"icon\": \"lucide-git-fork\",\n              \"title\": \"Local graph\"\n            }\n          }",
+    "sideBeta": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Beta.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Beta.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Beta.md->Delta.md",
+       "Gamma.md->Beta.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "markdown",
+      "file": "Beta.md",
+      "display": "Beta",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Beta.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Beta"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Beta.md",
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "wsSideBeta": {
+     "found": [
+      {
+       "where": "right/split[0]/tabs[5]",
+       "leaf": {
+        "id": "2b15ca60dbba9ab1",
+        "type": "leaf",
+        "state": {
+         "type": "localgraph",
+         "state": {
+          "file": "Beta.md",
+          "options": {
+           "collapse-filter": true,
+           "search": "",
+           "localJumps": 1,
+           "localBacklinks": true,
+           "localForelinks": true,
+           "localInterlinks": false,
+           "showTags": false,
+           "showAttachments": false,
+           "hideUnresolved": false,
+           "collapse-color-groups": true,
+           "colorGroups": [],
+           "collapse-display": true,
+           "showArrow": false,
+           "textFadeMultiplier": 0,
+           "nodeSizeMultiplier": 1,
+           "lineSizeMultiplier": 1,
+           "collapse-forces": true,
+           "centerStrength": 0.518713248970312,
+           "repelStrength": 10,
+           "linkStrength": 1,
+           "linkDistance": 250,
+           "scale": 1,
+           "close": false
+          }
+         },
+         "icon": "lucide-git-fork",
+         "title": "Local graph"
+        }
+       }
+      }
+     ],
+     "active": "ef8518d5bc1e8568",
+     "lastOpenFiles": [
+      "Alpha.md",
+      "Delta.md",
+      "pic.png",
+      "Beta.md",
+      "Board.canvas"
+     ]
+    },
+    "sideCanvas": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Board.canvas",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Board.canvas",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Board.canvas"
+      ],
+      "links": [
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "canvas",
+      "file": "Board.canvas",
+      "display": "Board",
+      "icon": "lucide-layout-dashboard",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "canvas"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "canvas",
+       "state": {
+        "file": "Board.canvas",
+        "viewState": {
+         "x": 200,
+         "y": 150,
+         "zoom": 0
+        }
+       },
+       "icon": "lucide-layout-dashboard",
+       "title": "Board"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "sideImage": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "pic.png",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "pic.png",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "pic.png"
+      ],
+      "links": [],
+      "visible": true
+     },
+     "active": {
+      "type": "image",
+      "file": "pic.png",
+      "display": "pic",
+      "icon": "lucide-image",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "image"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "image",
+       "state": {
+        "file": "pic.png"
+       },
+       "icon": "lucide-image",
+       "title": "pic"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "image",
+       "file": "pic.png",
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "sideEmptyTab": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": null,
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [],
+      "links": [],
+      "visible": true
+     },
+     "active": {
+      "type": "empty",
+      "file": null,
+      "display": "New tab",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 1,
+       "groupSize": 2,
+       "groupType": "tabs",
+       "groupCurrentTab": 1,
+       "groupTypes": [
+        "markdown",
+        "empty"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "empty",
+       "state": {},
+       "icon": "lucide-file",
+       "title": "New tab"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Gamma.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "empty",
+       "file": null,
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "sideNoMain": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": null,
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [],
+      "links": [],
+      "visible": true
+     },
+     "active": {
+      "type": "empty",
+      "file": null,
+      "display": "New tab",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "empty"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "empty",
+       "state": {},
+       "icon": "lucide-file",
+       "title": "New tab"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "empty",
+       "file": null,
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "wsSideNoMain": {
+     "found": [
+      {
+       "where": "right/split[0]/tabs[5]",
+       "leaf": {
+        "id": "2b15ca60dbba9ab1",
+        "type": "leaf",
+        "state": {
+         "type": "localgraph",
+         "state": {
+          "options": {
+           "collapse-filter": true,
+           "search": "",
+           "localJumps": 1,
+           "localBacklinks": true,
+           "localForelinks": true,
+           "localInterlinks": false,
+           "showTags": false,
+           "showAttachments": false,
+           "hideUnresolved": false,
+           "collapse-color-groups": true,
+           "colorGroups": [],
+           "collapse-display": true,
+           "showArrow": false,
+           "textFadeMultiplier": 0,
+           "nodeSizeMultiplier": 1,
+           "lineSizeMultiplier": 1,
+           "collapse-forces": true,
+           "centerStrength": 0.518713248970312,
+           "repelStrength": 10,
+           "linkStrength": 1,
+           "linkDistance": 250,
+           "scale": 1,
+           "close": false
+          }
+         },
+         "icon": "lucide-git-fork",
+         "title": "Local graph"
+        }
+       }
+      }
+     ],
+     "active": "05f89d3518bcd520",
+     "lastOpenFiles": [
+      "Gamma.md",
+      "pic.png",
+      "Board.canvas",
+      "Beta.md",
+      "Alpha.md",
+      "Delta.md"
+     ]
+    },
+    "wsSideNoMainRaw": "{\n            \"id\": \"2b15ca60dbba9ab1\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"localgraph\",\n              \"state\": {\n                \"options\": {\n                  \"collapse-filter\": true,\n                  \"search\": \"\",\n                  \"localJumps\": 1,\n                  \"localBacklinks\": true,\n                  \"localForelinks\": true,\n                  \"localInterlinks\": false,\n                  \"showTags\": false,\n                  \"showAttachments\": false,\n                  \"hideUnresolved\": false,\n                  \"collapse-color-groups\": true,\n                  \"colorGroups\": [],\n                  \"collapse-display\": true,\n                  \"showArrow\": false,\n                  \"textFadeMultiplier\": 0,\n                  \"nodeSizeMultiplier\": 1,\n                  \"lineSizeMultiplier\": 1,\n                  \"collapse-forces\": true,\n                  \"centerStrength\": 0.518713248970312,\n                  \"repelStrength\": 10,\n                  \"linkStrength\": 1,\n                  \"linkDistance\": 250,\n                  \"scale\": 1,\n                  \"close\": false\n                }\n              },\n              \"icon\": \"lucide-git-fork\",\n              \"title\": \"Local graph\"\n            }\n          }",
+    "sideAfterReopen": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Delta.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Delta.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Beta.md",
+       "Delta.md",
+       "Epsilon.md"
+      ],
+      "links": [
+       "Beta.md->Delta.md",
+       "Delta.md->Epsilon.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "markdown",
+      "file": "Delta.md",
+      "display": "Delta",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Delta.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Delta"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Delta.md",
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "sideActive": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Delta.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Delta.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": true
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Beta.md",
+       "Delta.md",
+       "Epsilon.md"
+      ],
+      "links": [
+       "Beta.md->Delta.md",
+       "Delta.md->Epsilon.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "localgraph",
+      "file": "Delta.md",
+      "display": "Local graph",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "right",
+       "indexInGroup": 5,
+       "groupSize": 6,
+       "groupType": "tabs",
+       "groupCurrentTab": 5,
+       "groupTypes": [
+        "backlink",
+        "outgoing-link",
+        "tag",
+        "all-properties",
+        "outline",
+        "localgraph"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Delta.md",
+        "options": {
+         "collapse-filter": true,
+         "search": "",
+         "localJumps": 1,
+         "localBacklinks": true,
+         "localForelinks": true,
+         "localInterlinks": false,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Local graph"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Delta.md",
+       "active": false,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "openLocalWithSide": {
+     "ran": true,
+     "err": null
+    },
+    "afterOpenLocalWithSide": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Graph of Alpha",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "16987987af7e88cc",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Alpha"
+       },
+       "isActive": true
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Local graph\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "display": "Graph of Alpha",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": "16987987af7e88cc",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "localgraph"
+       ],
+       "groupIndexInSplit": 1
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Alpha.md",
+        "options": {
+         "collapse-filter": true,
+         "search": "",
+         "localJumps": 1,
+         "localBacklinks": true,
+         "localForelinks": true,
+         "localInterlinks": false,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Graph of Alpha"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "active": true,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": false
+    }
+   },
+   "s05-tab-menus": {
+    "ok": true,
+    "rightTab": {
+     "aria": "Local graph",
+     "dataType": "localgraph",
+     "cls": "workspace-tab-header tappable is-active",
+     "innerTitle": "Local graph",
+     "icon": "svg-icon lucide-git-fork",
+     "rect": {
+      "x": 1434,
+      "y": 7,
+      "w": 28,
+      "h": 25,
+      "cx": 1448,
+      "cy": 19.5
+     },
+     "isActiveHeader": true
+    },
+    "rightMenu": [
+     "Close [svg-icon lucide-x]",
+     "---",
+     "Pin [svg-icon lucide-pin]",
+     "Link with tab... [svg-icon lucide-link]",
+     "---",
+     "Move to new window [svg-icon lucide-picture-in-picture]",
+     "Split right [svg-icon lucide-separator-vertical] (disabled)",
+     "Split down [svg-icon lucide-separator-horizontal]",
+     "---",
+     "Copy screenshot [svg-icon lucide-image]"
+    ],
+    "rightHeader": {
+     "display": "none",
+     "title": "Local graph",
+     "actions": [
+      "Bookmark",
+      "More options"
+     ]
+    },
+    "rightControls": [
+     {
+      "aria": "Close",
+      "cls": "clickable-icon graph-controls-button mod-close",
+      "visible": true
+     },
+     {
+      "aria": "Open graph settings",
+      "cls": "clickable-icon graph-controls-button mod-open",
+      "visible": false
+     },
+     {
+      "aria": "Restore default settings",
+      "cls": "clickable-icon graph-controls-button mod-reset",
+      "visible": true
+     }
+    ],
+    "mainTab": {
+     "aria": "Graph of Alpha",
+     "dataType": "localgraph",
+     "cls": "workspace-tab-header tappable mod-active is-active",
+     "innerTitle": "Graph of Alpha",
+     "icon": "svg-icon lucide-git-fork",
+     "rect": {
+      "x": 828,
+      "y": 6,
+      "w": 200,
+      "h": 34,
+      "cx": 928,
+      "cy": 23
+     },
+     "isActiveHeader": true
+    },
+    "mainMenu": [
+     "Close [svg-icon lucide-x]",
+     "---",
+     "Pin [svg-icon lucide-pin]",
+     "Unlink tab [svg-icon lucide-link]",
+     "---",
+     "Move to new window [svg-icon lucide-picture-in-picture]",
+     "Split right [svg-icon lucide-separator-vertical]",
+     "Split down [svg-icon lucide-separator-horizontal]",
+     "---",
+     "Copy screenshot [svg-icon lucide-image]"
+    ],
+    "mainHeader": {
+     "display": "flex",
+     "title": "Local graph",
+     "actions": [
+      "Bookmark",
+      "More options"
+     ]
+    },
+    "mainMoreOptions": [
+     "Split right [svg-icon lucide-separator-vertical]",
+     "Split down [svg-icon lucide-separator-horizontal]",
+     "---",
+     "Copy screenshot [svg-icon lucide-image]"
+    ],
+    "mainControls": [
+     {
+      "aria": "Close",
+      "cls": "clickable-icon graph-controls-button mod-close",
+      "visible": true
+     },
+     {
+      "aria": "Open graph settings",
+      "cls": "clickable-icon graph-controls-button mod-open",
+      "visible": false
+     },
+     {
+      "aria": "Restore default settings",
+      "cls": "clickable-icon graph-controls-button mod-reset",
+      "visible": true
+     }
+    ],
+    "noteMoreOptions": [
+     "Backlinks in document [svg-icon links-coming-in]",
+     "Reading view [svg-icon lucide-book-open]",
+     "Source mode [svg-icon lucide-code-2]",
+     "---",
+     "Split right [svg-icon lucide-separator-vertical]",
+     "Split down [svg-icon lucide-separator-horizontal]",
+     "Open in new window [svg-icon lucide-picture-in-picture-2]",
+     "---",
+     "Rename... [svg-icon lucide-edit-3]",
+     "Move file to... [svg-icon lucide-folder-tree]",
+     "Bookmark... [svg-icon lucide-bookmark]",
+     "Merge entire file with... [svg-icon lucide-git-merge]",
+     "Add file property [svg-icon lucide-plus-circle]",
+     "Export to PDF... [svg-icon lucide-file-down]",
+     "---",
+     "Find... [svg-icon lucide-file-search]",
+     "Replace... [svg-icon lucide-file-search]",
+     "---",
+     "Copy path [svg-icon lucide-clipboard]",
+     "---",
+     "Open version history [svg-icon lucide-history]",
+     "Open linked view [svg-icon lucide-link]",
+     "---",
+     "Open in default app [svg-icon lucide-arrow-up-right]",
+     "Show in system explorer [svg-icon lucide-arrow-up-right]",
+     "Reveal file in navigation [svg-icon lucide-folder-open]",
+     "---",
+     "---",
+     "Delete file [svg-icon lucide-trash-2]"
+    ],
+    "linkedViewSubmenu": [
+     "Open local graph",
+     "Open backlinks",
+     "Open outgoing links",
+     "Open file properties",
+     "Open outline"
+    ]
+   },
+   "s06-ctrl-g": {
+    "ok": true,
+    "sideBefore": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "markdown",
+      "file": "Alpha.md",
+      "display": "Alpha",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Alpha.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Alpha"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "sideAfterCtrlG": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": null,
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [],
+      "links": [],
+      "visible": true
+     },
+     "active": {
+      "type": "graph",
+      "file": null,
+      "display": "Graph view",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "graph"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "graph",
+       "state": {},
+       "icon": "lucide-git-fork",
+       "title": "Graph view"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "graph",
+       "file": null,
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "sideGlobal": [
+     {
+      "split": "main",
+      "indexInGroup": 0,
+      "groupSize": 1,
+      "groupType": "tabs",
+      "groupCurrentTab": 0,
+      "groupTypes": [
+       "graph"
+      ],
+      "groupIndexInSplit": 0
+     }
+    ],
+    "sideFromPane": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": null,
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [],
+      "links": [],
+      "visible": true
+     },
+     "active": {
+      "type": "graph",
+      "file": null,
+      "display": "Graph view",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "graph"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "graph",
+       "state": {},
+       "icon": "lucide-git-fork",
+       "title": "Graph view"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "graph",
+       "file": null,
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "sideGlobalFromPane": [
+     {
+      "split": "main",
+      "indexInGroup": 0,
+      "groupSize": 1,
+      "groupType": "tabs",
+      "groupCurrentTab": 0,
+      "groupTypes": [
+       "graph"
+      ],
+      "groupIndexInSplit": 0
+     }
+    ],
+    "linkedBefore": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Graph of Alpha",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "f9c194d4a5011346",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Alpha"
+       },
+       "isActive": false
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Local graph\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "markdown",
+      "file": "Alpha.md",
+      "display": "Alpha",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": "f9c194d4a5011346",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Alpha.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Alpha"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": true,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "linkedAfterCtrlG": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Graph of Alpha",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "f9c194d4a5011346",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Alpha"
+       },
+       "isActive": false
+      },
+      {
+       "type": "localgraph",
+       "file": null,
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Local graph\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [],
+      "links": [],
+      "visible": true
+     },
+     "active": {
+      "type": "graph",
+      "file": null,
+      "display": "Graph view",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": "f9c194d4a5011346",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "graph"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "graph",
+       "state": {},
+       "icon": "lucide-git-fork",
+       "title": "Graph view"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "graph",
+       "file": null,
+       "active": true,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "linkedGlobal": [
+     {
+      "split": "main",
+      "indexInGroup": 0,
+      "groupSize": 1,
+      "groupType": "tabs",
+      "groupCurrentTab": 0,
+      "groupTypes": [
+       "graph"
+      ],
+      "groupIndexInSplit": 0
+     }
+    ],
+    "linkedFromPane": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": null,
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 3,
+        "groupType": "tabs",
+        "groupCurrentTab": 2,
+        "groupTypes": [
+         "localgraph",
+         "markdown",
+         "graph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      },
+      {
+       "type": "localgraph",
+       "file": null,
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Local graphFiltersGroupsDisplayForces",
+      "nodes": [],
+      "links": [],
+      "visible": false
+     },
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [],
+      "links": [],
+      "visible": true
+     },
+     "active": {
+      "type": "graph",
+      "file": null,
+      "display": "Graph view",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 2,
+       "groupSize": 3,
+       "groupType": "tabs",
+       "groupCurrentTab": 2,
+       "groupTypes": [
+        "localgraph",
+        "markdown",
+        "graph"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "graph",
+       "state": {},
+       "icon": "lucide-git-fork",
+       "title": "Graph view"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "localgraph",
+       "file": null,
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "graph",
+       "file": null,
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "linkedGlobalFromPane": [
+     {
+      "split": "main",
+      "indexInGroup": 2,
+      "groupSize": 3,
+      "groupType": "tabs",
+      "groupCurrentTab": 2,
+      "groupTypes": [
+       "localgraph",
+       "markdown",
+       "graph"
+      ],
+      "groupIndexInSplit": 0
+     }
+    ]
+   },
+   "s07-node-click": {
+    "ok": true,
+    "rightBefore": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "markdown",
+      "file": "Alpha.md",
+      "display": "Alpha",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Alpha.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Alpha"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "rightPoint": {
+     "x": 1587.2827606201172,
+     "y": 429.44556427001953
+    },
+    "rightHovered": null,
+    "rightAfterClick": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": true
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "display": "Local graph",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "right",
+       "indexInGroup": 5,
+       "groupSize": 6,
+       "groupType": "tabs",
+       "groupCurrentTab": 5,
+       "groupTypes": [
+        "backlink",
+        "outgoing-link",
+        "tag",
+        "all-properties",
+        "outline",
+        "localgraph"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Alpha.md",
+        "options": {
+         "collapse-filter": true,
+         "search": "",
+         "localJumps": 1,
+         "localBacklinks": true,
+         "localForelinks": true,
+         "localInterlinks": false,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Local graph"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "rightAfterCtrlClick": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Beta.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Beta.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": null,
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Beta.md->Delta.md",
+       "Gamma.md->Beta.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "markdown",
+      "file": "Beta.md",
+      "display": "Beta",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 1,
+       "groupSize": 2,
+       "groupType": "tabs",
+       "groupCurrentTab": 1,
+       "groupTypes": [
+        "markdown",
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Beta.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Beta"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "markdown",
+       "file": "Beta.md",
+       "active": true,
+       "group": 0
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "mainBefore": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Graph of Alpha",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "6f674241542e79ac",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Alpha"
+       },
+       "isActive": true
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Alpha.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Local graph\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Board.canvas",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Alpha.md->Gamma.md",
+       "Board.canvas->Alpha.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "display": "Graph of Alpha",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": "6f674241542e79ac",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "localgraph"
+       ],
+       "groupIndexInSplit": 1
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Alpha.md",
+        "options": {
+         "collapse-filter": true,
+         "search": "",
+         "localJumps": 1,
+         "localBacklinks": true,
+         "localForelinks": true,
+         "localInterlinks": false,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Graph of Alpha"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Alpha.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Alpha.md",
+       "active": true,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "mainPoint": {
+     "x": 1031.981451034546,
+     "y": 422.1488037109375
+    },
+    "mainHovered": "Gamma.md",
+    "mainAfterClick": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Gamma.md",
+       "display": "Graph of Gamma",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "6f674241542e79ac",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 1,
+        "groupType": "tabs",
+        "groupCurrentTab": 0,
+        "groupTypes": [
+         "localgraph"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Gamma.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Gamma"
+       },
+       "isActive": false
+      },
+      {
+       "type": "localgraph",
+       "file": "Gamma.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Gamma.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Graph of Gamma",
+      "empty": null,
+      "text": "Graph of Gamma\nFilters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Gamma.md",
+       "Gamma.md->Beta.md"
+      ],
+      "visible": true
+     },
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Gamma.md",
+       "Gamma.md->Beta.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "markdown",
+      "file": "Gamma.md",
+      "display": "Gamma",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": "6f674241542e79ac",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "markdown"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Gamma.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Gamma"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Gamma.md",
+       "active": true,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Gamma.md",
+       "active": false,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": false
+    },
+    "mainAfterCtrlClick": {
+     "leaves": [
+      {
+       "type": "localgraph",
+       "file": "Gamma.md",
+       "display": "Graph of Gamma",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": "6f674241542e79ac",
+       "where": {
+        "split": "main",
+        "indexInGroup": 0,
+        "groupSize": 2,
+        "groupType": "tabs",
+        "groupCurrentTab": 1,
+        "groupTypes": [
+         "localgraph",
+         "markdown"
+        ],
+        "groupIndexInSplit": 1
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Gamma.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Graph of Gamma"
+       },
+       "isActive": false
+      },
+      {
+       "type": "localgraph",
+       "file": "Beta.md",
+       "display": "Local graph",
+       "icon": "lucide-git-fork",
+       "pinned": false,
+       "group": null,
+       "where": {
+        "split": "right",
+        "indexInGroup": 5,
+        "groupSize": 6,
+        "groupType": "tabs",
+        "groupCurrentTab": 5,
+        "groupTypes": [
+         "backlink",
+         "outgoing-link",
+         "tag",
+         "all-properties",
+         "outline",
+         "localgraph"
+        ],
+        "groupIndexInSplit": 0
+       },
+       "state": {
+        "type": "localgraph",
+        "state": {
+         "file": "Beta.md",
+         "options": {
+          "collapse-filter": true,
+          "search": "",
+          "localJumps": 1,
+          "localBacklinks": true,
+          "localForelinks": true,
+          "localInterlinks": false,
+          "showTags": false,
+          "showAttachments": false,
+          "hideUnresolved": false,
+          "collapse-color-groups": true,
+          "colorGroups": [],
+          "collapse-display": true,
+          "showArrow": false,
+          "textFadeMultiplier": 0,
+          "nodeSizeMultiplier": 1,
+          "lineSizeMultiplier": 1,
+          "collapse-forces": true,
+          "centerStrength": 0.518713248970312,
+          "repelStrength": 10,
+          "linkStrength": 1,
+          "linkDistance": 250,
+          "scale": 1,
+          "close": false
+         }
+        },
+        "icon": "lucide-git-fork",
+        "title": "Local graph"
+       },
+       "isActive": false
+      }
+     ],
+     "view": {
+      "headerTitle": "Graph of Gamma",
+      "empty": null,
+      "text": "Graph of GammaFiltersGroupsDisplayForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Gamma.md",
+       "Gamma.md->Beta.md"
+      ],
+      "visible": false
+     },
+     "sideView": {
+      "headerTitle": "Local graph",
+      "empty": null,
+      "text": "Filters\nGroups\nDisplay\nForces",
+      "nodes": [
+       "Alpha.md",
+       "Beta.md",
+       "Delta.md",
+       "Gamma.md"
+      ],
+      "links": [
+       "Alpha.md->Beta.md",
+       "Beta.md->Delta.md",
+       "Gamma.md->Beta.md"
+      ],
+      "visible": true
+     },
+     "active": {
+      "type": "markdown",
+      "file": "Beta.md",
+      "display": "Beta",
+      "icon": "lucide-file",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "main",
+       "indexInGroup": 1,
+       "groupSize": 2,
+       "groupType": "tabs",
+       "groupCurrentTab": 1,
+       "groupTypes": [
+        "localgraph",
+        "markdown"
+       ],
+       "groupIndexInSplit": 1
+      },
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Beta.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Beta"
+      },
+      "isActive": true
+     },
+     "main": [
+      {
+       "type": "markdown",
+       "file": "Gamma.md",
+       "active": false,
+       "group": 0
+      },
+      {
+       "type": "localgraph",
+       "file": "Gamma.md",
+       "active": false,
+       "group": 1
+      },
+      {
+       "type": "markdown",
+       "file": "Beta.md",
+       "active": true,
+       "group": 1
+      }
+     ],
+     "rightCollapsed": false
+    }
+   },
+   "s08-options": {
+    "ok": true,
+    "stateBefore": {
+     "type": "localgraph",
+     "state": {
+      "file": "Alpha.md",
+      "options": {
+       "collapse-filter": true,
+       "search": "",
+       "localJumps": 1,
+       "localBacklinks": true,
+       "localForelinks": true,
+       "localInterlinks": false,
+       "showTags": false,
+       "showAttachments": false,
+       "hideUnresolved": false,
+       "collapse-color-groups": true,
+       "colorGroups": [],
+       "collapse-display": true,
+       "showArrow": false,
+       "textFadeMultiplier": 0,
+       "nodeSizeMultiplier": 1,
+       "lineSizeMultiplier": 1,
+       "collapse-forces": true,
+       "centerStrength": 0.518713248970312,
+       "repelStrength": 10,
+       "linkStrength": 1,
+       "linkDistance": 250,
+       "scale": 1,
+       "close": false
+      }
+     },
+     "icon": "lucide-git-fork",
+     "title": "Local graph"
+    },
+    "controls": {
+     "wasClosed": false,
+     "rows": [
+      {
+       "name": "",
+       "control": "input",
+       "on": null,
+       "value": null,
+       "min": null,
+       "max": null,
+       "step": null
+      },
+      {
+       "name": "Depth",
+       "control": "slider",
+       "on": null,
+       "value": "1",
+       "min": "1",
+       "max": "5",
+       "step": "1"
+      },
+      {
+       "name": "Incoming links",
+       "control": "toggle",
+       "on": true,
+       "value": null,
+       "min": null,
+       "max": null,
+       "step": null
+      },
+      {
+       "name": "Outgoing links",
+       "control": "toggle",
+       "on": true,
+       "value": null,
+       "min": null,
+       "max": null,
+       "step": null
+      },
+      {
+       "name": "Neighbor links",
+       "control": "toggle",
+       "on": false,
+       "value": null,
+       "min": null,
+       "max": null,
+       "step": null
+      },
+      {
+       "name": "Tags",
+       "control": "toggle",
+       "on": false,
+       "value": null,
+       "min": null,
+       "max": null,
+       "step": null
+      },
+      {
+       "name": "Attachments",
+       "control": "toggle",
+       "on": false,
+       "value": null,
+       "min": null,
+       "max": null,
+       "step": null
+      },
+      {
+       "name": "Existing files only",
+       "control": "toggle",
+       "on": false,
+       "value": null,
+       "min": null,
+       "max": null,
+       "step": null
+      }
+     ]
+    },
+    "slider": {
+     "x": 1374.4375,
+     "y": 191.21875,
+     "w": 194.5625,
+     "value": "1",
+     "min": "1",
+     "max": "5",
+     "step": "1"
+    },
+    "stateAfter": {
+     "type": "localgraph",
+     "state": {
+      "file": "Alpha.md",
+      "options": {
+       "collapse-filter": false,
+       "search": "",
+       "localJumps": 3,
+       "localBacklinks": false,
+       "localForelinks": true,
+       "localInterlinks": true,
+       "showTags": false,
+       "showAttachments": false,
+       "hideUnresolved": false,
+       "collapse-color-groups": true,
+       "colorGroups": [],
+       "collapse-display": true,
+       "showArrow": false,
+       "textFadeMultiplier": 0,
+       "nodeSizeMultiplier": 1,
+       "lineSizeMultiplier": 1,
+       "collapse-forces": true,
+       "centerStrength": 0.518713248970312,
+       "repelStrength": 10,
+       "linkStrength": 1,
+       "linkDistance": 250,
+       "scale": 1,
+       "close": false
+      }
+     },
+     "icon": "lucide-git-fork",
+     "title": "Local graph"
+    },
+    "viewAfter": {
+     "headerTitle": "Local graph",
+     "empty": null,
+     "text": "Filters\nDepth\n3\nIncoming links\nOutgoing links\nNeighbor links\nTags\nAttachments\nExisting files only\nGroups\nDisplay\nForces",
+     "nodes": [
+      "Alpha.md",
+      "Beta.md",
+      "Delta.md",
+      "Epsilon.md",
+      "Gamma.md"
+     ],
+     "links": [
+      "Alpha.md->Beta.md",
+      "Alpha.md->Gamma.md",
+      "Beta.md->Delta.md",
+      "Delta.md->Epsilon.md",
+      "Gamma.md->Beta.md"
+     ],
+     "visible": true
+    },
+    "ws": {
+     "found": [
+      {
+       "where": "right/split[0]/tabs[5]",
+       "leaf": {
+        "id": "2b15ca60dbba9ab1",
+        "type": "leaf",
+        "state": {
+         "type": "localgraph",
+         "state": {
+          "file": "Alpha.md",
+          "options": {
+           "collapse-filter": false,
+           "search": "",
+           "localJumps": 3,
+           "localBacklinks": false,
+           "localForelinks": true,
+           "localInterlinks": true,
+           "showTags": false,
+           "showAttachments": false,
+           "hideUnresolved": false,
+           "collapse-color-groups": true,
+           "colorGroups": [],
+           "collapse-display": true,
+           "showArrow": false,
+           "textFadeMultiplier": 0,
+           "nodeSizeMultiplier": 1,
+           "lineSizeMultiplier": 1,
+           "collapse-forces": true,
+           "centerStrength": 0.518713248970312,
+           "repelStrength": 10,
+           "linkStrength": 1,
+           "linkDistance": 250,
+           "scale": 1,
+           "close": false
+          }
+         },
+         "icon": "lucide-git-fork",
+         "title": "Local graph"
+        }
+       }
+      }
+     ],
+     "active": "2b15ca60dbba9ab1",
+     "lastOpenFiles": [
+      "Beta.md",
+      "Gamma.md",
+      "Alpha.md",
+      "Delta.md",
+      "pic.png",
+      "Board.canvas"
+     ]
+    },
+    "wsRawLeaf": "{\n            \"id\": \"2b15ca60dbba9ab1\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"localgraph\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"options\": {\n                  \"collapse-filter\": false,\n                  \"search\": \"\",\n                  \"localJumps\": 3,\n                  \"localBacklinks\": false,\n                  \"localForelinks\": true,\n                  \"localInterlinks\": true,\n                  \"showTags\": false,\n                  \"showAttachments\": false,\n                  \"hideUnresolved\": false,\n                  \"collapse-color-groups\": true,\n                  \"colorGroups\": [],\n                  \"collapse-display\": true,\n                  \"showArrow\": false,\n                  \"textFadeMultiplier\": 0,\n                  \"nodeSizeMultiplier\": 1,\n                  \"lineSizeMultiplier\": 1,\n                  \"collapse-forces\": true,\n                  \"centerStrength\": 0.518713248970312,\n                  \"repelStrength\": 10,\n                  \"linkStrength\": 1,\n                  \"linkDistance\": 250,\n                  \"scale\": 1,\n                  \"close\": false\n                }\n              },\n              \"icon\": \"lucide-git-fork\",\n              \"title\": \"Local graph\"\n            }\n          }",
+    "graphJson": "{\n  \"collapse-filter\": true,\n  \"search\": \"\",\n  \"showTags\": false,\n  \"showAttachments\": false,\n  \"hideUnresolved\": false,\n  \"showOrphans\": true,\n  \"collapse-color-groups\": true,\n  \"colorGroups\": [],\n  \"collapse-display\": true,\n  \"showArrow\": false,\n  \"textFadeMultiplier\": 0,\n  \"nodeSizeMultiplier\": 1,\n  \"lineSizeMultiplier\": 1,\n  \"collapse-forces\": true,\n  \"centerStrength\": 0.518713248970312,\n  \"repelStrength\": 10,\n  \"linkStrength\": 1,\n  \"linkDistance\": 250,\n  \"scale\": 1,\n  \"close\": false\n}",
+    "stateOnBeta": {
+     "type": "localgraph",
+     "state": {
+      "file": "Beta.md",
+      "options": {
+       "collapse-filter": false,
+       "search": "",
+       "localJumps": 3,
+       "localBacklinks": false,
+       "localForelinks": true,
+       "localInterlinks": true,
+       "showTags": false,
+       "showAttachments": false,
+       "hideUnresolved": false,
+       "collapse-color-groups": true,
+       "colorGroups": [],
+       "collapse-display": true,
+       "showArrow": false,
+       "textFadeMultiplier": 0,
+       "nodeSizeMultiplier": 1,
+       "lineSizeMultiplier": 1,
+       "collapse-forces": true,
+       "centerStrength": 0.518713248970312,
+       "repelStrength": 10,
+       "linkStrength": 1,
+       "linkDistance": 250,
+       "scale": 1,
+       "close": false
+      }
+     },
+     "icon": "lucide-git-fork",
+     "title": "Local graph"
+    },
+    "linkedStateAfterSideEdit": {
+     "type": "localgraph",
+     "state": {
+      "file": "Beta.md",
+      "options": {
+       "collapse-filter": true,
+       "search": "",
+       "localJumps": 1,
+       "localBacklinks": true,
+       "localForelinks": true,
+       "localInterlinks": false,
+       "showTags": false,
+       "showAttachments": false,
+       "hideUnresolved": false,
+       "collapse-color-groups": true,
+       "colorGroups": [],
+       "collapse-display": true,
+       "showArrow": false,
+       "textFadeMultiplier": 0,
+       "nodeSizeMultiplier": 1,
+       "lineSizeMultiplier": 1,
+       "collapse-forces": true,
+       "centerStrength": 0.518713248970312,
+       "repelStrength": 10,
+       "linkStrength": 1,
+       "linkDistance": 250,
+       "scale": 1,
+       "close": false
+      }
+     },
+     "icon": "lucide-git-fork",
+     "title": "Graph of Beta"
+    },
+    "wsFinal": "{\n  \"main\": {\n    \"id\": \"835b4be078b5ab2b\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"b5a8085c89d94d17\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"56831c8af5f63a5b\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Alpha\"\n            },\n            \"group\": \"4e7bb0dd5bdfd87b\"\n          }\n        ]\n      },\n      {\n        \"id\": \"e2ab5e351d24f698\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"ca0f4bd20dd81b11\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"localgraph\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"options\": {\n                  \"collapse-filter\": true,\n                  \"search\": \"\",\n                  \"localJumps\": 1,\n                  \"localBacklinks\": true,\n                  \"localForelinks\": true,\n                  \"localInterlinks\": false,\n                  \"showTags\": false,\n                  \"showAttachments\": false,\n                  \"hideUnresolved\": false,\n                  \"collapse-color-groups\": true,\n                  \"colorGroups\": [],\n                  \"collapse-display\": true,\n                  \"showArrow\": false,\n                  \"textFadeMultiplier\": 0,\n                  \"nodeSizeMultiplier\": 1,\n                  \"lineSizeMultiplier\": 1,\n                  \"collapse-forces\": true,\n                  \"centerStrength\": 0.518713248970312,\n                  \"repelStrength\": 10,\n                  \"linkStrength\": 1,\n                  \"linkDistance\": 250,\n                  \"scale\": 1,\n                  \"close\": false\n                }\n              },\n              \"icon\": \"lucide-git-fork\",\n              \"title\": \"Graph of Alpha\"\n            },\n            \"group\": \"4e7bb0dd5bdfd87b\"\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"e151fc5089d3f3a0\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"0b8e4cdae41e3607\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"1909742442a97104\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"cb70a4b653ceb976\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"4a4696b1e7ff8d24\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"26a777ce418cc65b\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"5b3cc3381d9296b3\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"871a3ccf39df172f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"20a9bffb73bafe88\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"6868030b5431f03c\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"046805d19119d915\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"f1ee7d78e8ab9fe8\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          },\n          {\n            \"id\": \"2b15ca60dbba9ab1\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"localgraph\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"options\": {\n                  \"collapse-filter\": false,\n                  \"search\": \"\",\n                  \"localJumps\": 3,\n                  \"localBacklinks\": false,\n                  \"localForelinks\": true,\n                  \"localInterlinks\": true,\n                  \"showTags\": false,\n                  \"showAttachments\": false,\n                  \"hideUnresolved\": false,\n                  \"collapse-color-groups\": true,\n                  \"colorGroups\": [],\n                  \"collapse-display\": true,\n                  \"showArrow\": false,\n                  \"textFadeMultiplier\": 0,\n                  \"nodeSizeMultiplier\": 1,\n                  \"lineSizeMultiplier\": 1,\n                  \"collapse-forces\": true,\n                  \"centerStrength\": 0.518713248970312,\n                  \"repelStrength\": 10,\n                  \"linkStrength\": 1,\n                  \"linkDistance\": 250,\n                  \"scale\": 1,\n                  \"close\": false\n                }\n              },\n              \"icon\": \"lucide-git-fork\",\n              \"title\": \"Local graph\"\n            }\n          }\n        ],\n        \"currentTab\": 5\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"56831c8af5f63a5b\",\n  \"lastOpenFiles\": [\n    \"Beta.md\",\n    \"Alpha.md\",\n    \"Gamma.md\",\n    \"Delta.md\",\n    \"pic.png\",\n    \"Board.canvas\"\n  ]\n}"
+   }
+  },
+  "order": [
+   "s00-meta",
+   "s01-open-local",
+   "s02-open-again",
+   "s03-follow-linked",
+   "s04-sidebar-leaf",
+   "s05-tab-menus",
+   "s06-ctrl-g",
+   "s07-node-click",
+   "s08-options"
+  ],
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-localgraph/vault"
+ },
+ "after-restart": {
+  "startedAt": "2026-11-22T18:37:39.424Z",
+  "env": {
+   "ONLY": null,
+   "vault": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-localgraph/vault"
+  },
+  "steps": {
+   "r00-reloaded": {
+    "ok": true,
+    "title": "Alpha - vault - Obsidian 1.15.1",
+    "leaves": [
+     {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "display": "Graph of Alpha",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": "4e7bb0dd5bdfd87b",
+      "where": {
+       "split": "main",
+       "indexInGroup": 0,
+       "groupSize": 1,
+       "groupType": "tabs",
+       "groupCurrentTab": 0,
+       "groupTypes": [
+        "localgraph"
+       ],
+       "groupIndexInSplit": 1
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Alpha.md",
+        "options": {
+         "collapse-filter": true,
+         "search": "",
+         "localJumps": 1,
+         "localBacklinks": true,
+         "localForelinks": true,
+         "localInterlinks": false,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Graph of Alpha"
+      },
+      "isActive": false
+     },
+     {
+      "type": "localgraph",
+      "file": "Alpha.md",
+      "display": "Local graph",
+      "icon": "lucide-git-fork",
+      "pinned": false,
+      "group": null,
+      "where": {
+       "split": "right",
+       "indexInGroup": 5,
+       "groupSize": 6,
+       "groupType": "tabs",
+       "groupCurrentTab": 5,
+       "groupTypes": [
+        "backlink",
+        "outgoing-link",
+        "tag",
+        "all-properties",
+        "outline",
+        "localgraph"
+       ],
+       "groupIndexInSplit": 0
+      },
+      "state": {
+       "type": "localgraph",
+       "state": {
+        "file": "Alpha.md",
+        "options": {
+         "collapse-filter": false,
+         "search": "",
+         "localJumps": 3,
+         "localBacklinks": false,
+         "localForelinks": true,
+         "localInterlinks": true,
+         "showTags": false,
+         "showAttachments": false,
+         "hideUnresolved": false,
+         "collapse-color-groups": true,
+         "colorGroups": [],
+         "collapse-display": true,
+         "showArrow": false,
+         "textFadeMultiplier": 0,
+         "nodeSizeMultiplier": 1,
+         "lineSizeMultiplier": 1,
+         "collapse-forces": true,
+         "centerStrength": 0.518713248970312,
+         "repelStrength": 10,
+         "linkStrength": 1,
+         "linkDistance": 250,
+         "scale": 1,
+         "close": false
+        }
+       },
+       "icon": "lucide-git-fork",
+       "title": "Local graph"
+      },
+      "isActive": false
+     }
+    ],
+    "view": {
+     "headerTitle": "Graph of Alpha",
+     "empty": null,
+     "text": "Graph of Alpha\nFilters\nGroups\nDisplay\nForces",
+     "nodes": [
+      "Alpha.md",
+      "Beta.md",
+      "Board.canvas",
+      "Gamma.md"
+     ],
+     "links": [
+      "Alpha.md->Beta.md",
+      "Alpha.md->Gamma.md",
+      "Board.canvas->Alpha.md"
+     ],
+     "visible": true
+    },
+    "sideView": {
+     "headerTitle": "Local graph",
+     "empty": null,
+     "text": "Filters\nDepth\n3\nIncoming links\nOutgoing links\nNeighbor links\nTags\nAttachments\nExisting files only\nGroups\nDisplay\nForces",
+     "nodes": [
+      "Alpha.md",
+      "Beta.md",
+      "Delta.md",
+      "Epsilon.md",
+      "Gamma.md"
+     ],
+     "links": [
+      "Alpha.md->Beta.md",
+      "Alpha.md->Gamma.md",
+      "Beta.md->Delta.md",
+      "Delta.md->Epsilon.md",
+      "Gamma.md->Beta.md"
+     ],
+     "visible": true
+    },
+    "active": {
+     "type": "markdown",
+     "file": "Alpha.md",
+     "display": "Alpha",
+     "icon": "lucide-file",
+     "pinned": false,
+     "group": "4e7bb0dd5bdfd87b",
+     "where": {
+      "split": "main",
+      "indexInGroup": 0,
+      "groupSize": 1,
+      "groupType": "tabs",
+      "groupCurrentTab": 0,
+      "groupTypes": [
+       "markdown"
+      ],
+      "groupIndexInSplit": 0
+     },
+     "state": {
+      "type": "markdown",
+      "state": {
+       "file": "Alpha.md",
+       "mode": "source",
+       "source": false
+      },
+      "icon": "lucide-file",
+      "title": "Alpha"
+     },
+     "isActive": true
+    },
+    "sideTab": {
+     "aria": "Local graph",
+     "dataType": "localgraph",
+     "cls": "workspace-tab-header tappable is-active",
+     "innerTitle": "Local graph",
+     "icon": "svg-icon lucide-git-fork",
+     "rect": {
+      "x": 1459,
+      "y": 7,
+      "w": 28,
+      "h": 25,
+      "cx": 1473,
+      "cy": 19.5
+     },
+     "isActiveHeader": true
+    },
+    "rightHeaders": [
+     {
+      "aria": "Backlinks",
+      "dataType": "backlink",
+      "active": false
+     },
+     {
+      "aria": "Outgoing links",
+      "dataType": "outgoing-link",
+      "active": false
+     },
+     {
+      "aria": "Tags",
+      "dataType": "tag",
+      "active": false
+     },
+     {
+      "aria": "All properties",
+      "dataType": "all-properties",
+      "active": false
+     },
+     {
+      "aria": "Outline",
+      "dataType": "outline",
+      "active": false
+     },
+     {
+      "aria": "Local graph",
+      "dataType": "localgraph",
+      "active": true
+     }
+    ],
+    "wsAtStart": "{\n  \"main\": {\n    \"id\": \"835b4be078b5ab2b\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"b5a8085c89d94d17\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"56831c8af5f63a5b\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Alpha\"\n            },\n            \"group\": \"4e7bb0dd5bdfd87b\"\n          }\n        ]\n      },\n      {\n        \"id\": \"e2ab5e351d24f698\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"ca0f4bd20dd81b11\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"localgraph\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"options\": {\n                  \"collapse-filter\": true,\n                  \"search\": \"\",\n                  \"localJumps\": 1,\n                  \"localBacklinks\": true,\n                  \"localForelinks\": true,\n                  \"localInterlinks\": false,\n                  \"showTags\": false,\n                  \"showAttachments\": false,\n                  \"hideUnresolved\": false,\n                  \"collapse-color-groups\": true,\n                  \"colorGroups\": [],\n                  \"collapse-display\": true,\n                  \"showArrow\": false,\n                  \"textFadeMultiplier\": 0,\n                  \"nodeSizeMultiplier\": 1,\n                  \"lineSizeMultiplier\": 1,\n                  \"collapse-forces\": true,\n                  \"centerStrength\": 0.518713248970312,\n                  \"repelStrength\": 10,\n                  \"linkStrength\": 1,\n                  \"linkDistance\": 250,\n                  \"scale\": 1,\n                  \"close\": false\n                }\n              },\n              \"icon\": \"lucide-git-fork\",\n              \"title\": \"Graph of Alpha\"\n            },\n            \"group\": \"4e7bb0dd5bdfd87b\"\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"e151fc5089d3f3a0\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"0b8e4cdae41e3607\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"1909742442a97104\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"cb70a4b653ceb976\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"4a4696b1e7ff8d24\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"26a777ce418cc65b\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"5b3cc3381d9296b3\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"871a3ccf39df172f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"20a9bffb73bafe88\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"6868030b5431f03c\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"046805d19119d915\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"f1ee7d78e8ab9fe8\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          },\n          {\n            \"id\": \"2b15ca60dbba9ab1\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"localgraph\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"options\": {\n                  \"collapse-filter\": false,\n                  \"search\": \"\",\n                  \"localJumps\": 3,\n                  \"localBacklinks\": false,\n                  \"localForelinks\": true,\n                  \"localInterlinks\": true,\n                  \"showTags\": false,\n                  \"showAttachments\": false,\n                  \"hideUnresolved\": false,\n                  \"collapse-color-groups\": true,\n                  \"colorGroups\": [],\n                  \"collapse-display\": true,\n                  \"showArrow\": false,\n                  \"textFadeMultiplier\": 0,\n                  \"nodeSizeMultiplier\": 1,\n                  \"lineSizeMultiplier\": 1,\n                  \"collapse-forces\": true,\n                  \"centerStrength\": 0.518713248970312,\n                  \"repelStrength\": 10,\n                  \"linkStrength\": 1,\n                  \"linkDistance\": 250,\n                  \"scale\": 1,\n                  \"close\": false\n                }\n              },\n              \"icon\": \"lucide-git-fork\",\n              \"title\": \"Local graph\"\n            }\n          }\n        ],\n        \"currentTab\": 5\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"56831c8af5f63a5b\",\n  \"lastOpenFiles\": [\n    \"Beta.md\",\n    \"Alpha.md\",\n    \"Gamma.md\",\n    \"Delta.md\",\n    \"pic.png\",\n    \"Board.canvas\"\n  ]\n}",
+    "ws": {
+     "found": [
+      {
+       "where": "main/split[1]/tabs[0]",
+       "leaf": {
+        "id": "ca0f4bd20dd81b11",
+        "type": "leaf",
+        "state": {
+         "type": "localgraph",
+         "state": {
+          "file": "Alpha.md",
+          "options": {
+           "collapse-filter": true,
+           "search": "",
+           "localJumps": 1,
+           "localBacklinks": true,
+           "localForelinks": true,
+           "localInterlinks": false,
+           "showTags": false,
+           "showAttachments": false,
+           "hideUnresolved": false,
+           "collapse-color-groups": true,
+           "colorGroups": [],
+           "collapse-display": true,
+           "showArrow": false,
+           "textFadeMultiplier": 0,
+           "nodeSizeMultiplier": 1,
+           "lineSizeMultiplier": 1,
+           "collapse-forces": true,
+           "centerStrength": 0.518713248970312,
+           "repelStrength": 10,
+           "linkStrength": 1,
+           "linkDistance": 250,
+           "scale": 1,
+           "close": false
+          }
+         },
+         "icon": "lucide-git-fork",
+         "title": "Graph of Alpha"
+        },
+        "group": "4e7bb0dd5bdfd87b"
+       }
+      },
+      {
+       "where": "right/split[0]/tabs[5]",
+       "leaf": {
+        "id": "2b15ca60dbba9ab1",
+        "type": "leaf",
+        "state": {
+         "type": "localgraph",
+         "state": {
+          "file": "Alpha.md",
+          "options": {
+           "collapse-filter": false,
+           "search": "",
+           "localJumps": 3,
+           "localBacklinks": false,
+           "localForelinks": true,
+           "localInterlinks": true,
+           "showTags": false,
+           "showAttachments": false,
+           "hideUnresolved": false,
+           "collapse-color-groups": true,
+           "colorGroups": [],
+           "collapse-display": true,
+           "showArrow": false,
+           "textFadeMultiplier": 0,
+           "nodeSizeMultiplier": 1,
+           "lineSizeMultiplier": 1,
+           "collapse-forces": true,
+           "centerStrength": 0.518713248970312,
+           "repelStrength": 10,
+           "linkStrength": 1,
+           "linkDistance": 250,
+           "scale": 1,
+           "close": false
+          }
+         },
+         "icon": "lucide-git-fork",
+         "title": "Local graph"
+        }
+       }
+      }
+     ],
+     "active": "56831c8af5f63a5b",
+     "lastOpenFiles": [
+      "Beta.md",
+      "Alpha.md",
+      "Gamma.md",
+      "Delta.md",
+      "pic.png",
+      "Board.canvas"
+     ]
+    }
+   }
+  },
+  "order": [
+   "r00-reloaded"
+  ],
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-1-proj-11-software-projects-11-11-scoria-cc/d8162cb3-b947-4a67-846f-719c942fa92e/scratchpad/agent-localgraph/vault"
+ }
+}
